@@ -5,7 +5,7 @@ from texts.messages import MESSAGES
 
 
 def get_main_keyboard():
-    markup = ReplyKeyboardMarkup(row_width=1)
+    markup = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     activity = KeyboardButton(BUTTONS["activity"])
     users = KeyboardButton(BUTTONS["users"])
     parse = KeyboardButton(BUTTONS["parse"])
