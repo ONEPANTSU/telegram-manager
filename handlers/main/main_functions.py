@@ -5,10 +5,14 @@ from texts.messages import MESSAGES
 
 
 def get_main_keyboard():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
-    create_post = KeyboardButton(BUTTONS["create_post"])
+    markup = ReplyKeyboardMarkup(row_width=1)
+    activity = KeyboardButton(BUTTONS["activity"])
+    users = KeyboardButton(BUTTONS["users"])
+    parse = KeyboardButton(BUTTONS["parse"])
     markup.add(
-        create_post,
+        activity,
+        users,
+        parse,
     )
     return markup
 
