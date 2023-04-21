@@ -24,7 +24,7 @@ def activity_keyboard():
     view_button = InlineKeyboardButton(text=BUTTONS['view'], callback_data=viewer_post_callback.new())
     react_button = InlineKeyboardButton(text=BUTTONS['react'], callback_data=reactions_callback.new())
     unsub_all_button = InlineKeyboardButton(text=BUTTONS['unsub_all'], callback_data=unsub_all_callback.new())
-    act_keyboard = InlineKeyboardMarkup().add(sub_open_button, sub_close_button, unsub_open_button, unsub_close_button,
+    act_keyboard = InlineKeyboardMarkup(row_width=1).add(sub_open_button, sub_close_button, unsub_open_button, unsub_close_button,
                                               unsub_all_button, view_button, react_button)
     return act_keyboard
 
@@ -39,13 +39,13 @@ unsub_all_callback = CallbackData("unsub_all_button")
 
 
 async def chose_activity(message: Message):
-    await message.reply(text=MESSAGES["chose_activity"], reply_markup=activity_keyboard())
+    await message.answer(text=MESSAGES["chose_activity"], reply_markup=activity_keyboard())
 
 #для подписки
 
 
 async def subscribe_button(query: CallbackQuery, callback_data: dict):
-    await query.message.answer(text=MESSAGES["channel_link"])
+    await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await SubscribeStates.channel_link.set()
 
 
