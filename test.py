@@ -1,9 +1,10 @@
 import asyncio
+from os import remove, walk
 from random import shuffle
-from os import walk, remove
+
 from telethon import TelegramClient, functions
-from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.functions.channels import JoinChannelRequest, LeaveChannelRequest
+from telethon.tl.functions.messages import ImportChatInviteRequest
 
 
 def get_proxy():
@@ -20,7 +21,9 @@ async def subscribe_public_channel(channel_link, count, delay):
         account = local_accounts[account]
         phone = await account.get_me()
         try:
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             await account(JoinChannelRequest(channel_link))
             print(f"{phone.phone} вступил в {channel_link}")
         except Exception as error:
@@ -40,7 +43,9 @@ async def subscribe_private_channel(channel_link, count, delay):
         account = local_accounts[account]
         phone = await account.get_me()
         try:
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             await account(ImportChatInviteRequest(channel_link))
             print(f"{phone.phone} вступил в {channel_link}")
         except Exception as error:
@@ -53,7 +58,9 @@ async def leave_public_channel(channel_link, count, delay):
         account = accounts[account]
         phone = await account.get_me()
         try:
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             await account(LeaveChannelRequest(channel_link))
             print(f"{phone.phone} покинул {channel_link}")
         except Exception as error:
@@ -70,7 +77,9 @@ async def leave_private_channel(channel_link, count, delay):
         account = accounts[account]
         phone = await account.get_me()
         try:
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             try:
                 chat = await account.get_entity(channel_link)
                 chat_title = chat.title
@@ -87,9 +96,9 @@ async def leave_private_channel(channel_link, count, delay):
 
 async def leave_all_chanels(delay):
     with open("exceptions.txt") as file:
-        exceptions = file.read().split('\n')
-        if '\n' in exceptions:
-            exceptions.remove('\n')
+        exceptions = file.read().split("\n")
+        if "\n" in exceptions:
+            exceptions.remove("\n")
 
     for account in accounts:
         exceptions = []
@@ -98,7 +107,9 @@ async def leave_all_chanels(delay):
             exceptions.append(chat.title)
 
         async for dialog in account.iter_dialogs():
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             if dialog not in exceptions:
                 await dialog.delete()
             await asyncio.sleep(delay)
@@ -110,11 +121,21 @@ async def view_post(chanel_name, last_post_id, count_posts, count_accounts, dela
         account = accounts[account]
         phone = await account.get_me()
         try:
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
-            await account(functions.messages.GetMessagesViewsRequest(
-                peer=chanel_name,
-                id=[post_id for post_id in range(last_post_id, last_post_id - count_posts, -1)],
-                increment=True))
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
+            await account(
+                functions.messages.GetMessagesViewsRequest(
+                    peer=chanel_name,
+                    id=[
+                        post_id
+                        for post_id in range(
+                            last_post_id, last_post_id - count_posts, -1
+                        )
+                    ],
+                    increment=True,
+                )
+            )
             print(f"{phone.phone} посмторел посты в {chanel_name}")
         except Exception as error:
             print(str(error))
@@ -126,7 +147,9 @@ async def click_on_button(chanel_name, post_id, position, count, delay):
         account = accounts[account]
         phone = await account.get_me()
         try:
-            await account(functions.account.UpdateStatusRequest(offline=False))  # Go to online
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             message = await account.get_messages(chanel_name, ids=[int(post_id)])
             await message[0].click(position - 1)
             print(f"{phone.phone} нажал на кнопку в {chanel_name}")
@@ -142,10 +165,18 @@ async def main():
                 try:
                     addr, port, user, pasw = get_proxy().split(":")
 
-                    proxy = {'proxy_type': 'socks5', 'addr': addr, 'port': int(port), 'username': user,
-                             'password': pasw, 'rdns': True}
+                    proxy = {
+                        "proxy_type": "socks5",
+                        "addr": addr,
+                        "port": int(port),
+                        "username": user,
+                        "password": pasw,
+                        "rdns": True,
+                    }
 
-                    client = TelegramClient(f"base/{session}", api_id, api_hash, proxy=proxy)
+                    client = TelegramClient(
+                        f"base/{session}", api_id, api_hash, proxy=proxy
+                    )
                 except:
                     client = TelegramClient(f"base/{session}", api_id, api_hash)
                 try:
@@ -173,35 +204,55 @@ async def main():
 
         choice = input()
         if choice == "1":
-            await subscribe_public_channel(input("Ссылка на канал "), int(input("Количество акков ")),
-                                           int(input("Задержка в секундах ")))
+            await subscribe_public_channel(
+                input("Ссылка на канал "),
+                int(input("Количество акков ")),
+                int(input("Задержка в секундах ")),
+            )
         elif choice == "2":
-            await subscribe_private_channel(input("Ссылка на канал "), int(input("Количество акков ")),
-                                            int(input("Задержка в секундах ")))
+            await subscribe_private_channel(
+                input("Ссылка на канал "),
+                int(input("Количество акков ")),
+                int(input("Задержка в секундах ")),
+            )
         elif choice == "3":
-            await leave_public_channel(input("Ссылка на канал "), int(input("Количество акков ")),
-                                       int(input("Задержка в секундах ")))
+            await leave_public_channel(
+                input("Ссылка на канал "),
+                int(input("Количество акков ")),
+                int(input("Задержка в секундах ")),
+            )
         elif choice == "4":
-            await leave_private_channel(input("Ссылка на канал "), int(input("Количество акков ")),
-                                        int(input("Задержка в секундах ")))
+            await leave_private_channel(
+                input("Ссылка на канал "),
+                int(input("Количество акков ")),
+                int(input("Задержка в секундах ")),
+            )
         elif choice == "5":
             await leave_all_chanels(int(input("Задержка в секундах ")))
 
         elif choice == "6":
-            await view_post(input("Айди канала "), int(input("Айди последнего поста ")),
-                            int(input("Сколько постов просмотреть ")), int(input("Количество акков ")),
-                            int(input("Задержка в секундах ")))
+            await view_post(
+                input("Айди канала "),
+                int(input("Айди последнего поста ")),
+                int(input("Сколько постов просмотреть ")),
+                int(input("Количество акков ")),
+                int(input("Задержка в секундах ")),
+            )
         elif choice == "7":
-            await click_on_button(input("Айди канала "), input("Айди поста "), int(input("Номер кнопки ")),
-                                  int(input("Количество акков ")),
-                                  int(input("Задержка в секундах ")))
+            await click_on_button(
+                input("Айди канала "),
+                input("Айди поста "),
+                int(input("Номер кнопки ")),
+                int(input("Количество акков ")),
+                int(input("Задержка в секундах ")),
+            )
         else:
             break
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     api_id = 2375451
-    api_hash = 'a210050786a27c798ca59d63e0c58c08'
+    api_hash = "a210050786a27c798ca59d63e0c58c08"
     accounts = []
 
     with open("proxy.txt") as file:
