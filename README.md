@@ -1,1 +1,2 @@
-# TelegramManager
+# CMBot
+Content Making Bot
