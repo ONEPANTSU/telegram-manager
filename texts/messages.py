@@ -1,19 +1,14 @@
 start_message = (
-    "Здравствуйте, {0.first_name} 🖐!\n Я Content Making Bot для создания постов в <b>DailyLang: English</b>!"
+    "Здравствуйте, {0.first_name}! 🖐\n Я <b>Telegram Manager</b> "
+    "для управелния активностью в телеграм-каналах!\n Что вам нужно?"
 )
 
 main_menu_massage = "📌 Главное меню 📌"
-level_message = "Выберите категорию"
-terminus_message = "Категория: {type}\nВведите термин"
-transcription_message = "Введите транскрипцию"
-translation_message = "Введите перевод"
+activity_menu_massage = "🍌 Активность 🍌"
 
 
 MESSAGES = {
     "start": start_message,
     "main_menu": main_menu_massage,
-    "level": level_message,
-    "terminus": terminus_message,
-    "transcription": transcription_message,
-    "translation": translation_message,
+    "activity_menu": activity_menu_massage,
 }
