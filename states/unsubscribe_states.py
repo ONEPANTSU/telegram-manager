@@ -5,4 +5,3 @@ class UnsubscribeStates(StatesGroup):
     channel_link = State()
     number_of_accounts = State()
     delay = State()
-    

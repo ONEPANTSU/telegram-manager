@@ -1,4 +1,4 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
