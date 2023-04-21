@@ -1,8 +1,9 @@
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 
-class SubscribeStates(StatesGroup):
-    channel_link = State()
+class ReactionsStates(StatesGroup):
+    id_channel = State()
+    id_post = State()
+    number_of_button = State()
     number_of_accounts = State()
     delay = State()
-
