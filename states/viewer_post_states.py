@@ -7,4 +7,3 @@ class ViewerPostStates(StatesGroup):
     number_of_post = State()
     number_of_accounts = State()
     delay = State()
-
