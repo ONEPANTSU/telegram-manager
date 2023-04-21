@@ -11,6 +11,8 @@ from config import *
 from time import localtime
 from telethon import TelegramClient
 
+from useful.commands_handler import commands_handler
+
 
 async def add_user_button(message: Message):
     await message.answer(text=MESSAGES["user_phone"])

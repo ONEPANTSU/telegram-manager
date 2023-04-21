@@ -1,103 +1,239 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.callback_data import CallbackData
 
-from handlers.main.main_functions import main_menu
+from handlers.main.main_functions import main_menu, get_main_keyboard
+from handlers.users.users_handler import add_user_button
 from states import SubscribeStates, UnsubscribeStates, ViewerPostStates, ReactionsStates
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
+from useful.commands_handler import commands_handler
+from useful.instruments import bot
 
 
 def activity_keyboard():
-    sub_button = InlineKeyboardButton(BUTTONS['subscribe'], callback_data='subscribe_button')
-    unsub_button = InlineKeyboardButton(BUTTONS['unsubscribe'], callback_data='unsubscribe_button')
-    view_button = InlineKeyboardButton(BUTTONS['view'], callback_data='viewer_post_button')
-    react_button = InlineKeyboardButton(BUTTONS['react'], callback_data='reactions_button')
-    unsub_all_button = InlineKeyboardButton(BUTTONS['unsub_all'], callback_data='unsub_all_button')
-    act_keyboard = InlineKeyboardMarkup().add(sub_button, unsub_button, unsub_all_button, view_button, react_button)
+    sub_open_button = InlineKeyboardButton(text=BUTTONS['subscribe'], callback_data=subscribe_open_callback.new())
+    sub_close_button = InlineKeyboardButton(text=BUTTONS['subscribe'], callback_data=subscribe_close_callback.new())
+    unsub_open_button = InlineKeyboardButton(text=BUTTONS['unsubscribe'], callback_data=unsubscribe_open_callback.new())
+    unsub_close_button = InlineKeyboardButton(text=BUTTONS['unsubscribe'],
+                                              callback_data=unsubscribe_close_callback.new())
+    view_button = InlineKeyboardButton(text=BUTTONS['view'], callback_data=viewer_post_callback.new())
+    react_button = InlineKeyboardButton(text=BUTTONS['react'], callback_data=reactions_callback.new())
+    unsub_all_button = InlineKeyboardButton(text=BUTTONS['unsub_all'], callback_data=unsub_all_callback.new())
+    act_keyboard = InlineKeyboardMarkup().add(sub_open_button, sub_close_button, unsub_open_button, unsub_close_button,
+                                              unsub_all_button, view_button, react_button)
     return act_keyboard
 
 
-activity_callback = CallbackData("button")
+subscribe_open_callback = CallbackData("subscribe_open_button")
+subscribe_close_callback = CallbackData("subscribe_close_button")
+unsubscribe_open_callback = CallbackData("unsubscribe_open_button")
+unsubscribe_close_callback = CallbackData("unsubscribe_close_button")
+viewer_post_callback = CallbackData("viewer_post_button")
+reactions_callback = CallbackData("reactions_button")
+unsub_all_callback = CallbackData("unsub_all_button")
 
 
 async def chose_activity(message: Message):
     await message.reply(text=MESSAGES["chose_activity"], reply_markup=activity_keyboard())
 
-
-async def chose_activity_callback(message: Message, query: CallbackQuery, callback_data: dict):
-    answer = callback_data.get("button")
-    if answer == BUTTONS['subscribe']:
-        await subscribe_button(message)
-    elif answer == BUTTONS['unsubscribe_button']:
-        await unsubscribe_button(message)
-    elif answer == BUTTONS['viewer_post_button']:
-        await viewer_post_button(message)
-    elif answer == BUTTONS['reactions_button']:
-        await reactions_button(message)
-    elif answer == BUTTONS['viewer_post_button']:
-        await unsub_all_button(message)
-
-
 #для подписки
 
 
-async def subscribe_button(message: Message):
-    await message.answer(text=MESSAGES["channel_link"])
+async def subscribe_button(query: CallbackQuery, callback_data: dict):
+    await query.message.answer(text=MESSAGES["channel_link"])
     await SubscribeStates.channel_link.set()
 
 
 async def sub_channel_link_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(channel_link=answer)
-    await message.answer(text=MESSAGES["number_of_accounts"])
-    await SubscribeStates.number_of_accounts.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        await state.update_data(channel_link=answer)
+        await message.answer(text=MESSAGES["number_of_accounts"])
+        await SubscribeStates.number_of_accounts.set()
 
 
 async def sub_number_of_accounts_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(number_of_accounts=answer)
-    await message.answer(text=MESSAGES["delay"])
-    await SubscribeStates.delay.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await SubscribeStates.number_of_accounts.set()
+        else:
+            await state.update_data(number_of_accounts=answer)
+            await message.answer(text=MESSAGES["delay"])
+            await SubscribeStates.delay.set()
 
 
 async def sub_delay_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(delay=answer)
-    await message.answer(text=MESSAGES["subscribe"])
-    await state.finish()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await SubscribeStates.delay.set()
+        else:
+            await state.update_data(delay=answer)
+            await message.answer(text=MESSAGES["subscribe"])
+            await state.finish()
 
 #выбор приватный или неприватный канал
 
 #для отписки
 
 
-async def unsubscribe_button(message: Message):
-    await message.answer(text=MESSAGES["channel_link"])
+async def unsubscribe_button(query: CallbackQuery, callback_data: dict):
+    await query.message.answer(text=MESSAGES["channel_link"])
     await UnsubscribeStates.channel_link.set()
 
 
 async def unsub_channel_link_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(channel_link=answer)
-    await message.answer(text=MESSAGES["number_of_accounts"])
-    await SubscribeStates.number_of_accounts.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        await state.update_data(channel_link=answer)
+        await message.answer(text=MESSAGES["number_of_accounts"])
+        await UnsubscribeStates.number_of_accounts.set()
 
 
 async def unsub_number_of_accounts_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(number_of_accounts=answer)
-    await message.answer(text=MESSAGES["delay"])
-    await SubscribeStates.delay.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await UnsubscribeStates.number_of_accounts.set()
+        else:
+            await state.update_data(number_of_accounts=answer)
+            await message.answer(text=MESSAGES["delay"])
+            await UnsubscribeStates.delay.set()
 
 
 async def unsub_delay_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(delay=answer)
-    await message.answer(text=MESSAGES["unsubscribe"])
-    await state.finish()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await UnsubscribeStates.delay.set()
+        else:
+            await state.update_data(delay=answer)
+            await message.answer(text=MESSAGES["unsubscribe"])
+            await state.finish()
 
 #выбор приватный или неприватный канал
 
@@ -109,91 +245,348 @@ async def unsub_all_button(message: Message):
 
 #для просмотров постов
 
-async def viewer_post_button(message: Message):
-    await message.answer(text=MESSAGES["id_channel"])
+
+async def viewer_post_button(query: CallbackQuery, callback_data: dict):
+    await query.message.answer(text=MESSAGES["id_channel"])
     await ViewerPostStates.id_channel.set()
 
 
 async def viewer_id_channel_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(id_channel=answer)
-    await message.answer(text=MESSAGES["id_post"])
-    await ViewerPostStates.id_post.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ViewerPostStates.id_channel.set()
+        else:
+            await state.update_data(id_channel=answer)
+            await message.answer(text=MESSAGES["id_post"])
+            await ViewerPostStates.id_post.set()
 
 
 async def viewer_id_post_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(id_post=answer)
-    await message.answer(text=MESSAGES["number_of_post"])
-    await ViewerPostStates.number_of_post.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ViewerPostStates.id_post.set()
+        else:
+            await state.update_data(id_post=answer)
+            await message.answer(text=MESSAGES["number_of_post"])
+            await ViewerPostStates.number_of_post.set()
 
 
 async def number_of_post_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(number_of_post=answer)
-    await message.answer(text=MESSAGES["number_of_accounts"])
-    await ViewerPostStates.number_of_accounts.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ViewerPostStates.number_of_post.set()
+        else:
+            await state.update_data(number_of_post=answer)
+            await message.answer(text=MESSAGES["number_of_accounts"])
+            await ViewerPostStates.number_of_accounts.set()
 
 
 async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(number_of_accounts=answer)
-    await message.answer(text=MESSAGES["delay"])
-    await ViewerPostStates.delay.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ViewerPostStates.number_of_accounts.set()
+        else:
+            await state.update_data(number_of_accounts=answer)
+            await message.answer(text=MESSAGES["delay"])
+            await ViewerPostStates.delay.set()
 
 
 async def viewer_delay_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(delay=answer)
-    await message.answer(text=MESSAGES["viewer_post"])
-    await state.finish()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ViewerPostStates.delay.set()
+        else:
+            await state.update_data(delay=answer)
+            await message.answer(text=MESSAGES["viewer_post"])
+            await state.finish()
 
 #для реакций
 
 
-async def reactions_button(message: Message):
-    await message.answer(text=MESSAGES["id_channel"])
+async def reactions_button(query: CallbackQuery, callback_data: dict):
+    await query.message.answer(text=MESSAGES["id_channel"])
     await ReactionsStates.id_channel.set()
 
 
 async def reactions_id_channel_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(id_channel=answer)
-    await message.answer(text=MESSAGES["id_post"])
-    await ReactionsStates.id_post.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ReactionsStates.id_channel.set()
+        else:
+            await state.update_data(id_channel=answer)
+            await message.answer(text=MESSAGES["id_post"])
+            await ReactionsStates.id_post.set()
 
 
 async def reactions_id_post_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(id_post=answer)
-    await message.answer(text=MESSAGES["number_of_button"])
-    await ReactionsStates.number_of_button.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ReactionsStates.id_post.set()
+        else:
+            await state.update_data(id_post=answer)
+            await message.answer(text=MESSAGES["number_of_button"])
+            await ReactionsStates.number_of_button.set()
 
 
 async def number_of_button_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(number_of_button=answer)
-    await message.answer(text=MESSAGES["number_of_accounts"])
-    await ReactionsStates.number_of_accounts.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ReactionsStates.number_of_button.set()
+        else:
+            await state.update_data(number_of_button=answer)
+            await message.answer(text=MESSAGES["number_of_accounts"])
+            await ReactionsStates.number_of_accounts.set()
 
 
 async def reactions_number_of_accounts_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(number_of_accounts=answer)
-    await message.answer(text=MESSAGES["delay"])
-    await ReactionsStates.delay.set()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ReactionsStates.number_of_accounts.set()
+        else:
+            await state.update_data(number_of_accounts=answer)
+            await message.answer(text=MESSAGES["delay"])
+            await ReactionsStates.delay.set()
 
 
 async def reactions_delay_state(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(delay=answer)
-    await message.answer(text=MESSAGES["reactions"])
-    await state.finish()
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+    elif answer == BUTTONS["users_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+    elif answer == BUTTONS["activity_button"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+    else:
+        if not answer.isdigit():
+            await message.answer(
+                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ReactionsStates.delay.set()
+        else:
+            await state.update_data(delay=answer)
+            await message.answer(text=MESSAGES["reactions"])
+            await state.finish()
 
 
 def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(chose_activity, text=[BUTTONS["activity"]])
-    dp.register_callback_query_handler(chose_activity_callback, activity_callback.filter())
+    dp.register_callback_query_handler(subscribe_button, subscribe_open_callback.filter())
+    dp.register_callback_query_handler(subscribe_button, subscribe_close_callback.filter())
+    dp.register_callback_query_handler(unsubscribe_button, unsubscribe_open_callback.filter())
+    dp.register_callback_query_handler(unsubscribe_button, unsubscribe_close_callback.filter())
+    dp.register_callback_query_handler(viewer_post_button, viewer_post_callback.filter())
+    dp.register_callback_query_handler(reactions_button, reactions_callback.filter())
+    dp.register_callback_query_handler(chose_activity, unsub_all_callback.filter())
     dp.register_message_handler(sub_channel_link_state, state=SubscribeStates.channel_link)
     dp.register_message_handler(sub_number_of_accounts_state, state=SubscribeStates.number_of_accounts)
     dp.register_message_handler(sub_delay_state, state=SubscribeStates.delay)

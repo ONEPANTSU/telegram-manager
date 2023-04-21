@@ -5,6 +5,8 @@ start_message = (
 
 main_menu_massage = "📌 Главное меню 📌"
 activity_menu_massage = "🍌 Активность 🍌"
+user_message = "Начинается добавление аккаунта"
+parser_message = "Начинается parsing"
 user_phone_message = "Введите номер телефона 📞"
 user_password_message = "Введите пароль"
 user_sms_message = "Введите код"
@@ -22,11 +24,15 @@ viewer_post_message = "Посты просмотрены"
 number_of_button_message = "Введите номер кнопки"
 reactions_message = "Нажатие кнопки произошло успешно"
 
+isdigit_message = "Жду от вас циферки"
+
 
 MESSAGES = {
     "start": start_message,
     "main_menu": main_menu_massage,
     "activity_menu": activity_menu_massage,
+    "user": user_message,
+    "parser": parser_message,
     "user_phone": user_phone_message,
     "user_password": user_password_message,
     "user_sms": user_sms_message,
@@ -42,5 +48,6 @@ MESSAGES = {
     "number_of_button": number_of_button_message,
     "reactions": reactions_message,
     "chose_activity": chose_activity_message,
+    "isdigit": isdigit_message,
 }
 
