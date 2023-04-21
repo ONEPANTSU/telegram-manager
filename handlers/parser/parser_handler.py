@@ -24,7 +24,7 @@ async def parser_link_channel_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -32,7 +32,7 @@ async def parser_link_channel_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],

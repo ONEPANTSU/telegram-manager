@@ -14,10 +14,12 @@ from useful.instruments import bot
 
 
 def activity_keyboard():
-    sub_open_button = InlineKeyboardButton(text=BUTTONS['subscribe'], callback_data=subscribe_open_callback.new())
-    sub_close_button = InlineKeyboardButton(text=BUTTONS['subscribe'], callback_data=subscribe_close_callback.new())
-    unsub_open_button = InlineKeyboardButton(text=BUTTONS['unsubscribe'], callback_data=unsubscribe_open_callback.new())
-    unsub_close_button = InlineKeyboardButton(text=BUTTONS['unsubscribe'],
+    sub_open_button = InlineKeyboardButton(text=BUTTONS['subscribe_open'], callback_data=subscribe_open_callback.new())
+    sub_close_button = InlineKeyboardButton(text=BUTTONS['subscribe_close'],
+                                            callback_data=subscribe_close_callback.new())
+    unsub_open_button = InlineKeyboardButton(text=BUTTONS['unsubscribe_open'],
+                                             callback_data=unsubscribe_open_callback.new())
+    unsub_close_button = InlineKeyboardButton(text=BUTTONS['unsubscribe_close'],
                                               callback_data=unsubscribe_close_callback.new())
     view_button = InlineKeyboardButton(text=BUTTONS['view'], callback_data=viewer_post_callback.new())
     react_button = InlineKeyboardButton(text=BUTTONS['react'], callback_data=reactions_callback.new())
@@ -52,7 +54,7 @@ async def sub_channel_link_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -60,7 +62,7 @@ async def sub_channel_link_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -78,7 +80,7 @@ async def sub_number_of_accounts_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -86,7 +88,7 @@ async def sub_number_of_accounts_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -110,7 +112,7 @@ async def sub_delay_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -118,7 +120,7 @@ async def sub_delay_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -151,7 +153,7 @@ async def unsub_channel_link_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -159,7 +161,7 @@ async def unsub_channel_link_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -177,7 +179,7 @@ async def unsub_number_of_accounts_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -185,7 +187,7 @@ async def unsub_number_of_accounts_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -209,7 +211,7 @@ async def unsub_delay_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -217,7 +219,7 @@ async def unsub_delay_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -256,7 +258,7 @@ async def viewer_id_channel_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -264,7 +266,7 @@ async def viewer_id_channel_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -288,7 +290,7 @@ async def viewer_id_post_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -296,7 +298,7 @@ async def viewer_id_post_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -320,7 +322,7 @@ async def number_of_post_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -328,7 +330,7 @@ async def number_of_post_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -352,7 +354,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -360,7 +362,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -384,7 +386,7 @@ async def viewer_delay_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -392,7 +394,7 @@ async def viewer_delay_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -423,7 +425,7 @@ async def reactions_id_channel_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -431,7 +433,7 @@ async def reactions_id_channel_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -455,7 +457,7 @@ async def reactions_id_post_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -463,7 +465,7 @@ async def reactions_id_post_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -487,7 +489,7 @@ async def number_of_button_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -495,7 +497,7 @@ async def number_of_button_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -519,7 +521,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -527,7 +529,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
@@ -551,7 +553,7 @@ async def reactions_delay_state(message: Message, state: FSMContext):
     if answer.lstrip("/") in COMMANDS.values():
         await state.finish()
         await commands_handler(message)
-    elif answer == BUTTONS["users_button"]:
+    elif answer == BUTTONS["users"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["user"],
@@ -559,7 +561,7 @@ async def reactions_delay_state(message: Message, state: FSMContext):
         )
         await add_user_button(message)
         await state.finish()
-    elif answer == BUTTONS["activity_button"]:
+    elif answer == BUTTONS["activity"]:
         await bot.send_message(
             chat_id=message.chat.id,
             text=MESSAGES["activity_menu"],
