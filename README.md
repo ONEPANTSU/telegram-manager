@@ -1,2 +1,0 @@
-# CMBot
-Content Making Bot
