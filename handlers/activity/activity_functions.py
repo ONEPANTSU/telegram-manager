@@ -178,7 +178,8 @@ async def leave_all_channels(delay):
 
 async def view_post(channel_link, last_post_id, count_posts, count_accounts, delay):
     accounts = await get_accounts()
-
+    if "https://t.me/+" in channel_link:
+        channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     for account in range(count_accounts):
         account = accounts[account]
         phone = await account.get_me()
@@ -205,8 +206,10 @@ async def view_post(channel_link, last_post_id, count_posts, count_accounts, del
     disconnect_all(accounts)
 
 
-async def click_on_button(chanel_name, post_id, position, count, delay):
+async def click_on_button(channel_link, post_id, position, count, delay):
     accounts = await get_accounts()
+    if "https://t.me/+" in channel_link:
+        channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     for account in range(count):
         account = accounts[account]
         phone = await account.get_me()
@@ -214,9 +217,9 @@ async def click_on_button(chanel_name, post_id, position, count, delay):
             await account(
                 functions.account.UpdateStatusRequest(offline=False)
             )  # Go to online
-            message = await account.get_messages(chanel_name, ids=[int(post_id)])
+            message = await account.get_messages(channel_link, ids=[int(post_id)])
             await message[0].click(position - 1)
-            print(f"{phone.phone} нажал на кнопку в {chanel_name}")
+            print(f"{phone.phone} нажал на кнопку в {channel_link}")
         except Exception as error:
             print(str(error))
         await asyncio.sleep(delay)

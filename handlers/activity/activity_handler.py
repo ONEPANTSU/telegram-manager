@@ -348,22 +348,16 @@ async def viewer_delay_state(message: Message, state: FSMContext):
 
 
 async def reactions_query(query: CallbackQuery):
-    await query.message.answer(text=MESSAGES["id_channel"])
+    await query.message.answer(text=MESSAGES["channel_link"])
     await ReactionsStates.id_channel.set()
 
 
 async def reactions_id_channel_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        if not answer.isdigit():
-            await message.answer(
-                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
-            )
-            await ReactionsStates.id_channel.set()
-        else:
-            await state.update_data(id_channel=answer)
-            await message.answer(text=MESSAGES["id_post"])
-            await ReactionsStates.id_post.set()
+        await state.update_data(channel_link=answer)
+        await message.answer(text=MESSAGES["id_post"])
+        await ReactionsStates.id_post.set()
 
 
 async def reactions_id_post_state(message: Message, state: FSMContext):
@@ -375,7 +369,7 @@ async def reactions_id_post_state(message: Message, state: FSMContext):
             )
             await ReactionsStates.id_post.set()
         else:
-            await state.update_data(id_post=answer)
+            await state.update_data(post_id=int(answer))
             await message.answer(text=MESSAGES["number_of_button"])
             await ReactionsStates.number_of_button.set()
 
@@ -389,7 +383,7 @@ async def number_of_button_state(message: Message, state: FSMContext):
             )
             await ReactionsStates.number_of_button.set()
         else:
-            await state.update_data(number_of_button=answer)
+            await state.update_data(position=int(answer))
             await message.answer(text=MESSAGES["number_of_accounts"])
             await ReactionsStates.number_of_accounts.set()
 
@@ -403,7 +397,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
             )
             await ReactionsStates.number_of_accounts.set()
         else:
-            await state.update_data(number_of_accounts=answer)
+            await state.update_data(count=int(answer))
             await message.answer(text=MESSAGES["delay"])
             await ReactionsStates.delay.set()
 
@@ -417,7 +411,15 @@ async def reactions_delay_state(message: Message, state: FSMContext):
             )
             await ReactionsStates.delay.set()
         else:
-            await state.update_data(delay=answer)
+            await state.update_data(delay=int(answer))
+            data = await state.get_data()
+            await click_on_button(
+                data["channel_link"],
+                data["post_id"],
+                data["position"],
+                data["count"],
+                data["delay"],
+            )
             await message.answer(text=MESSAGES["reactions"])
             await state.finish()
 
