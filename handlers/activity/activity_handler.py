@@ -177,7 +177,7 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
 async def unsubscribe_query(
     query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
-    await query.message.answer(text=MESSAGES["channel_link"])
+    await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     is_public = callback_data.get("is_public")
     await state.update_data(is_public=is_public)
     await UnsubscribeStates.channel_link.set()
@@ -261,7 +261,7 @@ async def unsubscribe_all_query():
 
 
 async def viewer_post_button(query: CallbackQuery):
-    await query.message.answer(text=MESSAGES["channel_link"])
+    await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await ViewerPostStates.id_channel.set()
 
 
@@ -348,7 +348,7 @@ async def viewer_delay_state(message: Message, state: FSMContext):
 
 
 async def reactions_query(query: CallbackQuery):
-    await query.message.answer(text=MESSAGES["channel_link"])
+    await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await ReactionsStates.id_channel.set()
 
 

@@ -7,6 +7,8 @@ unsubscribe_private_button = "Отписаться от приватного к�
 unsubscribe_all_button = "Отписаться от всех каналов ➖"
 view_button = "Посмотреть посты 👀"
 react_button = "Накрутить реакции 💥"
+yes_button = "Да"
+no_button = "Нет"
 
 
 users_button = "Аккаунты ➕"
@@ -26,4 +28,6 @@ BUTTONS = {
     "unsubscribe_all": unsubscribe_all_button,
     "view": view_button,
     "react": react_button,
+    "yes": yes_button,
+    "no": no_button,
 }

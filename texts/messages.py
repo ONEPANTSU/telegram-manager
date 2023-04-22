@@ -22,9 +22,8 @@ number_of_post_message = "Введите количество постов"
 viewer_post_message = "Посты просмотрены"
 number_of_button_message = "Введите номер кнопки"
 reactions_message = "Нажатие кнопки произошло успешно"
-
+user_ask_message = "Аккаунт с паролем?"
 isdigit_message = "Жду от вас циферки"
-
 
 MESSAGES = {
     "start": start_message,
@@ -48,4 +47,5 @@ MESSAGES = {
     "reactions": reactions_message,
     "chose_activity": chose_activity_message,
     "isdigit": isdigit_message,
+    "user_ask": user_ask_message,
 }
