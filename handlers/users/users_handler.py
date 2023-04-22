@@ -11,7 +11,7 @@ from texts.messages import MESSAGES
 from useful.instruments import clients, code
 
 
-async def sms_state(message: Message, state: FSMContext) -> str:
+async def sms_state(message: Message, state: FSMContext):
     phone = (await state.get_data())["phone"]
     password = (await state.get_data())["password"]
     code[phone] = message.text
@@ -46,17 +46,6 @@ async def password_state(message: Message, state: FSMContext):
     phone = (await state.get_data())["phone"]
     await message.answer(text=MESSAGES["user_sms"])
     await connect(phone, password, state)
-
-
-#
-# async def sms_state(message: Message, state: FSMContext):
-#     sms = message.text
-#     await state.update_data(sms=sms)
-#     if phone:
-#         client = TelegramClient(f'base/{phone}', API_ID, API_HASH)
-#         client.start(phone=phone)
-#     await message.answer(text=MESSAGES["user_password"])
-#     await state.finish()
 
 
 def register_users_handlers(dp: Dispatcher):

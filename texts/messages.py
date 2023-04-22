@@ -50,4 +50,3 @@ MESSAGES = {
     "chose_activity": chose_activity_message,
     "isdigit": isdigit_message,
 }
-
