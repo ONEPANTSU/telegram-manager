@@ -6,10 +6,9 @@ from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 
+
 async def help_command(message: Message):
-    await message.answer(
-        text=MESSAGES["faq"]
-    )
+    await message.answer(text=MESSAGES["faq"])
 
 
 async def start_command(message: Message):

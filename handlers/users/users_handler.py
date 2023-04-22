@@ -1,6 +1,11 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 from aiogram.utils.callback_data import CallbackData
 from telethon import TelegramClient
 
@@ -24,9 +29,16 @@ async def phone_state(message: Message, state: FSMContext):
     await message.answer(text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone))
     await state.finish()
 
+
 def ask_keyboard(phone):
-    yes_button = InlineKeyboardButton(text=BUTTONS['yes'], callback_data=yes_no_callback.new(answer=BUTTONS['yes'], phone=phone))
-    no_button = InlineKeyboardButton(text=BUTTONS['no'], callback_data=yes_no_callback.new(answer=BUTTONS['no'], phone=phone))
+    yes_button = InlineKeyboardButton(
+        text=BUTTONS["yes"],
+        callback_data=yes_no_callback.new(answer=BUTTONS["yes"], phone=phone),
+    )
+    no_button = InlineKeyboardButton(
+        text=BUTTONS["no"],
+        callback_data=yes_no_callback.new(answer=BUTTONS["no"], phone=phone),
+    )
     act_keyboard = InlineKeyboardMarkup(row_width=2).add(yes_button, no_button)
 
     return act_keyboard
@@ -38,10 +50,10 @@ async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext
 
     await state.update_data(phone=phone)
     await state.update_data(is_password=answer)
-    if answer == BUTTONS['yes']:
+    if answer == BUTTONS["yes"]:
         await query.message.edit_text(text=MESSAGES["user_password"], reply_markup=None)
         await AddUserStates.password.set()
-    elif answer == BUTTONS['no']:
+    elif answer == BUTTONS["no"]:
         await query.message.answer(text=MESSAGES["user_sms"])
         await connect(state=state, phone=phone)
 
@@ -73,9 +85,7 @@ async def sms_state(message: Message, state: FSMContext):
             phone=phone, password=password, code_callback=code[phone]
         )
     else:
-        await clients[phone]._start(
-            phone=phone, code_callback=code[phone]
-        )
+        await clients[phone]._start(phone=phone, code_callback=code[phone])
     await state.finish()
 
 

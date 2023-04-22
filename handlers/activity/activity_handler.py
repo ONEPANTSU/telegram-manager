@@ -76,15 +76,12 @@ def activity_keyboard():
     react_button = InlineKeyboardButton(
         text=BUTTONS["react"], callback_data=reactions_callback.new()
     )
-    unsubscribe_all_button = InlineKeyboardButton(
-        text=BUTTONS["unsubscribe_all"], callback_data=unsubscribe_all_callback.new()
-    )
+
     act_keyboard = InlineKeyboardMarkup(row_width=1).add(
         subscribe_public_button,
         subscribe_private_button,
         unsubscribe_public_button,
         unsubscribe_private_button,
-        unsubscribe_all_button,
         view_button,
         react_button,
     )
@@ -231,23 +228,6 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
                 )
             await message.answer(text=MESSAGES["unsubscribe"])
             await state.finish()
-
-
-# выбор приватный или неприватный канал
-
-
-"""
-  UNSUBSCRIBE ALL CHANNELS STATES⠀⠀⠀⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-"""
-
-
-async def unsubscribe_all_query():
-    pass
 
 
 """

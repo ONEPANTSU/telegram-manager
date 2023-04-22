@@ -151,31 +151,6 @@ async def leave_private_channel(channel_link, count, delay):
     disconnect_all(accounts)
 
 
-async def leave_all_channels(delay):
-    accounts = await get_accounts()
-
-    with open("exceptions.txt") as file:
-        exceptions = file.read().split("\n")
-        if "\n" in exceptions:
-            exceptions.remove("\n")
-
-    for account in accounts:
-        exceptions = []
-        for exception in exceptions:
-            chat = await account.get_entity(exception)
-            exceptions.append(chat.title)
-
-        async for dialog in account.iter_dialogs():
-            await account(
-                functions.account.UpdateStatusRequest(offline=False)
-            )  # Go to online
-            if dialog not in exceptions:
-                await dialog.delete()
-            await asyncio.sleep(delay)
-        await asyncio.sleep(delay)
-    disconnect_all(accounts)
-
-
 async def view_post(channel_link, last_post_id, count_posts, count_accounts, delay):
     accounts = await get_accounts()
     if "https://t.me/+" in channel_link:
