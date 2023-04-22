@@ -26,6 +26,19 @@ reactions_message = "Нажатие кнопки произошло успешн
 user_ask_message = "Аккаунт с паролем?"
 isdigit_message = "Жду от вас циферки"
 
+
+#информирование пользователя и ошибки
+
+authorisation_error_message = "Произошла ошибка авторизации"
+phone_error_message = "Телефон введен неверно. Убедитесь, что номер начинается с знака '+'"
+sms_error_message = "Код введен неверно"
+password_error_message = "Пароль введен неверно"
+authorisation_success_message = "Авторизация прошла успешно. Пользователь: "
+available_bot_message = "Доступных ботов на данный момент: "
+
+
+
+
 MESSAGES = {
     "start": start_message,
     "main_menu": main_menu_massage,
@@ -49,5 +62,11 @@ MESSAGES = {
     "reactions": reactions_message,
     "chose_activity": chose_activity_message,
     "isdigit": isdigit_message,
-    "user_ask": user_ask_message,
+    "authorisation_error": authorisation_error_message,
+    "phone_error": phone_error_message,
+    "sms_error": sms_error_message,
+    "password_error": password_error_message,
+    "authorisation_success_error": authorisation_success_message,
+    "available_bot": available_bot_message,
+
 }

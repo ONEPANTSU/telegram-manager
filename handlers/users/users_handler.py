@@ -5,6 +5,7 @@ from aiogram.utils.callback_data import CallbackData
 from telethon import TelegramClient
 
 from config import *
+from handlers.activity.activity_handler import not_command_checker
 from states import AddUserStates
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
@@ -19,10 +20,12 @@ async def add_user_button(message: Message):
 
 
 async def phone_state(message: Message, state: FSMContext):
-    phone = message.text
-    await state.update_data(phone=phone)
-    await message.answer(text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone))
-    await state.finish()
+    if await not_command_checker(message=message, state=state):
+        phone = message.text
+        await state.update_data(phone=phone)
+        await message.answer(text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone))
+        await state.finish()
+
 
 def ask_keyboard(phone):
     yes_button = InlineKeyboardButton(text=BUTTONS['yes'], callback_data=yes_no_callback.new(answer=BUTTONS['yes'], phone=phone))
@@ -33,25 +36,27 @@ def ask_keyboard(phone):
 
 
 async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
-    answer = callback_data["answer"]
-    phone = callback_data["phone"]
+    if await not_command_checker(message=message, state=state):
+        answer = callback_data["answer"]
+        phone = callback_data["phone"]
 
-    await state.update_data(phone=phone)
-    await state.update_data(is_password=answer)
-    if answer == BUTTONS['yes']:
-        await query.message.edit_text(text=MESSAGES["user_password"], reply_markup=None)
-        await AddUserStates.password.set()
-    elif answer == BUTTONS['no']:
-        await query.message.answer(text=MESSAGES["user_sms"])
-        await connect(state=state, phone=phone)
+        await state.update_data(phone=phone)
+        await state.update_data(is_password=answer)
+        if answer == BUTTONS['yes']:
+            await query.message.edit_text(text=MESSAGES["user_password"], reply_markup=None)
+            await AddUserStates.password.set()
+        elif answer == BUTTONS['no']:
+            await query.message.answer(text=MESSAGES["user_sms"])
+            await connect(state=state, phone=phone)
 
 
 async def password_state(message: Message, state: FSMContext):
-    password = message.text
-    await state.update_data(password=password)
-    phone = (await state.get_data())["phone"]
-    await message.answer(text=MESSAGES["user_sms"])
-    await connect(phone=phone, password=password, state=state)
+    if await not_command_checker(message=message, state=state):
+        password = message.text
+        await state.update_data(password=password)
+        phone = (await state.get_data())["phone"]
+        await message.answer(text=MESSAGES["user_sms"])
+        await connect(phone=phone, password=password, state=state)
 
 
 async def connect(state, phone, password=None):
@@ -64,19 +69,20 @@ async def connect(state, phone, password=None):
 
 
 async def sms_state(message: Message, state: FSMContext):
-    phone = (await state.get_data())["phone"]
-    code[phone] = message.text
-    is_password = (await state.get_data())["is_password"]
-    if is_password == BUTTONS["yes"]:
-        password = (await state.get_data())["password"]
-        await clients[phone]._start(
-            phone=phone, password=password, code_callback=code[phone]
-        )
-    else:
-        await clients[phone]._start(
-            phone=phone, code_callback=code[phone]
-        )
-    await state.finish()
+    if await not_command_checker(message=message, state=state):
+        phone = (await state.get_data())["phone"]
+        code[phone] = message.text
+        is_password = (await state.get_data())["is_password"]
+        if is_password == BUTTONS["yes"]:
+            password = (await state.get_data())["password"]
+            await clients[phone]._start(
+                phone=phone, password=password, code_callback=code[phone]
+            )
+        else:
+            await clients[phone]._start(
+                phone=phone, code_callback=code[phone]
+            )
+        await state.finish()
 
 
 def register_users_handlers(dp: Dispatcher):
