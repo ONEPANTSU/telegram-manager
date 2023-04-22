@@ -3,13 +3,12 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
 from handlers.activity.activity_handler import activity_keyboard
-from handlers.main.main_functions import main_menu, get_main_keyboard
+from handlers.main.main_functions import get_main_keyboard, main_menu
 from handlers.users.users_handler import add_user_button
 from states import ParserStates
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
-
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 
@@ -54,5 +53,6 @@ async def parser_link_channel_state(message: Message, state: FSMContext):
 
 def register_users_handlers(dp: Dispatcher):
     dp.register_message_handler(parser_button, text=[BUTTONS["parse"]])
-    dp.register_message_handler(parser_link_channel_state, state=ParserStates.link_channel)
-
+    dp.register_message_handler(
+        parser_link_channel_state, state=ParserStates.link_channel
+    )
