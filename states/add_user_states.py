@@ -5,3 +5,4 @@ class AddUserStates(StatesGroup):
     phone = State()
     sms = State()
     password = State()
+    ask = State()
