@@ -22,6 +22,7 @@ activity_menu_massage = "🍌 Активность 🍌"
 user_message = "Начинается добавление аккаунта"
 parser_message = "Начинается parsing"
 user_phone_message = "Введите номер телефона ☎️"
+user_ask_message = "Аккаунт с паролем?"
 user_password_message = "Введите пароль"
 user_sms_message = "Введите код"
 chose_activity_message = "Что будем делать?"
@@ -46,6 +47,7 @@ MESSAGES = {
     "user": user_message,
     "parser": parser_message,
     "user_phone": user_phone_message,
+    "user_ask": user_ask_message,
     "user_password": user_password_message,
     "user_sms": user_sms_message,
     "channel_link": channel_link_message,

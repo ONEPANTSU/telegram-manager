@@ -14,6 +14,9 @@ no_button = "Нет"
 users_button = "Аккаунты ➕"
 parse_button = "Парсер 👥"
 
+yes_button = "Да"
+no_button = "Нет"
+
 back_button = "Назад 👈️"
 
 BUTTONS = {
