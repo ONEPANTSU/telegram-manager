@@ -151,7 +151,7 @@ async def leave_private_channel(channel_link, count, delay):
     disconnect_all(accounts)
 
 
-async def leave_all_chanels(delay):
+async def leave_all_channels(delay):
     accounts = await get_accounts()
 
     with open("exceptions.txt") as file:
@@ -176,7 +176,7 @@ async def leave_all_chanels(delay):
     disconnect_all(accounts)
 
 
-async def view_post(chanel_name, last_post_id, count_posts, count_accounts, delay):
+async def view_post(channel_link, last_post_id, count_posts, count_accounts, delay):
     accounts = await get_accounts()
 
     for account in range(count_accounts):
@@ -188,7 +188,7 @@ async def view_post(chanel_name, last_post_id, count_posts, count_accounts, dela
             )  # Go to online
             await account(
                 functions.messages.GetMessagesViewsRequest(
-                    peer=chanel_name,
+                    peer=channel_link,
                     id=[
                         post_id
                         for post_id in range(
@@ -198,7 +198,7 @@ async def view_post(chanel_name, last_post_id, count_posts, count_accounts, dela
                     increment=True,
                 )
             )
-            print(f"{phone.phone} посмторел посты в {chanel_name}")
+            print(f"{phone.phone} посмторел посты в {channel_link}")
         except Exception as error:
             print(str(error))
         await asyncio.sleep(delay)

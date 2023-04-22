@@ -56,7 +56,7 @@ async def not_command_checker(message: Message, state: FSMContext):
 def activity_keyboard():
     subscribe_public_button = InlineKeyboardButton(
         text=BUTTONS["subscribe_public"],
-        callback_data=subscribe_callback.new(is_public=True)
+        callback_data=subscribe_callback.new(is_public=True),
     )
     subscribe_private_button = InlineKeyboardButton(
         text=BUTTONS["subscribe_private"],
@@ -71,16 +71,13 @@ def activity_keyboard():
         callback_data=unsubscribe_callback.new(is_public=False),
     )
     view_button = InlineKeyboardButton(
-        text=BUTTONS["view"],
-        callback_data=viewer_post_callback.new()
+        text=BUTTONS["view"], callback_data=viewer_post_callback.new()
     )
     react_button = InlineKeyboardButton(
-        text=BUTTONS["react"],
-        callback_data=reactions_callback.new()
+        text=BUTTONS["react"], callback_data=reactions_callback.new()
     )
     unsubscribe_all_button = InlineKeyboardButton(
-        text=BUTTONS["unsubscribe_all"],
-        callback_data=unsubscribe_all_callback.new()
+        text=BUTTONS["unsubscribe_all"], callback_data=unsubscribe_all_callback.new()
     )
     act_keyboard = InlineKeyboardMarkup(row_width=1).add(
         subscribe_public_button,
@@ -177,7 +174,9 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
 """
 
 
-async def unsubscribe_query(query: CallbackQuery, callback_data: dict, state: FSMContext):
+async def unsubscribe_query(
+    query: CallbackQuery, callback_data: dict, state: FSMContext
+):
     await query.message.answer(text=MESSAGES["channel_link"])
     is_public = callback_data.get("is_public")
     await state.update_data(is_public=is_public)
@@ -262,22 +261,16 @@ async def unsubscribe_all_query():
 
 
 async def viewer_post_button(query: CallbackQuery):
-    await query.message.answer(text=MESSAGES["id_channel"])
+    await query.message.answer(text=MESSAGES["channel_link"])
     await ViewerPostStates.id_channel.set()
 
 
 async def viewer_id_channel_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        if not answer.isdigit():
-            await message.answer(
-                text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
-            )
-            await ViewerPostStates.id_channel.set()
-        else:
-            await state.update_data(id_channel=answer)
-            await message.answer(text=MESSAGES["id_post"])
-            await ViewerPostStates.id_post.set()
+        await state.update_data(channel_link=answer)
+        await message.answer(text=MESSAGES["id_post"])
+        await ViewerPostStates.id_post.set()
 
 
 async def viewer_id_post_state(message: Message, state: FSMContext):
@@ -289,7 +282,7 @@ async def viewer_id_post_state(message: Message, state: FSMContext):
             )
             await ViewerPostStates.id_post.set()
         else:
-            await state.update_data(id_post=answer)
+            await state.update_data(last_post_id=int(answer))
             await message.answer(text=MESSAGES["number_of_post"])
             await ViewerPostStates.number_of_post.set()
 
@@ -303,7 +296,7 @@ async def number_of_post_state(message: Message, state: FSMContext):
             )
             await ViewerPostStates.number_of_post.set()
         else:
-            await state.update_data(number_of_post=answer)
+            await state.update_data(count_posts=int(answer))
             await message.answer(text=MESSAGES["number_of_accounts"])
             await ViewerPostStates.number_of_accounts.set()
 
@@ -317,7 +310,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
             )
             await ViewerPostStates.number_of_accounts.set()
         else:
-            await state.update_data(number_of_accounts=answer)
+            await state.update_data(count_accounts=int(answer))
             await message.answer(text=MESSAGES["delay"])
             await ViewerPostStates.delay.set()
 
@@ -331,7 +324,15 @@ async def viewer_delay_state(message: Message, state: FSMContext):
             )
             await ViewerPostStates.delay.set()
         else:
-            await state.update_data(delay=answer)
+            await state.update_data(delay=int(answer))
+            data = await state.get_data()
+            await view_post(
+                data["channel_link"],
+                data["last_post_id"],
+                data["count_posts"],
+                data["count_accounts"],
+                data["delay"],
+            )
             await message.answer(text=MESSAGES["viewer_post"])
             await state.finish()
 
@@ -423,12 +424,8 @@ async def reactions_delay_state(message: Message, state: FSMContext):
 
 def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(chose_activity, text=[BUTTONS["activity"]])
-    dp.register_callback_query_handler(
-        subscribe_query, subscribe_callback.filter()
-    )
-    dp.register_callback_query_handler(
-        unsubscribe_query, unsubscribe_callback.filter()
-    )
+    dp.register_callback_query_handler(subscribe_query, subscribe_callback.filter())
+    dp.register_callback_query_handler(unsubscribe_query, unsubscribe_callback.filter())
     dp.register_callback_query_handler(
         viewer_post_button, viewer_post_callback.filter()
     )

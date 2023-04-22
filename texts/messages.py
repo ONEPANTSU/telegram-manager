@@ -10,14 +10,13 @@ parser_message = "Начинается parsing"
 user_phone_message = "Введите номер телефона ☎️"
 user_password_message = "Введите пароль"
 user_sms_message = "Введите код"
-
 chose_activity_message = "Что будем делать?"
 channel_link_message = "Введите ссылку на канал"
+channel_name_message = "Введите название канала"
 number_of_accounts_message = "Введите количество аккаунтов"
 delay_message = "Введите задержку"
 subscribe_message = "Подписка на канал осуществлена"
 unsubscribe_message = "Отписка от канала осуществлена"
-id_channel_message = "Введите id канала"
 id_post_message = "Введите id поста"
 number_of_post_message = "Введите количество постов"
 viewer_post_message = "Посты просмотрены"
@@ -37,11 +36,11 @@ MESSAGES = {
     "user_password": user_password_message,
     "user_sms": user_sms_message,
     "channel_link": channel_link_message,
+    "channel_name": channel_name_message,
     "number_of_accounts": number_of_accounts_message,
     "delay": delay_message,
     "subscribe": subscribe_message,
     "unsubscribe": unsubscribe_message,
-    "id_channel": id_channel_message,
     "id_post": id_post_message,
     "number_of_post": number_of_post_message,
     "viewer_post": viewer_post_message,
