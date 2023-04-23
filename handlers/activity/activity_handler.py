@@ -1,91 +1,14 @@
 from aiogram import Dispatcher
-from aiogram.dispatcher import FSMContext
 from aiogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Message,
     ReplyKeyboardRemove,
 )
-from aiogram.utils.callback_data import CallbackData
-
 from handlers.activity.activity_functions import *
-from handlers.main.main_functions import get_main_keyboard
-from handlers.users.users_handler import add_user_button
 from states import ReactionsStates, SubscribeStates, UnsubscribeStates, ViewerPostStates
 from texts.buttons import BUTTONS
-from texts.commands import COMMANDS
 from texts.messages import MESSAGES
-from useful.commands_handler import commands_handler
-from useful.instruments import bot
-
-subscribe_callback = CallbackData("subscribe_public_button", "is_public")
-unsubscribe_callback = CallbackData("unsubscribe_public_button", "is_public")
-unsubscribe_all_callback = CallbackData("unsubscribe_all_button")
-viewer_post_callback = CallbackData("viewer_post_button")
-reactions_callback = CallbackData("reactions_button")
-
-
-async def not_command_checker(message: Message, state: FSMContext):
-    answer = message.text
-    if answer.lstrip("/") in COMMANDS.values():
-        await state.finish()
-        await commands_handler(message)
-        return False
-    elif answer == BUTTONS["users"]:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["user"],
-            reply_markup=get_main_keyboard(),
-        )
-        await add_user_button(message)
-        await state.finish()
-        return False
-    elif answer == BUTTONS["activity"]:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["activity_menu"],
-            reply_markup=activity_keyboard(),
-        )
-        await state.finish()
-        return False
-    else:
-        return True
-
-
-def activity_keyboard():
-    subscribe_public_button = InlineKeyboardButton(
-        text=BUTTONS["subscribe_public"],
-        callback_data=subscribe_callback.new(is_public=True),
-    )
-    subscribe_private_button = InlineKeyboardButton(
-        text=BUTTONS["subscribe_private"],
-        callback_data=subscribe_callback.new(is_public=False),
-    )
-    unsubscribe_public_button = InlineKeyboardButton(
-        text=BUTTONS["unsubscribe_public"],
-        callback_data=unsubscribe_callback.new(is_public=True),
-    )
-    unsubscribe_private_button = InlineKeyboardButton(
-        text=BUTTONS["unsubscribe_private"],
-        callback_data=unsubscribe_callback.new(is_public=False),
-    )
-    view_button = InlineKeyboardButton(
-        text=BUTTONS["view"], callback_data=viewer_post_callback.new()
-    )
-    react_button = InlineKeyboardButton(
-        text=BUTTONS["react"], callback_data=reactions_callback.new()
-    )
-
-    act_keyboard = InlineKeyboardMarkup(row_width=1).add(
-        subscribe_public_button,
-        subscribe_private_button,
-        unsubscribe_public_button,
-        unsubscribe_private_button,
-        view_button,
-        react_button,
-    )
-    return act_keyboard
+from useful.callbacks import subscribe_callback, unsubscribe_callback, viewer_post_callback, reactions_callback, \
+    unsubscribe_all_callback
 
 
 async def chose_activity(message: Message):
@@ -114,9 +37,14 @@ async def subscribe_query(query: CallbackQuery, callback_data: dict, state: FSMC
 async def subscribe_channel_link_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        await state.update_data(channel_link=answer)
-        await message.answer(text=MESSAGES["number_of_accounts"])
-        await SubscribeStates.number_of_accounts.set()
+        if answer.startswith("https://t.me/"):
+            await state.update_data(channel_link=answer)
+            accounts_len = await get_accounts_len()
+            await message.answer(text=MESSAGES["number_of_accounts"].format(count=accounts_len))
+            await SubscribeStates.number_of_accounts.set()
+        else:
+            await message.answer(text=MESSAGES["link_error"])
+            await SubscribeStates.channel_link.set()
 
 
 async def subscribe_number_of_accounts_state(message: Message, state: FSMContext):
@@ -146,19 +74,24 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             data = await state.get_data()
             is_public = data["is_public"] == "True"
             if is_public:
-                await subscribe_public_channel(
+                is_success = await subscribe_public_channel(
+                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
             else:
-                await subscribe_private_channel(
+                is_success = await subscribe_private_channel(
+                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
-            await message.answer(text=MESSAGES["subscribe"])
-            await state.finish()
+            if is_success:
+                await message.answer(text=MESSAGES["subscribe"])
+                await state.finish()
+            else:
+                await SubscribeStates.number_of_accounts.set()
 
 
 """
@@ -183,9 +116,14 @@ async def unsubscribe_query(
 async def unsubscribe_channel_link_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        await state.update_data(channel_link=answer)
-        await message.answer(text=MESSAGES["number_of_accounts"])
-        await UnsubscribeStates.number_of_accounts.set()
+        if answer.startswith("https://t.me/"):
+            await state.update_data(channel_link=answer)
+            accounts_len = await get_accounts_len()
+            await message.answer(text=MESSAGES["number_of_accounts"].format(count=accounts_len))
+            await UnsubscribeStates.number_of_accounts.set()
+        else:
+            await message.answer(text=MESSAGES["link_error"])
+            await UnsubscribeStates.channel_link.set()
 
 
 async def unsubscribe_number_of_accounts_state(message: Message, state: FSMContext):
@@ -215,19 +153,25 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
             data = await state.get_data()
             is_public = data["is_public"] == "True"
             if is_public:
-                await leave_public_channel(
+                is_success = await leave_public_channel(
+                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
             else:
-                await leave_private_channel(
+                is_success = await leave_private_channel(
+                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
-            await message.answer(text=MESSAGES["unsubscribe"])
-            await state.finish()
+            if is_success:
+                await message.answer(text=MESSAGES["unsubscribe"])
+                await state.finish()
+            else:
+                await UnsubscribeStates.number_of_accounts.set()
+
 
 
 """
@@ -248,9 +192,13 @@ async def viewer_post_button(query: CallbackQuery):
 async def viewer_id_channel_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        await state.update_data(channel_link=answer)
-        await message.answer(text=MESSAGES["id_post"])
-        await ViewerPostStates.id_post.set()
+        if answer.startswith("https://t.me/"):
+            await state.update_data(channel_link=answer)
+            await message.answer(text=MESSAGES["id_post"])
+            await ViewerPostStates.id_post.set()
+        else:
+            await message.answer(text=MESSAGES["link_error"])
+            await ViewerPostStates.id_channel.set()
 
 
 async def viewer_id_post_state(message: Message, state: FSMContext):
@@ -277,7 +225,8 @@ async def number_of_post_state(message: Message, state: FSMContext):
             await ViewerPostStates.number_of_post.set()
         else:
             await state.update_data(count_posts=int(answer))
-            await message.answer(text=MESSAGES["number_of_accounts"])
+            accounts_len = await get_accounts_len()
+            await message.answer(text=MESSAGES["number_of_accounts"].format(count=accounts_len))
             await ViewerPostStates.number_of_accounts.set()
 
 
@@ -306,15 +255,20 @@ async def viewer_delay_state(message: Message, state: FSMContext):
         else:
             await state.update_data(delay=int(answer))
             data = await state.get_data()
-            await view_post(
+            is_success = await view_post(
+                answer,
                 data["channel_link"],
                 data["last_post_id"],
                 data["count_posts"],
                 data["count_accounts"],
                 data["delay"],
             )
-            await message.answer(text=MESSAGES["viewer_post"])
-            await state.finish()
+            if is_success:
+                await message.answer(text=MESSAGES["viewer_post"])
+                await state.finish()
+            else:
+                await ViewerPostStates.number_of_accounts.set()
+
 
 
 """
@@ -335,9 +289,13 @@ async def reactions_query(query: CallbackQuery):
 async def reactions_id_channel_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        await state.update_data(channel_link=answer)
-        await message.answer(text=MESSAGES["id_post"])
-        await ReactionsStates.id_post.set()
+        if answer.startswith("https://t.me/"):
+            await state.update_data(channel_link=answer)
+            await message.answer(text=MESSAGES["id_post"])
+            await ReactionsStates.id_post.set()
+        else:
+            await message.answer(text=MESSAGES["link_error"])
+            await ReactionsStates.id_channel.set()
 
 
 async def reactions_id_post_state(message: Message, state: FSMContext):
@@ -364,7 +322,8 @@ async def number_of_button_state(message: Message, state: FSMContext):
             await ReactionsStates.number_of_button.set()
         else:
             await state.update_data(position=int(answer))
-            await message.answer(text=MESSAGES["number_of_accounts"])
+            accounts_len = await get_accounts_len()
+            await message.answer(text=MESSAGES["number_of_accounts"].format(count=accounts_len))
             await ReactionsStates.number_of_accounts.set()
 
 
@@ -393,15 +352,19 @@ async def reactions_delay_state(message: Message, state: FSMContext):
         else:
             await state.update_data(delay=int(answer))
             data = await state.get_data()
-            await click_on_button(
+            is_success = await click_on_button(
+                answer,
                 data["channel_link"],
                 data["post_id"],
                 data["position"],
                 data["count"],
                 data["delay"],
             )
-            await message.answer(text=MESSAGES["reactions"])
-            await state.finish()
+            if is_success:
+                await message.answer(text=MESSAGES["reactions"])
+                await state.finish()
+            else:
+                await ReactionsStates.number_of_accounts.set()
 
 
 def register_activity_handlers(dp: Dispatcher):

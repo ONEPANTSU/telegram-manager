@@ -10,13 +10,43 @@ from aiogram.utils.callback_data import CallbackData
 from telethon import TelegramClient
 
 from config import *
-from handlers.activity.activity_handler import not_command_checker
+from handlers.main.main_functions import get_main_keyboard
 from states import AddUserStates
 from texts.buttons import BUTTONS
+from texts.commands import COMMANDS
 from texts.messages import MESSAGES
-from useful.instruments import clients, code
+from useful.commands_handler import commands_handler
+from useful.instruments import clients, code, bot
+from useful.keyboards import activity_keyboard
 
 yes_no_callback = CallbackData("yes_no", "answer", "phone")
+
+
+async def not_command_checker(message: Message, state: FSMContext):
+    answer = message.text
+    if answer.lstrip("/") in COMMANDS.values():
+        await state.finish()
+        await commands_handler(message)
+        return False
+    elif answer == BUTTONS["users"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["user"],
+            reply_markup=get_main_keyboard(),
+        )
+        await add_user_button(message)
+        await state.finish()
+        return False
+    elif answer == BUTTONS["activity"]:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["activity_menu"],
+            reply_markup=activity_keyboard(),
+        )
+        await state.finish()
+        return False
+    else:
+        return True
 
 
 async def add_user_button(message: Message):
@@ -27,9 +57,13 @@ async def add_user_button(message: Message):
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         phone = message.text
-        await state.update_data(phone=phone)
-        await message.answer(text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone))
-        await state.finish()
+        if phone.startswith("+"):
+            await state.update_data(phone=phone)
+            await message.answer(text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone))
+            await state.finish()
+        else:
+            await message.answer(text=MESSAGES["phone_error"])
+            await AddUserStates.phone.set()
 
 
 def ask_keyboard(phone):
@@ -47,7 +81,7 @@ def ask_keyboard(phone):
 
 
 async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
-    if await not_command_checker(message=message, state=state):
+    if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
         phone = callback_data["phone"]
 

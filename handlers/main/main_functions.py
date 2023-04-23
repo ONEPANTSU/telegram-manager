@@ -1,7 +1,5 @@
-from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
-
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from texts.buttons import BUTTONS
-from texts.messages import MESSAGES
 
 
 def get_main_keyboard():

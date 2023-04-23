@@ -28,7 +28,7 @@ user_sms_message = "Введите код"
 chose_activity_message = "Что будем делать?"
 channel_link_message = "Введите ссылку на канал"
 channel_name_message = "Введите название канала"
-number_of_accounts_message = "Введите количество аккаунтов"
+number_of_accounts_message = "Введите количество аккаунтов. Доступных ботов на данный момент: {count}"
 delay_message = "Введите задержку"
 subscribe_message = "Подписка на канал осуществлена"
 unsubscribe_message = "Отписка от канала осуществлена"
@@ -37,21 +37,20 @@ number_of_post_message = "Введите количество постов"
 viewer_post_message = "Посты просмотрены"
 number_of_button_message = "Введите номер кнопки"
 reactions_message = "Нажатие кнопки произошло успешно"
-user_ask_message = "Аккаунт с паролем?"
 isdigit_message = "Жду от вас циферки"
 
 
 #информирование пользователя и ошибки
 
+not_users_in_base_error = "В базе нет пользователей"
 authorisation_error_message = "Произошла ошибка авторизации"
-phone_error_message = "Телефон введен неверно. Убедитесь, что номер начинается с знака '+'"
+phone_error_message = "Телефон введен неверно. Попробуйте ввести ещё раз и убедитесь, что номер начинается с знака '+'"
 sms_error_message = "Код введен неверно"
 password_error_message = "Пароль введен неверно"
 authorisation_success_message = "Авторизация прошла успешно. Пользователь: "
 available_bot_message = "Доступных ботов на данный момент: "
-
-
-
+count_user_error_message = "Вы ввели слишком большое число. На данный момент в базе: {count}"
+link_error_message = "Ссылка введена неправильно. Попробуйте ещё раз"
 
 MESSAGES = {
     "start": start_message,
@@ -83,5 +82,6 @@ MESSAGES = {
     "password_error": password_error_message,
     "authorisation_success_error": authorisation_success_message,
     "available_bot": available_bot_message,
-
+    "count_user_error": count_user_error_message,
+    "link_error": link_error_message,
 }
