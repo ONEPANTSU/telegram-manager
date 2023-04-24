@@ -75,17 +75,11 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await subscribe_public_channel(
-                    message=message,
-                    channel_link=data["channel_link"],
-                    count=data["count"],
-                    delay=data["delay"],
+                    args=[data["channel_link"], data["count"], data["delay"]]
                 )
             else:
                 is_success = await subscribe_private_channel(
-                    message=message,
-                    channel_link=data["channel_link"],
-                    count=data["count"],
-                    delay=data["delay"],
+                    args=[data["channel_link"], data["count"], data["delay"]]
                 )
             if is_success:
                 await message.answer(text=MESSAGES["subscribe"])
@@ -105,7 +99,7 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
 
 
 async def unsubscribe_query(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
+        query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     is_public = callback_data.get("is_public")
@@ -154,24 +148,17 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await leave_public_channel(
-                    message=message,
-                    channel_link=data["channel_link"],
-                    count=data["count"],
-                    delay=data["delay"],
+                    args=[data["channel_link"], data["count"], data["delay"]]
                 )
             else:
                 is_success = await leave_private_channel(
-                    message=message,
-                    channel_link=data["channel_link"],
-                    count=data["count"],
-                    delay=data["delay"],
+                    args=[data["channel_link"], data["count"], data["delay"]]
                 )
             if is_success:
                 await message.answer(text=MESSAGES["unsubscribe"])
                 await state.finish()
             else:
                 await UnsubscribeStates.number_of_accounts.set()
-
 
 
 """
@@ -256,19 +243,17 @@ async def viewer_delay_state(message: Message, state: FSMContext):
             await state.update_data(delay=int(answer))
             data = await state.get_data()
             is_success = await view_post(
-                answer,
-                data["channel_link"],
-                data["last_post_id"],
-                data["count_posts"],
-                data["count_accounts"],
-                data["delay"],
+                args=[data["channel_link"],
+                      data["count_accounts"],
+                      data["last_post_id"],
+                      data["count_posts"],
+                      data["delay"]]
             )
             if is_success:
                 await message.answer(text=MESSAGES["viewer_post"])
                 await state.finish()
             else:
                 await ViewerPostStates.number_of_accounts.set()
-
 
 
 """
@@ -353,12 +338,11 @@ async def reactions_delay_state(message: Message, state: FSMContext):
             await state.update_data(delay=int(answer))
             data = await state.get_data()
             is_success = await click_on_button(
-                answer,
-                data["channel_link"],
-                data["post_id"],
-                data["position"],
-                data["count"],
-                data["delay"],
+                args=[data["channel_link"],
+                      data["count"],
+                      data["post_id"],
+                      data["position"],
+                      data["delay"]]
             )
             if is_success:
                 await message.answer(text=MESSAGES["reactions"])
