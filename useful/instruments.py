@@ -11,3 +11,5 @@ bot = Bot(BOT_TOKEN, parse_mode="HTML")
 dp = Dispatcher(bot, loop=loop, storage=storage)
 code = {}
 clients = {}
+
+callback_dict = {}   #{"from_user": ["link", count, is_public]}

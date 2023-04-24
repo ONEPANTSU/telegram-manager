@@ -8,7 +8,9 @@ from states import ReactionsStates, SubscribeStates, UnsubscribeStates, ViewerPo
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
 from useful.callbacks import subscribe_callback, unsubscribe_callback, viewer_post_callback, reactions_callback, \
-    unsubscribe_all_callback
+    unsubscribe_all_callback, delay_callback
+from useful.instruments import callback_dict
+from useful.keyboards import ask_delay_keyboard
 
 
 async def chose_activity(message: Message):
@@ -18,12 +20,12 @@ async def chose_activity(message: Message):
 
 
 """
-SUBSCRIBE PUBLIC CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
+    SUBSCRIBE CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -50,14 +52,45 @@ async def subscribe_channel_link_state(message: Message, state: FSMContext):
 async def subscribe_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
+        accounts_len = await get_accounts_len()
         if not answer.isdigit():
             await message.answer(
                 text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
             )
             await SubscribeStates.number_of_accounts.set()
+        elif accounts_len < int(answer):
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text=MESSAGES["count_user_error"].format(count=accounts_len),
+            )
+            await SubscribeStates.number_of_accounts.set()
         else:
             await state.update_data(count=int(answer))
-            await message.answer(text=MESSAGES["delay"])
+            data = await state.get_data()
+            link = data['channel_link']
+            count = int(answer)
+            is_public = data['is_public']
+            await message.answer(text=MESSAGES["delay_ask"], reply_markup=ask_delay_keyboard(message.from_user.id,
+                                                                                             link, count, is_public))
+            await state.finish()
+
+
+async def subscribe_ask_delay_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
+    if await not_command_checker(message=query.message, state=state):
+        answer = callback_data["answer"]
+        user_id = int(callback_data["user_id"])
+        link, count, is_public = callback_dict[user_id]
+        callback_dict.pop(user_id)
+        await state.update_data(channel_link=link)
+        await state.update_data(count=count)
+        await state.update_data(is_public=is_public)
+        await state.update_data(delay_ask=answer)
+        if answer == BUTTONS['delay_1']:    #Обычная задержка
+            await query.message.edit_text(text=MESSAGES["delay_regular"], reply_markup=None)
+            await SubscribeStates.delay.set()
+        elif answer == BUTTONS['delay_2']:     #Процентная задержка
+            await query.message.edit_text(text=MESSAGES["delay_perсent"], reply_markup=None)
+            # Встатить нужное
             await SubscribeStates.delay.set()
 
 
@@ -75,32 +108,35 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await subscribe_public_channel(
-                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
             else:
                 is_success = await subscribe_private_channel(
-                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
             if is_success:
-                await message.answer(text=MESSAGES["subscribe"])
+                await message.answer(text=MESSAGES["subscribe"], reply_markup=get_main_keyboard())
                 await state.finish()
             else:
-                await SubscribeStates.number_of_accounts.set()
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await SubscribeStates.channel_link.set()
 
 
 """
- UNSUBSCRIBE PUBLIC CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
+    UNSUBSCRIBE CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -129,14 +165,40 @@ async def unsubscribe_channel_link_state(message: Message, state: FSMContext):
 async def unsubscribe_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
+        accounts_len = await get_accounts_len()
         if not answer.isdigit():
             await message.answer(
                 text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
             )
             await UnsubscribeStates.number_of_accounts.set()
+        elif accounts_len < int(answer):
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text=MESSAGES["count_user_error"].format(count=accounts_len),
+            )
+            await UnsubscribeStates.number_of_accounts.set()
         else:
             await state.update_data(count=int(answer))
             await message.answer(text=MESSAGES["delay"])
+            await UnsubscribeStates.delay.set()
+
+
+async def unsubscribe_ask_delay_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
+    if await not_command_checker(message=query.message, state=state):
+        answer = callback_data["answer"]
+        user_id = int(callback_data["user_id"])
+        link, count, is_public = callback_dict[user_id]
+        callback_dict.pop(user_id)
+        await state.update_data(channel_link=link)
+        await state.update_data(count=count)
+        await state.update_data(is_public=is_public)
+        await state.update_data(delay_ask=answer)
+        if answer == BUTTONS['delay_1']:    #Обычная задержка
+            await query.message.edit_text(text=MESSAGES["delay_regular"], reply_markup=None)
+            await UnsubscribeStates.delay.set()
+        elif answer == BUTTONS['delay_2']:     #Процентная задержка
+            await query.message.edit_text(text=MESSAGES["delay_perсent"], reply_markup=None)
+            # Встатить нужное
             await UnsubscribeStates.delay.set()
 
 
@@ -154,33 +216,35 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await leave_public_channel(
-                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
             else:
                 is_success = await leave_private_channel(
-                    message=message,
                     channel_link=data["channel_link"],
                     count=data["count"],
                     delay=data["delay"],
                 )
             if is_success:
-                await message.answer(text=MESSAGES["unsubscribe"])
+                await message.answer(text=MESSAGES["unsubscribe"], reply_markup=ReplyKeyboardRemove())
                 await state.finish()
             else:
-                await UnsubscribeStates.number_of_accounts.set()
-
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await UnsubscribeStates.channel_link.set()
 
 
 """
        POST VIEWERS STATES⠀⠀⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -233,14 +297,40 @@ async def number_of_post_state(message: Message, state: FSMContext):
 async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
+        accounts_len = await get_accounts_len()
         if not answer.isdigit():
             await message.answer(
                 text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
             )
             await ViewerPostStates.number_of_accounts.set()
+        elif accounts_len < int(answer):
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text=MESSAGES["count_user_error"].format(count=accounts_len),
+            )
+            await ViewerPostStates.number_of_accounts.set()
         else:
             await state.update_data(count_accounts=int(answer))
             await message.answer(text=MESSAGES["delay"])
+            await ViewerPostStates.delay.set()
+
+
+async def viewer_ask_delay_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
+    if await not_command_checker(message=query.message, state=state):
+        answer = callback_data["answer"]
+        user_id = int(callback_data["user_id"])
+        link, count, is_public = callback_dict[user_id]
+        callback_dict.pop(user_id)
+        await state.update_data(channel_link=link)
+        await state.update_data(count=count)
+        await state.update_data(is_public=is_public)
+        await state.update_data(delay_ask=answer)
+        if answer == BUTTONS['delay_1']:    #Обычная задержка
+            await query.message.edit_text(text=MESSAGES["delay_regular"], reply_markup=None)
+            await ViewerPostStates.delay.set()
+        elif answer == BUTTONS['delay_2']:     #Процентная задержка
+            await query.message.edit_text(text=MESSAGES["delay_perсent"], reply_markup=None)
+            # Встатить нужное
             await ViewerPostStates.delay.set()
 
 
@@ -256,7 +346,6 @@ async def viewer_delay_state(message: Message, state: FSMContext):
             await state.update_data(delay=int(answer))
             data = await state.get_data()
             is_success = await view_post(
-                answer,
                 data["channel_link"],
                 data["last_post_id"],
                 data["count_posts"],
@@ -264,20 +353,24 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                 data["delay"],
             )
             if is_success:
-                await message.answer(text=MESSAGES["viewer_post"])
+                await message.answer(text=MESSAGES["viewer_post"], reply_markup=ReplyKeyboardRemove())
                 await state.finish()
             else:
-                await ViewerPostStates.number_of_accounts.set()
-
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await ViewerPostStates.id_channel.set()
 
 
 """
         REACTIONS STATES⠀⠀⠀⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -330,14 +423,40 @@ async def number_of_button_state(message: Message, state: FSMContext):
 async def reactions_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
+        accounts_len = await get_accounts_len()
         if not answer.isdigit():
             await message.answer(
                 text=MESSAGES["isdigit"], reply_markup=ReplyKeyboardRemove()
             )
             await ReactionsStates.number_of_accounts.set()
+        elif accounts_len < int(answer):
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text=MESSAGES["count_user_error"].format(count=accounts_len),
+            )
+            await ReactionsStates.number_of_accounts.set()
         else:
             await state.update_data(count=int(answer))
             await message.answer(text=MESSAGES["delay"])
+            await ReactionsStates.delay.set()
+
+
+async def reactions_ask_delay_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
+    if await not_command_checker(message=query.message, state=state):
+        answer = callback_data["answer"]
+        user_id = int(callback_data["user_id"])
+        link, count, is_public = callback_dict[user_id]
+        callback_dict.pop(user_id)
+        await state.update_data(channel_link=link)
+        await state.update_data(count=count)
+        await state.update_data(is_public=is_public)
+        await state.update_data(delay_ask=answer)
+        if answer == BUTTONS['delay_1']:    #Обычная задержка
+            await query.message.edit_text(text=MESSAGES["delay_regular"], reply_markup=None)
+            await ReactionsStates.delay.set()
+        elif answer == BUTTONS['delay_2']:     #Процентная задержка
+            await query.message.edit_text(text=MESSAGES["delay_perсent"], reply_markup=None)
+            # Встатить нужное
             await ReactionsStates.delay.set()
 
 
@@ -353,7 +472,6 @@ async def reactions_delay_state(message: Message, state: FSMContext):
             await state.update_data(delay=int(answer))
             data = await state.get_data()
             is_success = await click_on_button(
-                answer,
                 data["channel_link"],
                 data["post_id"],
                 data["position"],
@@ -361,10 +479,15 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                 data["delay"],
             )
             if is_success:
-                await message.answer(text=MESSAGES["reactions"])
+                await message.answer(text=MESSAGES["reactions"], reply_markup=ReplyKeyboardRemove())
                 await state.finish()
             else:
-                await ReactionsStates.number_of_accounts.set()
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await ReactionsStates.id_channel.set()
 
 
 def register_activity_handlers(dp: Dispatcher):
@@ -384,6 +507,7 @@ def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(
         subscribe_number_of_accounts_state, state=SubscribeStates.number_of_accounts
     )
+    dp.register_callback_query_handler(subscribe_ask_delay_state, delay_callback.filter())
     dp.register_message_handler(subscribe_delay_state, state=SubscribeStates.delay)
     dp.register_message_handler(
         unsubscribe_channel_link_state, state=UnsubscribeStates.channel_link
@@ -391,6 +515,7 @@ def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(
         unsubscribe_number_of_accounts_state, state=UnsubscribeStates.number_of_accounts
     )
+    dp.register_callback_query_handler(unsubscribe_ask_delay_state, delay_callback.filter())
     dp.register_message_handler(unsubscribe_delay_state, state=UnsubscribeStates.delay)
     dp.register_message_handler(
         viewer_id_channel_state, state=ViewerPostStates.id_channel
@@ -402,6 +527,7 @@ def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(
         viewer_number_of_accounts_state, state=ViewerPostStates.number_of_accounts
     )
+    dp.register_callback_query_handler(viewer_ask_delay_state, delay_callback.filter())
     dp.register_message_handler(viewer_delay_state, state=ViewerPostStates.delay)
     dp.register_message_handler(
         reactions_id_channel_state, state=ReactionsStates.id_channel
@@ -413,4 +539,5 @@ def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(
         reactions_number_of_accounts_state, state=ReactionsStates.number_of_accounts
     )
+    dp.register_callback_query_handler(reactions_ask_delay_state, delay_callback.filter())
     dp.register_message_handler(reactions_delay_state, state=ReactionsStates.delay)

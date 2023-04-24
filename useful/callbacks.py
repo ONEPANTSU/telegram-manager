@@ -5,3 +5,7 @@ unsubscribe_callback = CallbackData("unsubscribe_public_button", "is_public")
 unsubscribe_all_callback = CallbackData("unsubscribe_all_button")
 viewer_post_callback = CallbackData("viewer_post_button")
 reactions_callback = CallbackData("reactions_button")
+
+yes_no_callback = CallbackData("yes_no", "answer", "phone")
+
+delay_callback = CallbackData("delay", "answer", "user_id")

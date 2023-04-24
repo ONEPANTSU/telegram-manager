@@ -29,7 +29,9 @@ chose_activity_message = "Что будем делать?"
 channel_link_message = "Введите ссылку на канал"
 channel_name_message = "Введите название канала"
 number_of_accounts_message = "Введите количество аккаунтов. Доступных ботов на данный момент: {count}"
-delay_message = "Введите задержку"
+delay_ask_message = "Введите тип задержки"
+delay_regular_message = "Введите задержку"
+delay_perсent_message = "Введите процент"
 subscribe_message = "Подписка на канал осуществлена"
 unsubscribe_message = "Отписка от канала осуществлена"
 id_post_message = "Введите id поста"
@@ -51,6 +53,7 @@ authorisation_success_message = "Авторизация прошла успеш�
 available_bot_message = "Доступных ботов на данный момент: "
 count_user_error_message = "Вы ввели слишком большое число. На данный момент в базе: {count}"
 link_error_message = "Ссылка введена неправильно. Попробуйте ещё раз"
+error_message = "Произошла ошибка! Попробуйте ещё раз!"
 
 MESSAGES = {
     "start": start_message,
@@ -65,7 +68,9 @@ MESSAGES = {
     "channel_link": channel_link_message,
     "channel_name": channel_name_message,
     "number_of_accounts": number_of_accounts_message,
-    "delay": delay_message,
+    "delay_ask": delay_ask_message,
+    "delay_regular": delay_regular_message,
+    "delay_perсent": delay_perсent_message,
     "subscribe": subscribe_message,
     "unsubscribe": unsubscribe_message,
     "id_post": id_post_message,
@@ -84,4 +89,5 @@ MESSAGES = {
     "available_bot": available_bot_message,
     "count_user_error": count_user_error_message,
     "link_error": link_error_message,
+    "error": error_message,
 }

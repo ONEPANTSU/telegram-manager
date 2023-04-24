@@ -6,4 +6,5 @@ class ReactionsStates(StatesGroup):
     id_post = State()
     number_of_button = State()
     number_of_accounts = State()
+    ask = State()
     delay = State()

@@ -109,9 +109,9 @@ async def get_accounts_len():
     return accounts_len
 
 
-async def subscribe_public_channel(message: Message, channel_link, count, delay):
+async def subscribe_public_channel(channel_link, count, delay):
     accounts = await get_accounts()
-    accounts_len = len(accounts)
+    accounts_len = await get_accounts_len()
     if count <= accounts_len:
         shuffle(accounts)
         for account in range(count):
@@ -129,28 +129,17 @@ async def subscribe_public_channel(message: Message, channel_link, count, delay)
         disconnect_all(accounts)
         return True
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["count_user_error"].format(count=accounts_len),
-            reply_markup=get_main_keyboard(),
-        )
         disconnect_all(accounts)
         return False
 
 
-async def subscribe_private_channel(message: Message, channel_link, count, delay):
+async def subscribe_private_channel(channel_link, count, delay):
     if "https://t.me/+" in channel_link:
         channel_link = channel_link.replace("https://t.me/+", "")
     elif "https://t.me/joinchat/" in channel_link:
         channel_link = channel_link.replace("https://t.me/joinchat/", "")
     elif "t.me/joinchat/" in channel_link:
         channel_link = channel_link.replace("t.me/joinchat/", "")
-    else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["link_error"],
-        )
-
     accounts = await get_accounts()
     accounts_len = len(accounts)
     if count <= accounts_len:
@@ -170,15 +159,11 @@ async def subscribe_private_channel(message: Message, channel_link, count, delay
         disconnect_all(accounts)
         return True
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["count_user_error"].format(count=accounts_len),
-        )
         disconnect_all(accounts)
         return False
 
 
-async def leave_public_channel(message: Message, channel_link, count, delay):
+async def leave_public_channel(channel_link, count, delay):
     accounts = await get_accounts()
     accounts_len = len(accounts)
     if count <= accounts_len:
@@ -197,15 +182,11 @@ async def leave_public_channel(message: Message, channel_link, count, delay):
         disconnect_all(accounts)
         return True
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["count_user_error"].format(count=accounts_len),
-        )
         disconnect_all(accounts)
         return False
 
 
-async def leave_private_channel(message: Message, channel_link, count, delay):
+async def leave_private_channel(channel_link, count, delay):
     accounts = await get_accounts()
     accounts_len = len(accounts)
     if count <= accounts_len:
@@ -233,15 +214,11 @@ async def leave_private_channel(message: Message, channel_link, count, delay):
         disconnect_all(accounts)
         return True
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["count_user_error"].format(count=accounts_len),
-        )
         disconnect_all(accounts)
         return False
 
 
-async def view_post(message: Message, channel_link, last_post_id, count_posts, count_accounts, delay):
+async def view_post(channel_link, last_post_id, count_posts, count_accounts, delay):
     accounts = await get_accounts()
     accounts_len = len(accounts)
     if count_accounts <= accounts_len:
@@ -273,15 +250,11 @@ async def view_post(message: Message, channel_link, last_post_id, count_posts, c
         disconnect_all(accounts)
         return True
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["count_user_error"].format(count=accounts_len),
-        )
         disconnect_all(accounts)
         return False
 
 
-async def click_on_button(message: Message, channel_link, post_id, position, count, delay):
+async def click_on_button(channel_link, post_id, position, count, delay):
     accounts = await get_accounts()
     accounts_len = len(accounts)
     if count <= accounts_len:
@@ -303,9 +276,5 @@ async def click_on_button(message: Message, channel_link, post_id, position, cou
         disconnect_all(accounts)
         return True
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=MESSAGES["count_user_error"].format(count=accounts_len),
-        )
         disconnect_all(accounts)
         return False

@@ -15,11 +15,10 @@ from states import AddUserStates
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
+from useful.callbacks import yes_no_callback
 from useful.commands_handler import commands_handler
 from useful.instruments import clients, code, bot
-from useful.keyboards import activity_keyboard
-
-yes_no_callback = CallbackData("yes_no", "answer", "phone")
+from useful.keyboards import activity_keyboard, ask_keyboard
 
 
 async def not_command_checker(message: Message, state: FSMContext):
@@ -64,20 +63,6 @@ async def phone_state(message: Message, state: FSMContext):
         else:
             await message.answer(text=MESSAGES["phone_error"])
             await AddUserStates.phone.set()
-
-
-def ask_keyboard(phone):
-    yes_button = InlineKeyboardButton(
-        text=BUTTONS["yes"],
-        callback_data=yes_no_callback.new(answer=BUTTONS["yes"], phone=phone),
-    )
-    no_button = InlineKeyboardButton(
-        text=BUTTONS["no"],
-        callback_data=yes_no_callback.new(answer=BUTTONS["no"], phone=phone),
-    )
-    act_keyboard = InlineKeyboardMarkup(row_width=2).add(yes_button, no_button)
-
-    return act_keyboard
 
 
 async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext):

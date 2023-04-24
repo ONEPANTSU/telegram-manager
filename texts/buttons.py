@@ -7,8 +7,6 @@ unsubscribe_private_button = "Отписаться от приватного к�
 unsubscribe_all_button = "Отписаться от всех каналов ➖"
 view_button = "Посмотреть посты 👀"
 react_button = "Накрутить реакции 💥"
-yes_button = "Да"
-no_button = "Нет"
 
 
 users_button = "Аккаунты ➕"
@@ -16,6 +14,9 @@ parse_button = "Парсер 👥"
 
 yes_button = "Да"
 no_button = "Нет"
+
+delay_1_button = "Простая задержка"
+delay_2_button = "Процентная задержка"
 
 back_button = "Назад 👈️"
 
@@ -33,4 +34,6 @@ BUTTONS = {
     "react": react_button,
     "yes": yes_button,
     "no": no_button,
+    "delay_1": delay_1_button,
+    "delay_2": delay_2_button,
 }
