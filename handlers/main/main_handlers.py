@@ -1,6 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 
+from handlers.activity.activity_functions import get_timing, percent_timer, subscribe_public_channel
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -9,6 +10,9 @@ from texts.messages import MESSAGES
 
 async def help_command(message: Message):
     await message.answer(text=MESSAGES["faq"])
+    timing = get_timing("1 - 20\n 2 - 60\n5 - 20")
+    args = ["https://t.me/aaaaaa1212sss", 7]
+    await percent_timer(timing, subscribe_public_channel, args)
 
 
 async def start_command(message: Message):
