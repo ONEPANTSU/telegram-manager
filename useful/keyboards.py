@@ -1,8 +1,14 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from texts.buttons import BUTTONS
-from useful.callbacks import subscribe_callback, unsubscribe_callback, viewer_post_callback, reactions_callback, \
-    yes_no_callback, delay_callback
+from useful.callbacks import (
+    delay_callback,
+    reactions_callback,
+    subscribe_callback,
+    unsubscribe_callback,
+    viewer_post_callback,
+    yes_no_callback,
+)
 from useful.instruments import callback_dict
 
 
@@ -69,4 +75,3 @@ def ask_delay_keyboard(user_id, link, count, is_public):
     act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
 
     return act_delay_keyboard
-

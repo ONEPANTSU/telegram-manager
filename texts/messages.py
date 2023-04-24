@@ -26,7 +26,9 @@ user_sms_message = "Введите код"
 chose_activity_message = "Что будем делать?"
 channel_link_message = "Введите ссылку на канал"
 channel_name_message = "Введите название канала"
-number_of_accounts_message = "Введите количество аккаунтов. Доступных ботов на данный момент: {count}"
+number_of_accounts_message = (
+    "Введите количество аккаунтов. Доступных ботов на данный момент: {count}"
+)
 delay_ask_message = "Введите тип задержки"
 delay_regular_message = "Введите задержку"
 delay_perсent_message = "Введите процент"
@@ -40,7 +42,7 @@ reactions_message = "Нажатие кнопки произошло успешн
 isdigit_message = "Жду от вас циферки"
 
 
-#информирование пользователя и ошибки
+# информирование пользователя и ошибки
 
 not_users_in_base_error = "В базе нет пользователей"
 authorisation_error_message = "Произошла ошибка авторизации"
@@ -49,7 +51,9 @@ sms_error_message = "Код введен неверно"
 password_error_message = "Пароль введен неверно"
 authorisation_success_message = "Авторизация прошла успешно. Пользователь: "
 available_bot_message = "Доступных ботов на данный момент: "
-count_user_error_message = "Вы ввели слишком большое число. На данный момент в базе: {count}"
+count_user_error_message = (
+    "Вы ввели слишком большое число. На данный момент в базе: {count}"
+)
 link_error_message = "Ссылка введена неправильно. Попробуйте ещё раз"
 error_message = "Произошла ошибка! Попробуйте ещё раз!"
 

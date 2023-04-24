@@ -1,7 +1,11 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 
-from handlers.activity.activity_functions import get_timing, percent_timer, subscribe_public_channel
+from handlers.activity.activity_functions import (
+    get_timing,
+    percent_timer,
+    subscribe_public_channel,
+)
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS

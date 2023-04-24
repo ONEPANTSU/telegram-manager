@@ -17,7 +17,7 @@ from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 from useful.callbacks import yes_no_callback
 from useful.commands_handler import commands_handler
-from useful.instruments import clients, code, bot
+from useful.instruments import bot, clients, code
 from useful.keyboards import activity_keyboard, ask_keyboard
 
 
@@ -58,7 +58,9 @@ async def phone_state(message: Message, state: FSMContext):
         phone = message.text
         if phone.startswith("+"):
             await state.update_data(phone=phone)
-            await message.answer(text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone))
+            await message.answer(
+                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
+            )
             await state.finish()
         else:
             await message.answer(text=MESSAGES["phone_error"])
@@ -72,10 +74,12 @@ async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext
 
         await state.update_data(phone=phone)
         await state.update_data(is_password=answer)
-        if answer == BUTTONS['yes']:
-            await query.message.edit_text(text=MESSAGES["user_password"], reply_markup=None)
+        if answer == BUTTONS["yes"]:
+            await query.message.edit_text(
+                text=MESSAGES["user_password"], reply_markup=None
+            )
             await AddUserStates.password.set()
-        elif answer == BUTTONS['no']:
+        elif answer == BUTTONS["no"]:
             await query.message.answer(text=MESSAGES["user_sms"])
             await connect(state=state, phone=phone)
 
@@ -109,9 +113,7 @@ async def sms_state(message: Message, state: FSMContext):
                 phone=phone, password=password, code_callback=code[phone]
             )
         else:
-            await clients[phone]._start(
-                phone=phone, code_callback=code[phone]
-            )
+            await clients[phone]._start(phone=phone, code_callback=code[phone])
         await state.finish()
 
 

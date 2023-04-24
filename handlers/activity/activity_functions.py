@@ -23,7 +23,6 @@ from useful.instruments import bot
 from useful.keyboards import activity_keyboard
 
 
-
 def get_timing(timing_str):
     timing_arr = timing_str.split("\n")
     timing_dict = {}
@@ -67,7 +66,9 @@ async def percent_timer(timing, function, args):
             current_args = copy(args)
             current_args.append(delay)
             current_accounts = []
-            for account_iter in range(last_account_iter, last_account_iter + current_count):
+            for account_iter in range(
+                last_account_iter, last_account_iter + current_count
+            ):
                 current_accounts.append(accounts[account_iter])
             current_args[1] = current_count
             await function(args=current_args, accounts=current_accounts)
@@ -79,6 +80,7 @@ async def percent_timer(timing, function, args):
         end = time.time()
         print(start - end)
         start = end
+
 
 async def not_command_checker(message: Message, state: FSMContext):
     answer = message.text
@@ -169,6 +171,7 @@ async def get_accounts():
 #     disconnect_all(accounts)
 #     return accounts_len
 
+
 async def get_accounts_len():
     accounts_len = 0
     for _, _, sessions in walk("base"):
@@ -176,7 +179,6 @@ async def get_accounts_len():
             if session.endswith("session"):
                 accounts_len += 1
     return accounts_len
-
 
 
 async def subscribe_public_channel(args, accounts=None):
@@ -189,7 +191,6 @@ async def subscribe_public_channel(args, accounts=None):
     if count <= accounts_len:
         shuffle(accounts)
         for account in range(count):
-
             start = time.time()
 
             account = accounts[account]
@@ -203,7 +204,7 @@ async def subscribe_public_channel(args, accounts=None):
             except Exception as error:
                 print(str(error))
 
-            del_delay = math.floor(delay * RANDOM_PERCENT/100)
+            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
             new_delay = delay + random.randint(-del_delay, del_delay)
             await asyncio.sleep(new_delay)
 
@@ -293,7 +294,9 @@ async def leave_private_channel(args, accounts=None):
     accounts_len = len(accounts)
     if count <= accounts_len:
         if "https://t.me/+" in channel_link:
-            channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
+            channel_link = channel_link.replace(
+                "https://t.me/+", "https://t.me/joinchat/"
+            )
         elif "t.me/+" in channel_link:
             channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
         for account in range(count):
@@ -335,7 +338,9 @@ async def view_post(args, accounts=None):
     accounts_len = len(accounts)
     if count_accounts <= accounts_len:
         if "https://t.me/+" in channel_link:
-            channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
+            channel_link = channel_link.replace(
+                "https://t.me/+", "https://t.me/joinchat/"
+            )
         elif "t.me/+" in channel_link:
             channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
         for account in range(count_accounts):
@@ -381,7 +386,9 @@ async def click_on_button(args, accounts=None):
     accounts_len = len(accounts)
     if count <= accounts_len:
         if "https://t.me/+" in channel_link:
-            channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
+            channel_link = channel_link.replace(
+                "https://t.me/+", "https://t.me/joinchat/"
+            )
         elif "t.me/+" in channel_link:
             channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
         for account in range(count):
