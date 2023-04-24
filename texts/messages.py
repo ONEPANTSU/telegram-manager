@@ -30,8 +30,12 @@ number_of_accounts_message = (
     "Введите количество аккаунтов. Доступных ботов на данный момент: {count}"
 )
 delay_ask_message = "Введите тип задержки"
-delay_regular_message = "Введите задержку"
-delay_perсent_message = "Введите процент"
+delay_regular_message = "Введите постоянную задержку 📊"
+delay_percent_message = (
+    "Введите почасовые проценты аккаунтов 📉\n\n"
+    "<i>Например, если в 1 час используются 50% аккаунтов, "
+    "во 2 час 30%, а в 4 час 20%:</i>\n1 - 50\n2 - 30\n4 - 20"
+)
 subscribe_message = "Подписка на канал осуществлена"
 unsubscribe_message = "Отписка от канала осуществлена"
 id_post_message = "Введите id поста"
@@ -72,7 +76,7 @@ MESSAGES = {
     "number_of_accounts": number_of_accounts_message,
     "delay_ask": delay_ask_message,
     "delay_regular": delay_regular_message,
-    "delay_perсent": delay_perсent_message,
+    "delay_perсent": delay_percent_message,
     "subscribe": subscribe_message,
     "unsubscribe": unsubscribe_message,
     "id_post": id_post_message,

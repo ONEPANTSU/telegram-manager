@@ -19,6 +19,7 @@ from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 from useful.commands_handler import commands_handler
+from useful.exeptions import ClientException, ConnectionException, EntityException
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
 
@@ -57,12 +58,15 @@ async def percent_timer(timing, function, args):
             hour = time_iter
             percent = timing[hour]
             if time_iter != max(keys):
-                current_count = math.floor(count * percent / 100)
-                sum_current_count += current_count
+                current_count = round(count * percent / 100)
+                if current_count + sum_current_count <= count:
+                    sum_current_count += current_count
+                else:
+                    current_count = count - sum_current_count
             else:
                 current_count = count - sum_current_count
 
-            delay = math.floor(MILES_IN_HOUR / current_count)
+            delay = round(MILES_IN_HOUR / current_count)
             current_args = copy(args)
             current_args.append(delay)
             current_accounts = []
@@ -71,15 +75,19 @@ async def percent_timer(timing, function, args):
             ):
                 current_accounts.append(accounts[account_iter])
             current_args[1] = current_count
-            await function(args=current_args, accounts=current_accounts)
+            is_success = await function(args=current_args, accounts=current_accounts)
             last_account_iter += current_count
+
+            if not is_success:
+                return False
 
         else:
             await asyncio.sleep(MILES_IN_HOUR)
 
         end = time.time()
         print(start - end)
-        start = end
+
+    return True
 
 
 async def not_command_checker(message: Message, state: FSMContext):
@@ -149,8 +157,9 @@ async def get_accounts():
                     client = TelegramClient(
                         f"base/{session}", API_ID, API_HASH, proxy=proxy
                     )
-                except:
+                except ClientException:
                     client = TelegramClient(f"base/{session}", API_ID, API_HASH)
+
                 try:
                     await client.connect()
                     if not await client.get_me():
@@ -159,7 +168,7 @@ async def get_accounts():
                     else:
                         print(f"{session} connected")
                         accounts.append(client)
-                except:
+                except ConnectionException:
                     await client.disconnect()
                     remove(f"base/{session}")
         return accounts
@@ -309,7 +318,7 @@ async def leave_private_channel(args, accounts=None):
                 try:
                     chat = await account.get_entity(channel_link)
                     chat_title = chat.title
-                except:
+                except EntityException:
                     return
                 async for dialog in account.iter_dialogs():
                     if dialog.title == chat_title:

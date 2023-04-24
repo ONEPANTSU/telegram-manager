@@ -107,7 +107,7 @@ async def subscribe_ask_delay_state(
                 text=MESSAGES["delay_perсent"], reply_markup=None
             )
             # Встатить нужное
-            await SubscribeStates.delay.set()
+            await SubscribeStates.delay_percent.set()
 
 
 async def subscribe_delay_state(message: Message, state: FSMContext):
@@ -135,6 +135,42 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
                     text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
                 )
                 await state.finish()
+            else:
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await SubscribeStates.channel_link.set()
+
+
+async def subscribe_delay_percent_state(message: Message, state: FSMContext):
+    if await not_command_checker(message=message, state=state):
+        answer = message.text
+
+        timing = get_timing(answer)
+        if timing is None:
+            await message.answer(
+                text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
+            )
+            await SubscribeStates.delay_percent.set()
+        else:
+            data = await state.get_data()
+            is_public = data["is_public"] == "True"
+            args = [data["channel_link"], data["count"]]
+            if is_public:
+                is_success = await percent_timer(timing, subscribe_public_channel, args)
+            else:
+                is_success = await percent_timer(
+                    timing, subscribe_private_channel, args
+                )
+
+            if is_success:
+                await message.answer(
+                    text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
+                )
+                await state.finish()
+
             else:
                 await bot.send_message(
                     chat_id=message.chat.id,
@@ -555,6 +591,9 @@ def register_activity_handlers(dp: Dispatcher):
         subscribe_ask_delay_state, delay_callback.filter()
     )
     dp.register_message_handler(subscribe_delay_state, state=SubscribeStates.delay)
+    dp.register_message_handler(
+        subscribe_delay_percent_state, state=SubscribeStates.delay_percent
+    )
     dp.register_message_handler(
         unsubscribe_channel_link_state, state=UnsubscribeStates.channel_link
     )

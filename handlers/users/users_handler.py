@@ -2,11 +2,8 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     Message,
 )
-from aiogram.utils.callback_data import CallbackData
 from telethon import TelegramClient
 
 from config import *
