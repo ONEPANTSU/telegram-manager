@@ -195,7 +195,7 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
             await UnsubscribeStates.number_of_accounts.set()
         else:
             await state.update_data(count=int(answer))
-            await message.answer(text=MESSAGES["delay"])
+            await message.answer(text=MESSAGES["delay_ask"])
             await UnsubscribeStates.delay.set()
 
 
@@ -333,7 +333,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
             await ViewerPostStates.number_of_accounts.set()
         else:
             await state.update_data(count_accounts=int(answer))
-            await message.answer(text=MESSAGES["delay"])
+            await message.answer(text=MESSAGES["delay_ask"])
             await ViewerPostStates.delay.set()
 
 
@@ -471,7 +471,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
             await ReactionsStates.number_of_accounts.set()
         else:
             await state.update_data(count=int(answer))
-            await message.answer(text=MESSAGES["delay"])
+            await message.answer(text=MESSAGES["delay_ask"])
             await ReactionsStates.delay.set()
 
 
