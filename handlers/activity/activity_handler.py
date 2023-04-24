@@ -229,7 +229,6 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
                 await message.answer(text=MESSAGES["channel_link"])
                 await UnsubscribeStates.channel_link.set()
 
-
 """
        POST VIEWERS STATES⠀⠀⠀⠀⠀⠀⠀
                ⣿⣿⣿⠀⠀⠀⠀⠀
@@ -354,7 +353,6 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                 )
                 await message.answer(text=MESSAGES["channel_link"])
                 await ViewerPostStates.id_channel.set()
-
 
 """
         REACTIONS STATES⠀⠀⠀⠀⠀⠀⠀⠀
