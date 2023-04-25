@@ -257,7 +257,7 @@ async def unsubscribe_ask_delay_state(
                 text=MESSAGES["delay_perсent"], reply_markup=None
             )
             # Встатить нужное
-            await UnsubscribeStates.delay.set()
+            await UnsubscribeStates.delay_percent.set()
 
 
 async def unsubscribe_delay_state(message: Message, state: FSMContext):
@@ -285,6 +285,42 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
                     text=MESSAGES["unsubscribe"], reply_markup=ReplyKeyboardRemove()
                 )
                 await state.finish()
+            else:
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await UnsubscribeStates.channel_link.set()
+
+
+async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
+    if await not_command_checker(message=message, state=state):
+        answer = message.text
+
+        timing = get_timing(answer)
+        if timing is None:
+            await message.answer(
+                text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
+            )
+            await UnsubscribeStates.delay_percent.set()
+        else:
+            data = await state.get_data()
+            is_public = data["is_public"] == "True"
+            args = [data["channel_link"], data["count"]]
+            if is_public:
+                is_success = await percent_timer(timing, leave_public_channel, args)
+            else:
+                is_success = await percent_timer(
+                    timing, leave_private_channel, args
+                )
+
+            if is_success:
+                await message.answer(
+                    text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
+                )
+                await state.finish()
+
             else:
                 await bot.send_message(
                     chat_id=message.chat.id,
@@ -395,7 +431,7 @@ async def viewer_ask_delay_state(
                 text=MESSAGES["delay_perсent"], reply_markup=None
             )
             # Встатить нужное
-            await ViewerPostStates.delay.set()
+            await ViewerPostStates.delay_percent.set()
 
 
 async def viewer_delay_state(message: Message, state: FSMContext):
@@ -423,6 +459,36 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                     text=MESSAGES["viewer_post"], reply_markup=ReplyKeyboardRemove()
                 )
                 await state.finish()
+            else:
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await ViewerPostStates.id_channel.set()
+
+
+async def viewer_delay_percent_state(message: Message, state: FSMContext):
+    if await not_command_checker(message=message, state=state):
+        answer = message.text
+
+        timing = get_timing(answer)
+        if timing is None:
+            await message.answer(
+                text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ViewerPostStates.delay_percent.set()
+        else:
+            data = await state.get_data()
+            args = [data["channel_link"], data["count"], data["last_post_id"], data["count_posts"]]
+            is_success = await percent_timer(timing, view_post, args)
+
+            if is_success:
+                await message.answer(
+                    text=MESSAGES["viewer_post"], reply_markup=get_main_keyboard()
+                )
+                await state.finish()
+
             else:
                 await bot.send_message(
                     chat_id=message.chat.id,
@@ -533,7 +599,7 @@ async def reactions_ask_delay_state(
                 text=MESSAGES["delay_perсent"], reply_markup=None
             )
             # Встатить нужное
-            await ReactionsStates.delay.set()
+            await ReactionsStates.delay_percent.set()
 
 
 async def reactions_delay_state(message: Message, state: FSMContext):
@@ -561,6 +627,35 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                     text=MESSAGES["reactions"], reply_markup=ReplyKeyboardRemove()
                 )
                 await state.finish()
+            else:
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=MESSAGES["error"],
+                )
+                await message.answer(text=MESSAGES["channel_link"])
+                await ReactionsStates.id_channel.set()
+
+
+async def reactions_delay_percent_state(message: Message, state: FSMContext):
+    if await not_command_checker(message=message, state=state):
+        answer = message.text
+
+        timing = get_timing(answer)
+        if timing is None:
+            await message.answer(
+                text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
+            )
+            await ReactionsStates.delay_percent.set()
+        else:
+            data = await state.get_data()
+            args = [data["channel_link"], data["count"], data["post_id"], data["position"]]
+            is_success = await percent_timer(timing, view_post, args)
+            if is_success:
+                await message.answer(
+                    text=MESSAGES["reactions"], reply_markup=get_main_keyboard()
+                )
+                await state.finish()
+
             else:
                 await bot.send_message(
                     chat_id=message.chat.id,
@@ -604,6 +699,7 @@ def register_activity_handlers(dp: Dispatcher):
         unsubscribe_ask_delay_state, delay_callback.filter()
     )
     dp.register_message_handler(unsubscribe_delay_state, state=UnsubscribeStates.delay)
+    dp.register_message_handler(unsubscribe_delay_percent_state, state=UnsubscribeStates.delay_percent)
     dp.register_message_handler(
         viewer_id_channel_state, state=ViewerPostStates.id_channel
     )
@@ -616,6 +712,7 @@ def register_activity_handlers(dp: Dispatcher):
     )
     dp.register_callback_query_handler(viewer_ask_delay_state, delay_callback.filter())
     dp.register_message_handler(viewer_delay_state, state=ViewerPostStates.delay)
+    dp.register_message_handler(viewer_delay_percent_state, state=ViewerPostStates.delay_percent)
     dp.register_message_handler(
         reactions_id_channel_state, state=ReactionsStates.id_channel
     )
@@ -630,3 +727,4 @@ def register_activity_handlers(dp: Dispatcher):
         reactions_ask_delay_state, delay_callback.filter()
     )
     dp.register_message_handler(reactions_delay_state, state=ReactionsStates.delay)
+    dp.register_message_handler(reactions_delay_percent_state, state=ReactionsStates.delay_percent)

@@ -19,7 +19,6 @@ from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 from useful.commands_handler import commands_handler
-from useful.exeptions import ClientException, ConnectionException, EntityException
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
 
@@ -28,7 +27,16 @@ def get_timing(timing_str):
     timing_arr = timing_str.split("\n")
     timing_dict = {}
     for timing in timing_arr:
-        hour, percent = map(int, timing.split(" - "))
+        try:
+            hour, percent = map(int, timing.split(" - "))
+        except:
+            try:
+                hour, percent = map(int, timing.split("-"))
+            except:
+                try:
+                    hour, percent = map(int, timing.split(" -"))
+                except:
+                    hour, percent = map(int, timing.split("- "))
         timing_dict[hour] = percent
     if sum(timing_dict.values()) == 100:
         return timing_dict
@@ -157,7 +165,7 @@ async def get_accounts():
                     client = TelegramClient(
                         f"base/{session}", API_ID, API_HASH, proxy=proxy
                     )
-                except ClientException:
+                except:
                     client = TelegramClient(f"base/{session}", API_ID, API_HASH)
 
                 try:
@@ -168,7 +176,7 @@ async def get_accounts():
                     else:
                         print(f"{session} connected")
                         accounts.append(client)
-                except ConnectionException:
+                except:
                     await client.disconnect()
                     remove(f"base/{session}")
         return accounts
@@ -318,7 +326,7 @@ async def leave_private_channel(args, accounts=None):
                 try:
                     chat = await account.get_entity(channel_link)
                     chat_title = chat.title
-                except EntityException:
+                except:
                     return
                 async for dialog in account.iter_dialogs():
                     if dialog.title == chat_title:

@@ -8,3 +8,4 @@ class ReactionsStates(StatesGroup):
     number_of_accounts = State()
     ask = State()
     delay = State()
+    delay_percent = State()
