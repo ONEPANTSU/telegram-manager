@@ -2,12 +2,11 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from texts.buttons import BUTTONS
 from useful.callbacks import (
-    delay_callback,
     reactions_callback,
     subscribe_callback,
     unsubscribe_callback,
     viewer_post_callback,
-    yes_no_callback,
+    yes_no_callback, reactions_delay_callback,
 )
 from useful.instruments import callback_dict
 
@@ -61,15 +60,45 @@ def ask_keyboard(phone):
     return act_keyboard
 
 
-def ask_delay_keyboard(user_id, link, count, is_public):
+def ask_delay_keyboard(user_id, link, count, is_public, callback):
     callback_dict[user_id] = [link, count, is_public]
     delay_1 = InlineKeyboardButton(
         text=BUTTONS["delay_1"],
-        callback_data=delay_callback.new(answer=BUTTONS["delay_1"], user_id=user_id),
+        callback_data=callback.new(answer=BUTTONS["delay_1"], user_id=user_id),
     )
     delay_2 = InlineKeyboardButton(
         text=BUTTONS["delay_2"],
-        callback_data=delay_callback.new(answer=BUTTONS["delay_2"], user_id=user_id),
+        callback_data=callback.new(answer=BUTTONS["delay_2"], user_id=user_id),
+    )
+    act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
+
+    return act_delay_keyboard
+
+
+def ask_delay_keyboard_viewer(user_id, link, count, last_post_id, count_posts):
+    callback_dict[user_id] = [link, count, last_post_id, count_posts]
+    delay_1 = InlineKeyboardButton(
+        text=BUTTONS["delay_1"],
+        callback_data=viewer_post_callback.new(answer=BUTTONS["delay_1"], user_id=user_id),
+    )
+    delay_2 = InlineKeyboardButton(
+        text=BUTTONS["delay_2"],
+        callback_data=viewer_post_callback.new(answer=BUTTONS["delay_2"], user_id=user_id),
+    )
+    act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
+
+    return act_delay_keyboard
+
+
+def ask_delay_keyboard_reactions(user_id, link, count, post_id, position):
+    callback_dict[user_id] = [link, count, post_id, position]
+    delay_1 = InlineKeyboardButton(
+        text=BUTTONS["delay_1"],
+        callback_data=reactions_delay_callback.new(answer=BUTTONS["delay_1"], user_id=user_id),
+    )
+    delay_2 = InlineKeyboardButton(
+        text=BUTTONS["delay_2"],
+        callback_data=reactions_delay_callback.new(answer=BUTTONS["delay_2"], user_id=user_id),
     )
     act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
 

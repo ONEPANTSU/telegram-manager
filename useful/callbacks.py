@@ -8,4 +8,7 @@ reactions_callback = CallbackData("reactions_button")
 
 yes_no_callback = CallbackData("yes_no", "answer", "phone")
 
-delay_callback = CallbackData("delay", "answer", "user_id")
+subscribe_delay_callback = CallbackData("subscribe_delay", "answer", "user_id")
+unsubscribe_delay_callback = CallbackData("unsubscribe_delay", "answer", "user_id")
+viewer_post_delay_callback = CallbackData("viewer_post_delay", "answer", "user_id")
+reactions_delay_callback = CallbackData("reactions_delay", "answer", "user_id")
