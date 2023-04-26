@@ -17,7 +17,7 @@ from handlers.main.main_functions import get_main_keyboard
 from handlers.users.users_handler import add_user_button
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
-from texts.messages import MESSAGES
+from texts.messages import MESSAGES, LOADING
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
@@ -44,8 +44,9 @@ def get_timing(timing_str):
         return None
 
 
-async def percent_timer(timing, function, args):
+async def percent_timer(timing, function, args, message: Message = None):
     """
+    :param message:
     :param timing: get_timing()
     :param function: function of account's activity
     :param args: [channel_link, count],
@@ -53,6 +54,9 @@ async def percent_timer(timing, function, args):
                 [channel_link, count, post_id, position]
     :return: None
     """
+
+    message = await message.answer(text=LOADING[0])
+
     count = args[1]
     accounts = await get_accounts()
     shuffle(accounts)
@@ -83,12 +87,15 @@ async def percent_timer(timing, function, args):
             current_args.append(delay)
             current_accounts = []
             for account_iter in range(
-                last_account_iter, last_account_iter + current_count
+                    last_account_iter, last_account_iter + current_count
             ):
                 current_accounts.append(accounts[account_iter])
             current_args[1] = current_count
+
+            loading_args = [last_account_iter, count]
+
             is_success = await function(
-                args=current_args, accounts=current_accounts, last_iter=last_iter
+                args=current_args, accounts=current_accounts, last_iter=last_iter, message=message, loading_args=loading_args
             )
             last_account_iter += current_count
 
@@ -204,10 +211,44 @@ async def get_accounts_len():
     return accounts_len
 
 
-async def subscribe_public_channel(args, accounts=None, last_iter=False):
+async def edit_message_loading(message: Message, percent=0):
+    if percent == 1:
+        await message.edit_text(text=LOADING[10])
+    elif percent >= 0.9:
+        await message.edit_text(text=LOADING[9])
+    elif percent >= 0.8:
+        await message.edit_text(text=LOADING[8])
+    elif percent >= 0.7:
+        await message.edit_text(text=LOADING[7])
+    elif percent >= 0.6:
+        await message.edit_text(text=LOADING[6])
+    elif percent >= 0.5:
+        await message.edit_text(text=LOADING[5])
+    elif percent >= 0.4:
+        await message.edit_text(text=LOADING[4])
+    elif percent >= 0.3:
+        await message.edit_text(text=LOADING[3])
+    elif percent >= 0.2:
+        await message.edit_text(text=LOADING[2])
+    elif percent >= 0.1:
+        await message.edit_text(text=LOADING[1])
+    else:
+        await message.edit_text(text=LOADING[0])
+
+
+async def subscribe_public_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+
+    if loading_args is not None:
+        current_count = loading_args[0]
+        max_count = loading_args[1]
+    else:
+        current_count = 0
+        max_count = count
+        message = await message.answer(text=LOADING[0])
+
     if accounts is None:
         accounts = await get_accounts()
     accounts_len = len(accounts)
@@ -227,6 +268,10 @@ async def subscribe_public_channel(args, accounts=None, last_iter=False):
             except Exception as error:
                 print(str(error))
 
+            current_count += 1
+            done_percent = current_count / max_count
+            await edit_message_loading(message, done_percent)
+
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                 new_delay = delay + random.randint(-del_delay, del_delay)
@@ -242,10 +287,18 @@ async def subscribe_public_channel(args, accounts=None, last_iter=False):
         return False
 
 
-async def subscribe_private_channel(args, accounts=None, last_iter=False):
+async def subscribe_private_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+
+    if loading_args is not None:
+        current_count = loading_args[0]
+        max_count = loading_args[1]
+    else:
+        current_count = 0
+        max_count = count
+        message = await message.answer(text=LOADING[0])
 
     if "https://t.me/+" in channel_link:
         channel_link = channel_link.replace("https://t.me/+", "")
@@ -272,10 +325,16 @@ async def subscribe_private_channel(args, accounts=None, last_iter=False):
                 print(f"{phone.phone} вступил в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            current_count += 1
+            done_percent = current_count / max_count
+            await edit_message_loading(message, done_percent)
+
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
+
         disconnect_all(accounts)
         return True
     else:
@@ -283,10 +342,19 @@ async def subscribe_private_channel(args, accounts=None, last_iter=False):
         return False
 
 
-async def leave_public_channel(args, accounts=None, last_iter=False):
+async def leave_public_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+
+    if loading_args is not None:
+        current_count = loading_args[0]
+        max_count = loading_args[1]
+    else:
+        current_count = 0
+        max_count = count
+        message = await message.answer(text=LOADING[0])
+
     if accounts is None:
         accounts = await get_accounts()
     accounts_len = len(accounts)
@@ -302,10 +370,16 @@ async def leave_public_channel(args, accounts=None, last_iter=False):
                 print(f"{phone.phone} покинул {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            current_count += 1
+            done_percent = current_count / max_count
+            await edit_message_loading(message, done_percent)
+
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
+
         disconnect_all(accounts)
         return True
     else:
@@ -313,10 +387,19 @@ async def leave_public_channel(args, accounts=None, last_iter=False):
         return False
 
 
-async def leave_private_channel(args, accounts=None, last_iter=False):
+async def leave_private_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+
+    if loading_args is not None:
+        current_count = loading_args[0]
+        max_count = loading_args[1]
+    else:
+        current_count = 0
+        max_count = count
+        message = await message.answer(text=LOADING[0])
+
     if accounts is None:
         accounts = await get_accounts()
     accounts_len = len(accounts)
@@ -345,10 +428,16 @@ async def leave_private_channel(args, accounts=None, last_iter=False):
                         print(f"{phone.phone} покинул {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            current_count += 1
+            done_percent = current_count / max_count
+            await edit_message_loading(message, done_percent)
+
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
+
         disconnect_all(accounts)
         return True
     else:
@@ -356,12 +445,21 @@ async def leave_private_channel(args, accounts=None, last_iter=False):
         return False
 
 
-async def view_post(args, accounts=None, last_iter=False):
+async def view_post(args, accounts=None, last_iter=False, message=None, loading_args=None):
     channel_link = args[0]
     count_accounts = args[1]
     last_post_id = args[2]
     count_posts = args[3]
     delay = args[4]
+
+    if loading_args is not None:
+        current_count = loading_args[0]
+        max_count = loading_args[1]
+    else:
+        current_count = 0
+        max_count = count_accounts
+        message = await message.answer(text=LOADING[0])
+
     if accounts is None:
         accounts = await get_accounts()
     accounts_len = len(accounts)
@@ -394,10 +492,16 @@ async def view_post(args, accounts=None, last_iter=False):
                 print(f"{phone.phone} посмторел посты в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            current_count += 1
+            done_percent = current_count / max_count
+            await edit_message_loading(message, done_percent)
+
             if not (account_iter + 1 == count_accounts and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
+
         disconnect_all(accounts)
         return True
     else:
@@ -405,12 +509,21 @@ async def view_post(args, accounts=None, last_iter=False):
         return False
 
 
-async def click_on_button(args, accounts=None, last_iter=False):
+async def click_on_button(args, accounts=None, last_iter=False, message=None, loading_args=None):
     channel_link = args[0]
     count = args[1]
     post_id = args[2]
     position = args[3]
     delay = args[4]
+
+    if loading_args is not None:
+        current_count = loading_args[0]
+        max_count = loading_args[1]
+    else:
+        current_count = 0
+        max_count = count
+        message = await message.answer(text=LOADING[0])
+
     if accounts is None:
         accounts = await get_accounts()
     accounts_len = len(accounts)
@@ -433,10 +546,16 @@ async def click_on_button(args, accounts=None, last_iter=False):
                 print(f"{phone.phone} нажал на кнопку в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            current_count += 1
+            done_percent = current_count / max_count
+            await edit_message_loading(message, done_percent)
+
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
+
         disconnect_all(accounts)
         return True
     else:

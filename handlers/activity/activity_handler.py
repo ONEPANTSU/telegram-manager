@@ -135,11 +135,11 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await subscribe_public_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]]
+                    args=[data["channel_link"], data["count"], data["delay"]], message=message
                 )
             else:
                 is_success = await subscribe_private_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]]
+                    args=[data["channel_link"], data["count"], data["delay"]], message=message
                 )
             if is_success:
                 await message.answer(
@@ -170,10 +170,10 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             if is_public:
-                is_success = await percent_timer(timing, subscribe_public_channel, args)
+                is_success = await percent_timer(timing, subscribe_public_channel, args, message=message)
             else:
                 is_success = await percent_timer(
-                    timing, subscribe_private_channel, args
+                    timing, subscribe_private_channel, args, message=message
                 )
 
             if is_success:
@@ -298,11 +298,11 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await leave_public_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]]
+                    args=[data["channel_link"], data["count"], data["delay"]], message=message
                 )
             else:
                 is_success = await leave_private_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]]
+                    args=[data["channel_link"], data["count"], data["delay"]], message=message
                 )
             if is_success:
                 await message.answer(
@@ -333,9 +333,9 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             if is_public:
-                is_success = await percent_timer(timing, leave_public_channel, args)
+                is_success = await percent_timer(timing, leave_public_channel, args, message=message)
             else:
-                is_success = await percent_timer(timing, leave_private_channel, args)
+                is_success = await percent_timer(timing, leave_private_channel, args, message=message)
 
             if is_success:
                 await message.answer(
@@ -484,7 +484,8 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                     data["last_post_id"],
                     data["count_posts"],
                     data["delay"],
-                ]
+                ],
+                message=message
             )
             if is_success:
                 await message.answer(
@@ -518,7 +519,7 @@ async def viewer_delay_percent_state(message: Message, state: FSMContext):
                 data["last_post_id"],
                 data["count_posts"],
             ]
-            is_success = await percent_timer(timing, view_post, args)
+            is_success = await percent_timer(timing, view_post, args, message=message)
 
             if is_success:
                 await message.answer(
@@ -667,7 +668,8 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                     data["post_id"],
                     data["position"],
                     data["delay"],
-                ]
+                ],
+                message=message
             )
             if is_success:
                 await message.answer(
@@ -701,7 +703,7 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
                 data["post_id"],
                 data["position"],
             ]
-            is_success = await percent_timer(timing, view_post, args)
+            is_success = await percent_timer(timing, click_on_button, args, message=message)
             if is_success:
                 await message.answer(
                     text=MESSAGES["reactions"], reply_markup=get_main_keyboard()
