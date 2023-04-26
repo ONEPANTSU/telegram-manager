@@ -9,4 +9,3 @@ class SubscribeStates(StatesGroup):
     delay_percent = State()
     confirm = State()
     percent_confirm = State()
-

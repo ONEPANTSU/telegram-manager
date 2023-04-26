@@ -17,7 +17,7 @@ from handlers.main.main_functions import get_main_keyboard
 from handlers.users.users_handler import add_user_button
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
-from texts.messages import MESSAGES, LOADING
+from texts.messages import LOADING, MESSAGES
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
@@ -44,9 +44,9 @@ def get_timing(timing_str):
         return None
 
 
-async def percent_timer(timing, function, args, message: Message = None):
+async def percent_timer(timing, function, args, prev_message: Message = None):
     """
-    :param message:
+    :param prev_message:
     :param timing: get_timing()
     :param function: function of account's activity
     :param args: [channel_link, count],
@@ -54,8 +54,8 @@ async def percent_timer(timing, function, args, message: Message = None):
                 [channel_link, count, post_id, position]
     :return: None
     """
-
-    message = await message.answer(text=LOADING[0])
+    message = await prev_message.answer(text=LOADING[0])
+    await prev_message.delete()
 
     count = args[1]
     accounts = await get_accounts()
@@ -87,7 +87,7 @@ async def percent_timer(timing, function, args, message: Message = None):
             current_args.append(delay)
             current_accounts = []
             for account_iter in range(
-                    last_account_iter, last_account_iter + current_count
+                last_account_iter, last_account_iter + current_count
             ):
                 current_accounts.append(accounts[account_iter])
             current_args[1] = current_count
@@ -95,7 +95,11 @@ async def percent_timer(timing, function, args, message: Message = None):
             loading_args = [last_account_iter, count]
 
             is_success = await function(
-                args=current_args, accounts=current_accounts, last_iter=last_iter, message=message, loading_args=loading_args
+                args=current_args,
+                accounts=current_accounts,
+                last_iter=last_iter,
+                prev_message=message,
+                loading_args=loading_args,
             )
             last_account_iter += current_count
 
@@ -236,7 +240,9 @@ async def edit_message_loading(message: Message, percent=0):
         await message.edit_text(text=LOADING[0])
 
 
-async def subscribe_public_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
+async def subscribe_public_channel(
+    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -244,10 +250,12 @@ async def subscribe_public_channel(args, accounts=None, last_iter=False, message
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
+        message = prev_message
     else:
         current_count = 0
         max_count = count
-        message = await message.answer(text=LOADING[0])
+        message = await prev_message.answer(text=LOADING[0])
+        await prev_message.delete()
 
     if accounts is None:
         accounts = await get_accounts()
@@ -287,7 +295,9 @@ async def subscribe_public_channel(args, accounts=None, last_iter=False, message
         return False
 
 
-async def subscribe_private_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
+async def subscribe_private_channel(
+    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -295,10 +305,12 @@ async def subscribe_private_channel(args, accounts=None, last_iter=False, messag
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
+        message = prev_message
     else:
         current_count = 0
         max_count = count
-        message = await message.answer(text=LOADING[0])
+        message = await prev_message.answer(text=LOADING[0])
+        await prev_message.delete()
 
     if "https://t.me/+" in channel_link:
         channel_link = channel_link.replace("https://t.me/+", "")
@@ -342,7 +354,9 @@ async def subscribe_private_channel(args, accounts=None, last_iter=False, messag
         return False
 
 
-async def leave_public_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
+async def leave_public_channel(
+    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -350,10 +364,12 @@ async def leave_public_channel(args, accounts=None, last_iter=False, message=Non
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
+        message = prev_message
     else:
         current_count = 0
         max_count = count
-        message = await message.answer(text=LOADING[0])
+        message = await prev_message.answer(text=LOADING[0])
+        await prev_message.delete()
 
     if accounts is None:
         accounts = await get_accounts()
@@ -387,7 +403,9 @@ async def leave_public_channel(args, accounts=None, last_iter=False, message=Non
         return False
 
 
-async def leave_private_channel(args, accounts=None, last_iter=False, message=None, loading_args=None):
+async def leave_private_channel(
+    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -395,10 +413,12 @@ async def leave_private_channel(args, accounts=None, last_iter=False, message=No
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
+        message = prev_message
     else:
         current_count = 0
         max_count = count
-        message = await message.answer(text=LOADING[0])
+        message = await prev_message.answer(text=LOADING[0])
+        await prev_message.delete()
 
     if accounts is None:
         accounts = await get_accounts()
@@ -445,7 +465,9 @@ async def leave_private_channel(args, accounts=None, last_iter=False, message=No
         return False
 
 
-async def view_post(args, accounts=None, last_iter=False, message=None, loading_args=None):
+async def view_post(
+    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+):
     channel_link = args[0]
     count_accounts = args[1]
     last_post_id = args[2]
@@ -455,10 +477,12 @@ async def view_post(args, accounts=None, last_iter=False, message=None, loading_
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
+        message = prev_message
     else:
         current_count = 0
         max_count = count_accounts
-        message = await message.answer(text=LOADING[0])
+        message = await prev_message.answer(text=LOADING[0])
+        await prev_message.delete()
 
     if accounts is None:
         accounts = await get_accounts()
@@ -509,7 +533,9 @@ async def view_post(args, accounts=None, last_iter=False, message=None, loading_
         return False
 
 
-async def click_on_button(args, accounts=None, last_iter=False, message=None, loading_args=None):
+async def click_on_button(
+    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+):
     channel_link = args[0]
     count = args[1]
     post_id = args[2]
@@ -519,10 +545,12 @@ async def click_on_button(args, accounts=None, last_iter=False, message=None, lo
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
+        message = prev_message
     else:
         current_count = 0
         max_count = count
-        message = await message.answer(text=LOADING[0])
+        message = await prev_message.answer(text=LOADING[0])
+        await prev_message.delete()
 
     if accounts is None:
         accounts = await get_accounts()

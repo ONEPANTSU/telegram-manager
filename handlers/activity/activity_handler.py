@@ -7,15 +7,23 @@ from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
 from useful.callbacks import (
     reactions_callback,
+    reactions_delay_callback,
     subscribe_callback,
+    subscribe_delay_callback,
+    subscribe_yes_no_confirm_callback,
     unsubscribe_all_callback,
     unsubscribe_callback,
-    viewer_post_callback, subscribe_delay_callback, unsubscribe_delay_callback, viewer_post_delay_callback,
-    reactions_delay_callback, subscribe_yes_no_confirm_callback,
+    unsubscribe_delay_callback,
+    viewer_post_callback,
+    viewer_post_delay_callback,
 )
 from useful.instruments import callback_dict
-from useful.keyboards import ask_delay_keyboard, ask_delay_keyboard_viewer, ask_delay_keyboard_reactions, \
-    confirm_keyboard
+from useful.keyboards import (
+    ask_delay_keyboard,
+    ask_delay_keyboard_reactions,
+    ask_delay_keyboard_viewer,
+    confirm_keyboard,
+)
 
 
 async def chose_activity(message: Message):
@@ -131,11 +139,14 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             args = [data["channel_link"], data["count"], data["delay"]]
             callback_dict[user_id] = [is_public, args]
             await state.finish()
-            await message.answer(text=MESSAGES["confirm"],
-                                 reply_markup=confirm_keyboard(user_id=user_id,
-                                                               callback=subscribe_yes_no_confirm_callback,
-                                                               is_percent=False)
-                                 )
+            await message.answer(
+                text=MESSAGES["confirm"],
+                reply_markup=confirm_keyboard(
+                    user_id=user_id,
+                    callback=subscribe_yes_no_confirm_callback,
+                    is_percent=False,
+                ),
+            )
 
 
 async def subscribe_delay_percent_state(message: Message, state: FSMContext):
@@ -155,10 +166,14 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
             user_id = message.from_user.id
             callback_dict[user_id] = [timing, is_public, args]
             await state.finish()
-            await message.answer(text=MESSAGES["confirm"],
-                                 reply_markup=confirm_keyboard(user_id=user_id,
-                                                               callback=subscribe_yes_no_confirm_callback,
-                                                               is_percent=True))
+            await message.answer(
+                text=MESSAGES["confirm"],
+                reply_markup=confirm_keyboard(
+                    user_id=user_id,
+                    callback=subscribe_yes_no_confirm_callback,
+                    is_percent=True,
+                ),
+            )
 
 
 async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict):
@@ -174,21 +189,15 @@ async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict)
             await subscribe_confirm(args, is_public, query.message)
         callback_dict.pop(user_id)
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
-        await query.message.edit_text(
-            text=MESSAGES["confirm_no"], reply_markup=None
-        )
+        await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         callback_dict.pop(user_id)
 
 
 async def subscribe_confirm(args, is_public, message):
     if is_public:
-        is_success = await subscribe_public_channel(
-            args=args, message=message
-        )
+        is_success = await subscribe_public_channel(args=args, prev_message=message)
     else:
-        is_success = await subscribe_private_channel(
-            args=args, message=message
-        )
+        is_success = await subscribe_private_channel(args=args, prev_message=message)
     if is_success:
         await message.answer(
             text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
@@ -204,10 +213,12 @@ async def subscribe_confirm(args, is_public, message):
 
 async def subscribe_percent_confirm(args, is_public, timing, message):
     if is_public:
-        is_success = await percent_timer(timing, subscribe_public_channel, args, message=message)
+        is_success = await percent_timer(
+            timing, subscribe_public_channel, args, prev_message=message
+        )
     else:
         is_success = await percent_timer(
-            timing, subscribe_private_channel, args, message=message
+            timing, subscribe_private_channel, args, prev_message=message
         )
 
     if is_success:
@@ -222,7 +233,6 @@ async def subscribe_percent_confirm(args, is_public, timing, message):
         )
         await message.answer(text=MESSAGES["channel_link"])
         await SubscribeStates.channel_link.set()
-
 
 
 """
@@ -332,11 +342,13 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             if is_public:
                 is_success = await leave_public_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]], message=message
+                    args=[data["channel_link"], data["count"], data["delay"]],
+                    prev_message=message,
                 )
             else:
                 is_success = await leave_private_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]], message=message
+                    args=[data["channel_link"], data["count"], data["delay"]],
+                    prev_message=message,
                 )
             if is_success:
                 await message.answer(
@@ -367,9 +379,13 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
             is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             if is_public:
-                is_success = await percent_timer(timing, leave_public_channel, args, message=message)
+                is_success = await percent_timer(
+                    timing, leave_public_channel, args, prev_message=message
+                )
             else:
-                is_success = await percent_timer(timing, leave_private_channel, args, message=message)
+                is_success = await percent_timer(
+                    timing, leave_private_channel, args, prev_message=message
+                )
 
             if is_success:
                 await message.answer(
@@ -519,7 +535,7 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                     data["count_posts"],
                     data["delay"],
                 ],
-                message=message
+                prev_message=message,
             )
             if is_success:
                 await message.answer(
@@ -553,7 +569,9 @@ async def viewer_delay_percent_state(message: Message, state: FSMContext):
                 data["last_post_id"],
                 data["count_posts"],
             ]
-            is_success = await percent_timer(timing, view_post, args, message=message)
+            is_success = await percent_timer(
+                timing, view_post, args, prev_message=message
+            )
 
             if is_success:
                 await message.answer(
@@ -703,7 +721,7 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                     data["position"],
                     data["delay"],
                 ],
-                message=message
+                prev_message=message,
             )
             if is_success:
                 await message.answer(
@@ -737,7 +755,9 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
                 data["post_id"],
                 data["position"],
             ]
-            is_success = await percent_timer(timing, click_on_button, args, message=message)
+            is_success = await percent_timer(
+                timing, click_on_button, args, prev_message=message
+            )
             if is_success:
                 await message.answer(
                     text=MESSAGES["reactions"], reply_markup=get_main_keyboard()
