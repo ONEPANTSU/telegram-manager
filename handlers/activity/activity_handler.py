@@ -7,9 +7,7 @@ from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
 from useful.callbacks import (
     reactions_callback,
-    reactions_delay_callback,
     subscribe_callback,
-    subscribe_delay_callback,
     unsubscribe_all_callback,
     unsubscribe_callback,
     viewer_post_callback, subscribe_delay_callback, unsubscribe_delay_callback, viewer_post_delay_callback,
@@ -153,7 +151,7 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
         else:
             data = await state.get_data()
             is_public = data["is_public"] == "True"
-            args = [data["channel_link"], data["count"], data["delay"]]
+            args = [data["channel_link"], data["count"]]
             user_id = message.from_user.id
             callback_dict[user_id] = [timing, is_public, args]
             await state.finish()
@@ -185,11 +183,11 @@ async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict)
 async def subscribe_confirm(args, is_public, message):
     if is_public:
         is_success = await subscribe_public_channel(
-            args=args
+            args=args, message=message
         )
     else:
         is_success = await subscribe_private_channel(
-            args=args
+            args=args, message=message
         )
     if is_success:
         await message.answer(
@@ -206,10 +204,10 @@ async def subscribe_confirm(args, is_public, message):
 
 async def subscribe_percent_confirm(args, is_public, timing, message):
     if is_public:
-        is_success = await percent_timer(timing, subscribe_public_channel, args)
+        is_success = await percent_timer(timing, subscribe_public_channel, args, message=message)
     else:
         is_success = await percent_timer(
-            timing, subscribe_private_channel, args
+            timing, subscribe_private_channel, args, message=message
         )
 
     if is_success:
