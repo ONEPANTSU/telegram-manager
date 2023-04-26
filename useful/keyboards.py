@@ -7,7 +7,7 @@ from useful.callbacks import (
     subscribe_callback,
     unsubscribe_callback,
     viewer_post_callback,
-    yes_no_callback,
+    yes_no_callback, reactions_delay_callback, subscribe_yes_no_confirm_callback,
 )
 from useful.instruments import callback_dict
 
@@ -112,3 +112,17 @@ def ask_delay_keyboard_reactions(user_id, link, count, post_id, position):
     act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
 
     return act_delay_keyboard
+
+
+def confirm_keyboard(user_id, callback, is_percent):
+    yes_confirm = InlineKeyboardButton(
+        text=BUTTONS["yes_confirm"],
+        callback_data=subscribe_yes_no_confirm_callback.new(answer=BUTTONS["yes_confirm"], user_id=user_id, is_percent=is_percent),
+    )
+    no_confirm = InlineKeyboardButton(
+        text=BUTTONS["no_confirm"],
+        callback_data=subscribe_yes_no_confirm_callback.new(answer=BUTTONS["no_confirm"], user_id=user_id, is_percent=is_percent),
+    )
+    yes_no_confirm_keyboard = InlineKeyboardMarkup(row_width=2).add(yes_confirm, no_confirm)
+
+    return yes_no_confirm_keyboard

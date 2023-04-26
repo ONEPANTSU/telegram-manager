@@ -11,9 +11,13 @@ react_button = "Накрутить реакции 💥"
 
 users_button = "Аккаунты ➕"
 parse_button = "Парсер 👥"
+count_users_button = "База 👥"
 
 yes_button = "Да"
 no_button = "Нет"
+
+yes_confirm_button = "Да"
+no_confirm_button = "Нет"
 
 delay_1_button = "Простая 📊"
 delay_2_button = "Процентная 📉"
@@ -25,6 +29,7 @@ BUTTONS = {
     "back": back_button,
     "parse": parse_button,
     "users": users_button,
+    "count_users": count_users_button,
     "subscribe_public": subscribe_public_button,
     "subscribe_private": subscribe_private_button,
     "unsubscribe_public": unsubscribe_public_button,
@@ -34,6 +39,8 @@ BUTTONS = {
     "react": react_button,
     "yes": yes_button,
     "no": no_button,
+    "yes_confirm": yes_confirm_button,
+    "no_confirm": no_confirm_button,
     "delay_1": delay_1_button,
     "delay_2": delay_2_button,
 }
