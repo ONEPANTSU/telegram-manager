@@ -7,3 +7,6 @@ class SubscribeStates(StatesGroup):
     ask = State()
     delay = State()
     delay_percent = State()
+    confirm = State()
+    percent_confirm = State()
+

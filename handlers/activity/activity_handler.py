@@ -11,10 +11,11 @@ from useful.callbacks import (
     unsubscribe_all_callback,
     unsubscribe_callback,
     viewer_post_callback, subscribe_delay_callback, unsubscribe_delay_callback, viewer_post_delay_callback,
-    reactions_delay_callback,
+    reactions_delay_callback, subscribe_yes_no_confirm_callback,
 )
 from useful.instruments import callback_dict
-from useful.keyboards import ask_delay_keyboard, ask_delay_keyboard_viewer, ask_delay_keyboard_reactions
+from useful.keyboards import ask_delay_keyboard, ask_delay_keyboard_viewer, ask_delay_keyboard_reactions, \
+    confirm_keyboard
 
 
 async def chose_activity(message: Message):
@@ -122,26 +123,15 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             await state.update_data(delay=int(answer))
             data = await state.get_data()
             is_public = data["is_public"] == "True"
-            if is_public:
-                is_success = await subscribe_public_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]]
-                )
-            else:
-                is_success = await subscribe_private_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]]
-                )
-            if is_success:
-                await message.answer(
-                    text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
-                )
-                await state.finish()
-            else:
-                await bot.send_message(
-                    chat_id=message.chat.id,
-                    text=MESSAGES["error"],
-                )
-                await message.answer(text=MESSAGES["channel_link"])
-                await SubscribeStates.channel_link.set()
+            user_id = message.from_user.id
+            args = [data["channel_link"], data["count"], data["delay"]]
+            callback_dict[user_id] = [is_public, args]
+            await state.finish()
+            await message.answer(text=MESSAGES["confirm"],
+                                 reply_markup=confirm_keyboard(user_id=user_id,
+                                                               callback=subscribe_yes_no_confirm_callback,
+                                                               is_percent=False)
+                                 )
 
 
 async def subscribe_delay_percent_state(message: Message, state: FSMContext):
@@ -157,27 +147,78 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
         else:
             data = await state.get_data()
             is_public = data["is_public"] == "True"
-            args = [data["channel_link"], data["count"]]
-            if is_public:
-                is_success = await percent_timer(timing, subscribe_public_channel, args)
-            else:
-                is_success = await percent_timer(
-                    timing, subscribe_private_channel, args
-                )
+            args = [data["channel_link"], data["count"], data["delay"]]
+            user_id = message.from_user.id
+            callback_dict[user_id] = [timing, is_public, args]
+            await state.finish()
+            await message.answer(text=MESSAGES["confirm"],
+                                 reply_markup=confirm_keyboard(user_id=user_id,
+                                                               callback=subscribe_yes_no_confirm_callback,
+                                                               is_percent=True))
 
-            if is_success:
-                await message.answer(
-                    text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
-                )
-                await state.finish()
 
-            else:
-                await bot.send_message(
-                    chat_id=message.chat.id,
-                    text=MESSAGES["error"],
-                )
-                await message.answer(text=MESSAGES["channel_link"])
-                await SubscribeStates.channel_link.set()
+async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict):
+    user_id = int(callback_data["user_id"])
+    is_percent = callback_data["is_percent"] == "True"
+    answer = callback_data["answer"]
+    if answer == BUTTONS["yes_confirm"]:  # Подтверждено
+        if is_percent:
+            timing, is_public, args = callback_dict[user_id]
+            await subscribe_percent_confirm(args, is_public, timing, query.message)
+        else:
+            is_public, args = callback_dict[user_id]
+            await subscribe_confirm(args, is_public, query.message)
+        callback_dict.pop(user_id)
+    elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
+        await query.message.edit_text(
+            text=MESSAGES["confirm_no"], reply_markup=None
+        )
+        callback_dict.pop(user_id)
+
+
+async def subscribe_confirm(args, is_public, message):
+    if is_public:
+        is_success = await subscribe_public_channel(
+            args=args
+        )
+    else:
+        is_success = await subscribe_private_channel(
+            args=args
+        )
+    if is_success:
+        await message.answer(
+            text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
+        )
+    else:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["error"],
+        )
+        await message.answer(text=MESSAGES["channel_link"])
+        await SubscribeStates.channel_link.set()
+
+
+async def subscribe_percent_confirm(args, is_public, timing, message):
+    if is_public:
+        is_success = await percent_timer(timing, subscribe_public_channel, args)
+    else:
+        is_success = await percent_timer(
+            timing, subscribe_private_channel, args
+        )
+
+    if is_success:
+        await message.answer(
+            text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
+        )
+
+    else:
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=MESSAGES["error"],
+        )
+        await message.answer(text=MESSAGES["channel_link"])
+        await SubscribeStates.channel_link.set()
+
 
 
 """
@@ -712,6 +753,10 @@ def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(
         subscribe_delay_percent_state, state=SubscribeStates.delay_percent
     )
+    dp.register_callback_query_handler(
+        subscribe_ask_confirm_query, subscribe_yes_no_confirm_callback.filter()
+    )
+
     dp.register_message_handler(
         unsubscribe_channel_link_state, state=UnsubscribeStates.channel_link
     )
