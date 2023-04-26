@@ -7,14 +7,21 @@ from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
 from useful.callbacks import (
     reactions_callback,
+    reactions_delay_callback,
     subscribe_callback,
+    subscribe_delay_callback,
     unsubscribe_all_callback,
     unsubscribe_callback,
-    viewer_post_callback, subscribe_delay_callback, unsubscribe_delay_callback, viewer_post_delay_callback,
-    reactions_delay_callback,
+    unsubscribe_delay_callback,
+    viewer_post_callback,
+    viewer_post_delay_callback,
 )
 from useful.instruments import callback_dict
-from useful.keyboards import ask_delay_keyboard, ask_delay_keyboard_viewer, ask_delay_keyboard_reactions
+from useful.keyboards import (
+    ask_delay_keyboard,
+    ask_delay_keyboard_reactions,
+    ask_delay_keyboard_viewer,
+)
 
 
 async def chose_activity(message: Message):
@@ -79,7 +86,11 @@ async def subscribe_number_of_accounts_state(message: Message, state: FSMContext
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
-                    message.from_user.id, link, count, is_public, callback=subscribe_delay_callback
+                    message.from_user.id,
+                    link,
+                    count,
+                    is_public,
+                    callback=subscribe_delay_callback,
                 ),
             )
             await state.finish()
@@ -235,8 +246,14 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
             link = data["channel_link"]
             count = int(answer)
             is_public = data["is_public"]
-            await message.answer(text=MESSAGES["delay_ask"], reply_markup=ask_delay_keyboard(
-                    message.from_user.id, link, count, is_public, callback=unsubscribe_delay_callback
+            await message.answer(
+                text=MESSAGES["delay_ask"],
+                reply_markup=ask_delay_keyboard(
+                    message.from_user.id,
+                    link,
+                    count,
+                    is_public,
+                    callback=unsubscribe_delay_callback,
                 ),
             )
             await state.finish()
@@ -318,9 +335,7 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
             if is_public:
                 is_success = await percent_timer(timing, leave_public_channel, args)
             else:
-                is_success = await percent_timer(
-                    timing, leave_private_channel, args
-                )
+                is_success = await percent_timer(timing, leave_private_channel, args)
 
             if is_success:
                 await message.answer(
@@ -417,10 +432,12 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
             count = int(answer)
             last_post_id = data["last_post_id"]
             count_posts = data["count_posts"]
-            await message.answer(text=MESSAGES["delay_ask"], reply_markup=ask_delay_keyboard_viewer(
-                message.from_user.id, channel_link, count, last_post_id, count_posts
-            ),
-                                 )
+            await message.answer(
+                text=MESSAGES["delay_ask"],
+                reply_markup=ask_delay_keyboard_viewer(
+                    message.from_user.id, channel_link, count, last_post_id, count_posts
+                ),
+            )
             await state.finish()
 
 
@@ -495,7 +512,12 @@ async def viewer_delay_percent_state(message: Message, state: FSMContext):
             await ViewerPostStates.delay_percent.set()
         else:
             data = await state.get_data()
-            args = [data["channel_link"], data["count"], data["last_post_id"], data["count_posts"]]
+            args = [
+                data["channel_link"],
+                data["count"],
+                data["last_post_id"],
+                data["count_posts"],
+            ]
             is_success = await percent_timer(timing, view_post, args)
 
             if is_success:
@@ -593,10 +615,12 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
             count = int(answer)
             post_id = data["post_id"]
             position = data["position"]
-            await message.answer(text=MESSAGES["delay_ask"], reply_markup=ask_delay_keyboard_reactions(
-                message.from_user.id, link, count, post_id, position
-            ),
-                                 )
+            await message.answer(
+                text=MESSAGES["delay_ask"],
+                reply_markup=ask_delay_keyboard_reactions(
+                    message.from_user.id, link, count, post_id, position
+                ),
+            )
             await state.finish()
 
 
@@ -671,7 +695,12 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
             await ReactionsStates.delay_percent.set()
         else:
             data = await state.get_data()
-            args = [data["channel_link"], data["count"], data["post_id"], data["position"]]
+            args = [
+                data["channel_link"],
+                data["count"],
+                data["post_id"],
+                data["position"],
+            ]
             is_success = await percent_timer(timing, view_post, args)
             if is_success:
                 await message.answer(
@@ -722,7 +751,9 @@ def register_activity_handlers(dp: Dispatcher):
         unsubscribe_ask_delay_state, unsubscribe_delay_callback.filter()
     )
     dp.register_message_handler(unsubscribe_delay_state, state=UnsubscribeStates.delay)
-    dp.register_message_handler(unsubscribe_delay_percent_state, state=UnsubscribeStates.delay_percent)
+    dp.register_message_handler(
+        unsubscribe_delay_percent_state, state=UnsubscribeStates.delay_percent
+    )
     dp.register_message_handler(
         viewer_id_channel_state, state=ViewerPostStates.id_channel
     )
@@ -733,9 +764,13 @@ def register_activity_handlers(dp: Dispatcher):
     dp.register_message_handler(
         viewer_number_of_accounts_state, state=ViewerPostStates.number_of_accounts
     )
-    dp.register_callback_query_handler(viewer_ask_delay_state, viewer_post_delay_callback.filter())
+    dp.register_callback_query_handler(
+        viewer_ask_delay_state, viewer_post_delay_callback.filter()
+    )
     dp.register_message_handler(viewer_delay_state, state=ViewerPostStates.delay)
-    dp.register_message_handler(viewer_delay_percent_state, state=ViewerPostStates.delay_percent)
+    dp.register_message_handler(
+        viewer_delay_percent_state, state=ViewerPostStates.delay_percent
+    )
     dp.register_message_handler(
         reactions_id_channel_state, state=ReactionsStates.id_channel
     )
@@ -750,4 +785,6 @@ def register_activity_handlers(dp: Dispatcher):
         reactions_ask_delay_state, reactions_delay_callback.filter()
     )
     dp.register_message_handler(reactions_delay_state, state=ReactionsStates.delay)
-    dp.register_message_handler(reactions_delay_percent_state, state=ReactionsStates.delay_percent)
+    dp.register_message_handler(
+        reactions_delay_percent_state, state=ReactionsStates.delay_percent
+    )

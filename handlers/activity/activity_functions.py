@@ -63,6 +63,7 @@ async def percent_timer(timing, function, args):
 
     for time_iter in range(1, max(keys) + 1):
         if time_iter in keys:
+            last_iter = False
             hour = time_iter
             percent = timing[hour]
             if time_iter != max(keys):
@@ -72,6 +73,7 @@ async def percent_timer(timing, function, args):
                 else:
                     current_count = count - sum_current_count
             else:
+                last_iter = True
                 current_count = count - sum_current_count
 
             delay = round(MILES_IN_HOUR / current_count)
@@ -83,7 +85,9 @@ async def percent_timer(timing, function, args):
             ):
                 current_accounts.append(accounts[account_iter])
             current_args[1] = current_count
-            is_success = await function(args=current_args, accounts=current_accounts)
+            is_success = await function(
+                args=current_args, accounts=current_accounts, last_iter=last_iter
+            )
             last_account_iter += current_count
 
             if not is_success:
@@ -198,7 +202,7 @@ async def get_accounts_len():
     return accounts_len
 
 
-async def subscribe_public_channel(args, accounts=None):
+async def subscribe_public_channel(args, accounts=None, last_iter=False):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -221,9 +225,10 @@ async def subscribe_public_channel(args, accounts=None):
             except Exception as error:
                 print(str(error))
 
-            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-            new_delay = delay + random.randint(-del_delay, del_delay)
-            await asyncio.sleep(new_delay)
+            if not (account == count and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
 
             end = time.time()
             print(end - start)
@@ -235,7 +240,7 @@ async def subscribe_public_channel(args, accounts=None):
         return False
 
 
-async def subscribe_private_channel(args, accounts=None):
+async def subscribe_private_channel(args, accounts=None, last_iter=False):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -265,7 +270,10 @@ async def subscribe_private_channel(args, accounts=None):
                 print(f"{phone.phone} вступил в {channel_link}")
             except Exception as error:
                 print(str(error))
-            await asyncio.sleep(delay)
+            if not (account == count and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
         disconnect_all(accounts)
         return True
     else:
@@ -273,7 +281,7 @@ async def subscribe_private_channel(args, accounts=None):
         return False
 
 
-async def leave_public_channel(args, accounts=None):
+async def leave_public_channel(args, accounts=None, last_iter=False):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -292,9 +300,10 @@ async def leave_public_channel(args, accounts=None):
                 print(f"{phone.phone} покинул {channel_link}")
             except Exception as error:
                 print(str(error))
-            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-            new_delay = delay + random.randint(-del_delay, del_delay)
-            await asyncio.sleep(new_delay)
+            if not (account == count and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
         disconnect_all(accounts)
         return True
     else:
@@ -302,7 +311,7 @@ async def leave_public_channel(args, accounts=None):
         return False
 
 
-async def leave_private_channel(args, accounts=None):
+async def leave_private_channel(args, accounts=None, last_iter=False):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
@@ -334,9 +343,10 @@ async def leave_private_channel(args, accounts=None):
                         print(f"{phone.phone} покинул {channel_link}")
             except Exception as error:
                 print(str(error))
-            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-            new_delay = delay + random.randint(-del_delay, del_delay)
-            await asyncio.sleep(new_delay)
+            if not (account == count and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
         disconnect_all(accounts)
         return True
     else:
@@ -344,7 +354,7 @@ async def leave_private_channel(args, accounts=None):
         return False
 
 
-async def view_post(args, accounts=None):
+async def view_post(args, accounts=None, last_iter=False):
     channel_link = args[0]
     count_accounts = args[1]
     last_post_id = args[2]
@@ -382,9 +392,10 @@ async def view_post(args, accounts=None):
                 print(f"{phone.phone} посмторел посты в {channel_link}")
             except Exception as error:
                 print(str(error))
-            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-            new_delay = delay + random.randint(-del_delay, del_delay)
-            await asyncio.sleep(new_delay)
+            if not (account == count_accounts and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
         disconnect_all(accounts)
         return True
     else:
@@ -392,7 +403,7 @@ async def view_post(args, accounts=None):
         return False
 
 
-async def click_on_button(args, accounts=None):
+async def click_on_button(args, accounts=None, last_iter=False):
     channel_link = args[0]
     count = args[1]
     post_id = args[2]
@@ -420,9 +431,10 @@ async def click_on_button(args, accounts=None):
                 print(f"{phone.phone} нажал на кнопку в {channel_link}")
             except Exception as error:
                 print(str(error))
-            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-            new_delay = delay + random.randint(-del_delay, del_delay)
-            await asyncio.sleep(new_delay)
+            if not (account == count and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
         disconnect_all(accounts)
         return True
     else:

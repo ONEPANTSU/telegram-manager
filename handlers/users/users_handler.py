@@ -1,9 +1,6 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import (
-    CallbackQuery,
-    Message,
-)
+from aiogram.types import CallbackQuery, Message
 from telethon import TelegramClient
 
 from config import *
