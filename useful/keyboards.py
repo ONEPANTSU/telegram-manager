@@ -8,7 +8,7 @@ from useful.callbacks import (
     subscribe_yes_no_confirm_callback,
     unsubscribe_callback,
     viewer_post_callback,
-    yes_no_callback,
+    yes_no_callback, viewer_post_delay_callback,
 )
 from useful.instruments import callback_dict
 
@@ -81,13 +81,13 @@ def ask_delay_keyboard_viewer(user_id, link, count, last_post_id, count_posts):
     callback_dict[user_id] = [link, count, last_post_id, count_posts]
     delay_1 = InlineKeyboardButton(
         text=BUTTONS["delay_1"],
-        callback_data=viewer_post_callback.new(
+        callback_data=viewer_post_delay_callback.new(
             answer=BUTTONS["delay_1"], user_id=user_id
         ),
     )
     delay_2 = InlineKeyboardButton(
         text=BUTTONS["delay_2"],
-        callback_data=viewer_post_callback.new(
+        callback_data=viewer_post_delay_callback.new(
             answer=BUTTONS["delay_2"], user_id=user_id
         ),
     )
