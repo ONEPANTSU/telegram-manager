@@ -241,7 +241,7 @@ async def edit_message_loading(message: Message, percent=0):
 
 
 async def subscribe_public_channel(
-    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -296,7 +296,7 @@ async def subscribe_public_channel(
 
 
 async def subscribe_private_channel(
-    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -355,7 +355,7 @@ async def subscribe_private_channel(
 
 
 async def leave_public_channel(
-    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -404,7 +404,7 @@ async def leave_public_channel(
 
 
 async def leave_private_channel(
-    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -466,7 +466,7 @@ async def leave_private_channel(
 
 
 async def view_post(
-    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count_accounts = args[1]
@@ -534,7 +534,7 @@ async def view_post(
 
 
 async def click_on_button(
-    args, accounts=None, last_iter=False, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]

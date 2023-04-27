@@ -118,13 +118,13 @@ def ask_delay_keyboard_reactions(user_id, link, count, post_id, position):
 def confirm_keyboard(user_id, callback, is_percent):
     yes_confirm = InlineKeyboardButton(
         text=BUTTONS["yes_confirm"],
-        callback_data=subscribe_yes_no_confirm_callback.new(
+        callback_data=callback.new(
             answer=BUTTONS["yes_confirm"], user_id=user_id, is_percent=is_percent
         ),
     )
     no_confirm = InlineKeyboardButton(
         text=BUTTONS["no_confirm"],
-        callback_data=subscribe_yes_no_confirm_callback.new(
+        callback_data=callback.new(
             answer=BUTTONS["no_confirm"], user_id=user_id, is_percent=is_percent
         ),
     )

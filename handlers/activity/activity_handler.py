@@ -698,7 +698,7 @@ async def reactions_ask_delay_state(
             await query.message.edit_text(
                 text=MESSAGES["delay_perсent"], reply_markup=None
             )
-            # Встатить нужное
+            # Вставить нужное
             await ReactionsStates.delay_percent.set()
 
 
