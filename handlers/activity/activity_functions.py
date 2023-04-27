@@ -217,27 +217,55 @@ async def get_accounts_len():
 
 async def edit_message_loading(message: Message, percent=0):
     if percent == 1:
-        await message.edit_text(text=LOADING[10])
+        try:
+            await message.edit_text(text=LOADING[10])
+        except:
+            pass
     elif percent >= 0.9:
-        await message.edit_text(text=LOADING[9])
+        try:
+            await message.edit_text(text=LOADING[9])
+        except:
+            pass
     elif percent >= 0.8:
-        await message.edit_text(text=LOADING[8])
+        try:
+            await message.edit_text(text=LOADING[8])
+        except:
+            pass
     elif percent >= 0.7:
-        await message.edit_text(text=LOADING[7])
+        try:
+            await message.edit_text(text=LOADING[7])
+        except:
+            pass
     elif percent >= 0.6:
-        await message.edit_text(text=LOADING[6])
+        try:
+            await message.edit_text(text=LOADING[6])
+        except:
+            pass
     elif percent >= 0.5:
-        await message.edit_text(text=LOADING[5])
+        try:
+            await message.edit_text(text=LOADING[5])
+        except:
+            pass
     elif percent >= 0.4:
-        await message.edit_text(text=LOADING[4])
+        try:
+            await message.edit_text(text=LOADING[4])
+        except:
+            pass
     elif percent >= 0.3:
-        await message.edit_text(text=LOADING[3])
+        try:
+            await message.edit_text(text=LOADING[3])
+        except:
+            pass
     elif percent >= 0.2:
-        await message.edit_text(text=LOADING[2])
+        try:
+            await message.edit_text(text=LOADING[2])
+        except:
+            pass
     elif percent >= 0.1:
-        await message.edit_text(text=LOADING[1])
-    else:
-        await message.edit_text(text=LOADING[0])
+        try:
+            await message.edit_text(text=LOADING[1])
+        except:
+            pass
 
 
 async def subscribe_public_channel(

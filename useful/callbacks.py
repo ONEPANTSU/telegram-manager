@@ -17,11 +17,11 @@ subscribe_yes_no_confirm_callback = CallbackData(
     "subscribe_yes_no_confirm", "answer", "user_id", "is_percent"
 )
 unsubscribe_yes_no_confirm_callback = CallbackData(
-    "subscribe_yes_no_confirm", "answer", "user_id", "is_percent"
+    "unsubscribe_yes_no_confirm", "answer", "user_id", "is_percent"
 )
 viewer_post_delay_yes_no_confirm_callback = CallbackData(
-    "subscribe_yes_no_confirm", "answer", "user_id", "is_percent"
+    "viewer_yes_no_confirm", "answer", "user_id", "is_percent"
 )
 reactions_yes_no_confirm_callback = CallbackData(
-    "subscribe_yes_no_confirm", "answer", "user_id", "is_percent"
+    "reaction_yes_no_confirm", "answer", "user_id", "is_percent"
 )
