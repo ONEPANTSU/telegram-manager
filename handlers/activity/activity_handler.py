@@ -149,8 +149,7 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
 async def subscribe_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-
-        timing = get_timing(answer)
+        timing = get_timing(answer, message)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -349,7 +348,7 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer)
+        timing = get_timing(answer, message)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -577,7 +576,7 @@ async def viewer_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer)
+        timing = get_timing(answer, message)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -798,7 +797,7 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer)
+        timing = get_timing(answer, message)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()

@@ -62,6 +62,7 @@ error_message = "Произошла ошибка! Попробуйте ещё р
 confirm_message = "Данные введены верно?"
 confirm_no_message = "Действие не произведено!"
 confirm_yes_message = "Действие произведено!"
+get_timing_error = "Введен неправильный формат задержки. Действие не выполнено!"
 
 LOADING = [
     "▫️▫️▫️▫️▫️▫️▫️▫️▫️▫️ 0 %",
@@ -115,4 +116,5 @@ MESSAGES = {
     "confirm": confirm_message,
     "confirm_no": confirm_no_message,
     "confirm_yes": confirm_yes_message,
+    "get_timing": get_timing_error,
 }

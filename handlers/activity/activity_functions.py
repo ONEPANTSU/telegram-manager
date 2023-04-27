@@ -23,7 +23,7 @@ from useful.instruments import bot
 from useful.keyboards import activity_keyboard
 
 
-def get_timing(timing_str):
+def get_timing(timing_str, message: Message):
     timing_arr = timing_str.split("\n")
     timing_dict = {}
     for timing in timing_arr:
@@ -36,7 +36,10 @@ def get_timing(timing_str):
                 try:
                     hour, percent = map(int, timing.split(" -"))
                 except:
-                    hour, percent = map(int, timing.split("- "))
+                    try:
+                        hour, percent = map(int, timing.split("- "))
+                    except:
+                        return None
         timing_dict[hour] = percent
     if sum(timing_dict.values()) == 100:
         return timing_dict
