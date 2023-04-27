@@ -573,11 +573,11 @@ async def click_on_button(
     if loading_args is not None:
         current_count = loading_args[0]
         max_count = loading_args[1]
-        message = prev_message
+        edit_message = prev_message
     else:
         current_count = 0
         max_count = count
-        message = await prev_message.answer(text=LOADING[0])
+        edit_message = await prev_message.answer(text=LOADING[0])
         await prev_message.delete()
 
     if accounts is None:
@@ -605,7 +605,7 @@ async def click_on_button(
 
             current_count += 1
             done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+            await edit_message_loading(edit_message, done_percent)
 
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
