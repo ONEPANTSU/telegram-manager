@@ -8,6 +8,7 @@ from texts.messages import MESSAGES
 from useful.callbacks import (
     reactions_callback,
     reactions_delay_callback,
+    reactions_yes_no_confirm_callback,
     subscribe_callback,
     subscribe_delay_callback,
     subscribe_yes_no_confirm_callback,
@@ -16,7 +17,8 @@ from useful.callbacks import (
     unsubscribe_delay_callback,
     unsubscribe_yes_no_confirm_callback,
     viewer_post_callback,
-    viewer_post_delay_callback, viewer_yes_no_confirm_callback, reactions_yes_no_confirm_callback,
+    viewer_post_delay_callback,
+    viewer_yes_no_confirm_callback,
 )
 from useful.instruments import callback_dict
 from useful.keyboards import (
@@ -35,11 +37,6 @@ async def chose_activity(message: Message):
 
 """
     SUBSCRIBE CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -100,7 +97,7 @@ async def subscribe_number_of_accounts_state(message: Message, state: FSMContext
 
 
 async def subscribe_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -237,16 +234,11 @@ async def subscribe_percent_confirm(args, is_public, timing, message):
 
 """
     UNSUBSCRIBE CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
 async def unsubscribe_query(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     is_public = callback_data.get("is_public")
@@ -304,7 +296,7 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
 
 
 async def unsubscribe_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -440,12 +432,7 @@ async def unsubscribe_percent_confirm(args, is_public, timing, message):
 
 
 """
-       POST VIEWERS STATES⠀⠀⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+       POST VIEWERS STATES⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -529,7 +516,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
 
 
 async def viewer_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -650,9 +637,7 @@ async def viewer_confirm(args, message):
 
 
 async def viewer_percent_confirm(args, timing, message):
-    is_success = await percent_timer(
-        timing, view_post, args, prev_message=message
-    )
+    is_success = await percent_timer(timing, view_post, args, prev_message=message)
     if is_success:
         await message.answer(
             text=MESSAGES["viewer_post"], reply_markup=get_main_keyboard()
@@ -668,12 +653,7 @@ async def viewer_percent_confirm(args, timing, message):
 
 
 """
-        REACTIONS STATES⠀⠀⠀⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀
-               ⣿⣿⣿⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+        REACTIONS STATES⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 """
 
 
@@ -757,7 +737,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
 
 
 async def reactions_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -812,32 +792,6 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                     is_percent=False,
                 ),
             )
-            """
-            await state.update_data(delay=int(answer))
-            data = await state.get_data()
-            is_success = await click_on_button(
-                args=[
-                    data["channel_link"],
-                    data["count"],
-                    data["post_id"],
-                    data["position"],
-                    data["delay"],
-                ],
-                prev_message=message,
-            )
-            if is_success:
-                await message.answer(
-                    text=MESSAGES["reactions"], reply_markup=ReplyKeyboardRemove()
-                )
-                await state.finish()
-            else:
-                await bot.send_message(
-                    chat_id=message.chat.id,
-                    text=MESSAGES["error"],
-                )
-                await message.answer(text=MESSAGES["channel_link"])
-                await ReactionsStates.id_channel.set()
-            """
 
 
 async def reactions_delay_percent_state(message: Message, state: FSMContext):
@@ -869,31 +823,6 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
                     is_percent=True,
                 ),
             )
-            """
-            data = await state.get_data()
-            args = [
-                data["channel_link"],
-                data["count"],
-                data["post_id"],
-                data["position"],
-            ]
-            is_success = await percent_timer(
-                timing, click_on_button, args, prev_message=message
-            )
-            if is_success:
-                await message.answer(
-                    text=MESSAGES["reactions"], reply_markup=get_main_keyboard()
-                )
-                await state.finish()
-
-            else:
-                await bot.send_message(
-                    chat_id=message.chat.id,
-                    text=MESSAGES["error"],
-                )
-                await message.answer(text=MESSAGES["channel_link"])
-                await ReactionsStates.id_channel.set()
-            """
 
 
 async def reactions_ask_confirm_query(query: CallbackQuery, callback_data: dict):

@@ -8,7 +8,8 @@ from useful.callbacks import (
     subscribe_yes_no_confirm_callback,
     unsubscribe_callback,
     viewer_post_callback,
-    yes_no_callback, viewer_post_delay_callback,
+    viewer_post_delay_callback,
+    yes_no_callback,
 )
 from useful.instruments import callback_dict
 
