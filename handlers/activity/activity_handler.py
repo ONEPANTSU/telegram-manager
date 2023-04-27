@@ -351,33 +351,6 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
                     is_percent=False,
                 ),
             )
-            """
-            await state.update_data(delay=int(answer))
-            data = await state.get_data()
-            is_public = data["is_public"] == "True"
-            if is_public:
-                is_success = await leave_public_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]],
-                    prev_message=message,
-                )
-            else:
-                is_success = await leave_private_channel(
-                    args=[data["channel_link"], data["count"], data["delay"]],
-                    prev_message=message,
-                )
-            if is_success:
-                await message.answer(
-                    text=MESSAGES["unsubscribe"], reply_markup=ReplyKeyboardRemove()
-                )
-                await state.finish()
-            else:
-                await bot.send_message(
-                    chat_id=message.chat.id,
-                    text=MESSAGES["error"],
-                )
-                await message.answer(text=MESSAGES["channel_link"])
-                await UnsubscribeStates.channel_link.set()
-            """
 
 
 async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
@@ -405,33 +378,6 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
                     is_percent=True,
                 ),
             )
-            """
-            data = await state.get_data()
-            is_public = data["is_public"] == "True"
-            args = [data["channel_link"], data["count"]]
-            if is_public:
-                is_success = await percent_timer(
-                    timing, leave_public_channel, args, prev_message=message
-                )
-            else:
-                is_success = await percent_timer(
-                    timing, leave_private_channel, args, prev_message=message
-                )
-
-            if is_success:
-                await message.answer(
-                    text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
-                )
-                await state.finish()
-
-            else:
-                await bot.send_message(
-                    chat_id=message.chat.id,
-                    text=MESSAGES["error"],
-                )
-                await message.answer(text=MESSAGES["channel_link"])
-                await UnsubscribeStates.channel_link.set()
-            """
 
 
 async def unsubscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict):
@@ -466,7 +412,7 @@ async def unsubscribe_confirm(args, is_public, message):
             text=MESSAGES["error"],
         )
         await message.answer(text=MESSAGES["channel_link"])
-        await SubscribeStates.channel_link.set()
+        await UnsubscribeStates.channel_link.set()
 
 
 async def unsubscribe_percent_confirm(args, is_public, timing, message):
@@ -490,7 +436,7 @@ async def unsubscribe_percent_confirm(args, is_public, timing, message):
             text=MESSAGES["error"],
         )
         await message.answer(text=MESSAGES["channel_link"])
-        await SubscribeStates.channel_link.set()
+        await UnsubscribeStates.channel_link.set()
 
 
 """
