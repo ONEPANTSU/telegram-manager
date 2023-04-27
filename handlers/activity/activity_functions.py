@@ -60,6 +60,7 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
     count = args[1]
     accounts = await get_accounts()
     shuffle(accounts)
+    disconnect_all(accounts[count:])
 
     keys = list(timing.keys())
     sum_current_count = 0
@@ -159,7 +160,10 @@ def get_proxies():
 
 def disconnect_all(accounts):
     for account in accounts:
-        account.disconnect()
+        try:
+            account.disconnect()
+        except:
+            pass
 
 
 async def get_accounts():
@@ -167,43 +171,37 @@ async def get_accounts():
     for _, _, sessions in walk("base"):
         for session in sessions:
             if session.endswith("session"):
-                try:
-                    addr, port, user, pasw = get_proxies().split(":")
+                if not session + "-journal" in sessions:
+                    try:
+                        addr, port, user, pasw = get_proxies().split(":")
 
-                    proxy = {
-                        "proxy_type": "socks5",
-                        "addr": addr,
-                        "port": int(port),
-                        "username": user,
-                        "password": pasw,
-                        "rdns": True,
-                    }
+                        proxy = {
+                            "proxy_type": "socks5",
+                            "addr": addr,
+                            "port": int(port),
+                            "username": user,
+                            "password": pasw,
+                            "rdns": True,
+                        }
 
-                    client = TelegramClient(
-                        f"base/{session}", API_ID, API_HASH, proxy=proxy
-                    )
-                except:
-                    client = TelegramClient(f"base/{session}", API_ID, API_HASH)
+                        client = TelegramClient(
+                            f"base/{session}", API_ID, API_HASH, proxy=proxy
+                        )
+                    except:
+                        client = TelegramClient(f"base/{session}", API_ID, API_HASH)
 
-                try:
-                    await client.connect()
-                    if not await client.get_me():
+                    try:
+                        await client.connect()
+                        if not await client.get_me():
+                            await client.disconnect()
+                            remove(f"base/{session}")
+                        else:
+                            print(f"{session} connected")
+                            accounts.append(client)
+                    except:
                         await client.disconnect()
                         remove(f"base/{session}")
-                    else:
-                        print(f"{session} connected")
-                        accounts.append(client)
-                except:
-                    await client.disconnect()
-                    remove(f"base/{session}")
         return accounts
-
-
-# async def get_accounts_len():
-#     accounts = await get_accounts()
-#     accounts_len = len(accounts)
-#     disconnect_all(accounts)
-#     return accounts_len
 
 
 async def get_accounts_len():
@@ -212,6 +210,8 @@ async def get_accounts_len():
         for session in sessions:
             if session.endswith("session"):
                 accounts_len += 1
+            elif session.endswith("session-journal"):
+                accounts_len -= 1
     return accounts_len
 
 
@@ -287,6 +287,8 @@ async def subscribe_public_channel(
 
     if accounts is None:
         accounts = await get_accounts()
+        shuffle(accounts)
+        disconnect_all(accounts[count:])
     accounts_len = len(accounts)
     if count <= accounts_len:
         shuffle(accounts)
@@ -303,6 +305,8 @@ async def subscribe_public_channel(
                 print(f"{phone.phone} вступил в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            account.disconnect()
 
             current_count += 1
             done_percent = current_count / max_count
@@ -351,6 +355,8 @@ async def subscribe_private_channel(
 
     if accounts is None:
         accounts = await get_accounts()
+        shuffle(accounts)
+        disconnect_all(accounts[count:])
     accounts_len = len(accounts)
     if count <= accounts_len:
         shuffle(accounts)
@@ -365,6 +371,8 @@ async def subscribe_private_channel(
                 print(f"{phone.phone} вступил в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            account.disconnect()
 
             current_count += 1
             done_percent = current_count / max_count
@@ -401,6 +409,8 @@ async def leave_public_channel(
 
     if accounts is None:
         accounts = await get_accounts()
+        shuffle(accounts)
+        disconnect_all(accounts[count:])
     accounts_len = len(accounts)
     if count <= accounts_len:
         for account_iter in range(count):
@@ -414,6 +424,8 @@ async def leave_public_channel(
                 print(f"{phone.phone} покинул {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            account.disconnect()
 
             current_count += 1
             done_percent = current_count / max_count
@@ -450,6 +462,8 @@ async def leave_private_channel(
 
     if accounts is None:
         accounts = await get_accounts()
+        shuffle(accounts)
+        disconnect_all(accounts[count:])
     accounts_len = len(accounts)
     if count <= accounts_len:
         if "https://t.me/+" in channel_link:
@@ -476,6 +490,8 @@ async def leave_private_channel(
                         print(f"{phone.phone} покинул {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            account.disconnect()
 
             current_count += 1
             done_percent = current_count / max_count
@@ -514,6 +530,8 @@ async def view_post(
 
     if accounts is None:
         accounts = await get_accounts()
+        shuffle(accounts)
+        disconnect_all(accounts[count_accounts:])
     accounts_len = len(accounts)
     if count_accounts <= accounts_len:
         if "https://t.me/+" in channel_link:
@@ -544,6 +562,8 @@ async def view_post(
                 print(f"{phone.phone} посмторел посты в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            account.disconnect()
 
             current_count += 1
             done_percent = current_count / max_count
@@ -582,6 +602,8 @@ async def click_on_button(
 
     if accounts is None:
         accounts = await get_accounts()
+        shuffle(accounts)
+        disconnect_all(accounts[count:])
     accounts_len = len(accounts)
     if count <= accounts_len:
         if "https://t.me/+" in channel_link:
@@ -602,6 +624,8 @@ async def click_on_button(
                 print(f"{phone.phone} нажал на кнопку в {channel_link}")
             except Exception as error:
                 print(str(error))
+
+            account.disconnect()
 
             current_count += 1
             done_percent = current_count / max_count
