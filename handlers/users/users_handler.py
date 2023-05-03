@@ -56,6 +56,13 @@ async def phone_state(message: Message, state: FSMContext):
                 text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
             )
             await state.finish()
+        elif phone.startswith("8"):
+            phone = phone.replace("8", "+7", 1)
+            await state.update_data(phone=phone)
+            await message.answer(
+                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
+            )
+            await state.finish()
         else:
             await message.answer(text=MESSAGES["phone_error"])
             await AddUserStates.phone.set()
@@ -104,10 +111,10 @@ async def sms_state(message: Message, state: FSMContext):
         if is_password == BUTTONS["yes"]:
             password = (await state.get_data())["password"]
             await clients[phone]._start(
-                phone=phone, password=password, code_callback=code[phone]
+                phone=phone, password=password, code_callback=code[phone], message=message
             )
         else:
-            await clients[phone]._start(phone=phone, code_callback=code[phone])
+            await clients[phone]._start(phone=phone, code_callback=code[phone], message=message)
         await state.finish()
 
 

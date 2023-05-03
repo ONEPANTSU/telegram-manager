@@ -8,6 +8,7 @@ def get_main_keyboard():
     activity = KeyboardButton(BUTTONS["activity"])
     users = KeyboardButton(BUTTONS["users"])
     count_users = KeyboardButton(BUTTONS["count_users"])
+    #clear_journals = KeyboardButton(BUTTONS["clear_journals"])
     markup.add(activity, users, count_users)
     return markup
 

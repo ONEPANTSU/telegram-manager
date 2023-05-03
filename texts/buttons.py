@@ -24,6 +24,8 @@ delay_2_button = "Процентная 📉"
 
 back_button = "Назад 👈️"
 
+clear_journals_button = "Очистить журнал 🚫"
+
 BUTTONS = {
     "activity": activity_button,
     "back": back_button,
@@ -43,4 +45,5 @@ BUTTONS = {
     "no_confirm": no_confirm_button,
     "delay_1": delay_1_button,
     "delay_2": delay_2_button,
+    "clear_journals": clear_journals_button,
 }

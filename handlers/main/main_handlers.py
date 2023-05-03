@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 
-from handlers.activity.activity_functions import get_accounts_len
+from handlers.activity.activity_functions import get_all_accounts_len, delete_journals_files
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -25,8 +25,13 @@ async def back_by_command(message: Message):
 
 
 async def count_users_button(message: Message):
-    accounts_len = await get_accounts_len()
+    accounts_len = await get_all_accounts_len()
     await message.answer(text=MESSAGES["available_bot"].format(count_user=accounts_len))
+
+
+async def clear_journals_button(message: Message):
+    delete_journals_files()
+    await message.answer(text=MESSAGES["clear_journals"])
 
 
 def register_main_handlers(dp: Dispatcher):
@@ -35,3 +40,4 @@ def register_main_handlers(dp: Dispatcher):
     dp.register_message_handler(back_by_button, text=[BUTTONS["back"]])
     dp.register_message_handler(back_by_command, commands=[COMMANDS["back"]])
     dp.register_message_handler(count_users_button, text=[BUTTONS["count_users"]])
+    dp.register_message_handler(clear_journals_button, text=[BUTTONS["clear_journals"]])

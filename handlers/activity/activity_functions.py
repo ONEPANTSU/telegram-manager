@@ -1,5 +1,6 @@
 import asyncio
 import math
+import os
 import random
 import time
 from copy import copy
@@ -21,6 +22,7 @@ from texts.messages import LOADING, MESSAGES
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
+import gc
 
 
 def get_timing(timing_str, message: Message):
@@ -73,6 +75,9 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
 
     for time_iter in range(1, max(keys) + 1):
         if time_iter in keys:
+
+            gc.collect()
+
             last_iter = False
             hour = time_iter
             percent = timing[hour]
@@ -90,26 +95,32 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
             current_args = copy(args)
             current_args.append(delay)
             current_accounts = []
-            for account_iter in range(
-                last_account_iter, last_account_iter + current_count
-            ):
-                current_accounts.append(accounts[account_iter])
-            current_args[1] = current_count
+            try:
+                for account_iter in range(
+                    last_account_iter, last_account_iter + current_count
+                ):
+                    try:
+                        current_accounts.append(accounts[account_iter])
+                    except:
+                        print("IndexError: list index out of range")
 
-            loading_args = [last_account_iter, count]
+                current_args[1] = current_count
 
-            is_success = await function(
-                args=current_args,
-                accounts=current_accounts,
-                last_iter=last_iter,
-                prev_message=message,
-                loading_args=loading_args,
-            )
-            last_account_iter += current_count
+                loading_args = [last_account_iter, count]
 
-            if not is_success:
-                return False
+                is_success = await function(
+                    args=current_args,
+                    accounts=current_accounts,
+                    last_iter=last_iter,
+                    prev_message=message,
+                    loading_args=loading_args,
+                )
+                last_account_iter += current_count
 
+                if not is_success:
+                    return False
+            except:
+                print("IndexError: list index out of range II")
         else:
             await asyncio.sleep(MILES_IN_HOUR)
 
@@ -161,6 +172,16 @@ def get_proxies():
         return proxies
 
 
+def delete_journals_files():
+    for _, _, sessions in walk("base"):
+        for session in sessions:
+            if session.endswith("journal"):
+                try:
+                    os.remove("base/" + session)
+                except:
+                    print("Deleting was excepted")
+
+
 def disconnect_all(accounts):
     for account in accounts:
         try:
@@ -206,6 +227,13 @@ async def get_accounts():
                         remove(f"base/{session}")
         return accounts
 
+async def get_all_accounts_len():
+    accounts_len = 0
+    for _, _, sessions in walk("base"):
+        for session in sessions:
+            if session.endswith("session"):
+                accounts_len += 1
+    return accounts_len
 
 async def get_accounts_len():
     accounts_len = 0
@@ -323,6 +351,7 @@ async def subscribe_public_channel(
             end = time.time()
             print(end - start)
 
+            gc.collect()
         disconnect_all(accounts)
         return True
     else:
@@ -361,36 +390,38 @@ async def subscribe_private_channel(
         shuffle(accounts)
         disconnect_all(accounts[count:])
     accounts_len = len(accounts)
-    if count <= accounts_len:
-        shuffle(accounts)
-        for account_iter in range(count):
-            account = accounts[account_iter]
-            phone = await account.get_me()
-            try:
-                await account(
-                    functions.account.UpdateStatusRequest(offline=False)
-                )  # Go to online
-                await account(ImportChatInviteRequest(channel_link))
-                print(f"{phone.phone} вступил в {channel_link}")
-            except Exception as error:
-                print(str(error))
+    if count > accounts_len:
+        count = accounts_len
+    shuffle(accounts)
+    for account_iter in range(count):
+        account = accounts[account_iter]
+        phone = await account.get_me()
+        try:
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
+            await account(ImportChatInviteRequest(channel_link))
+            print(f"{phone.phone} вступил в {channel_link}")
+        except Exception as error:
+            print(str(error))
 
-            account.disconnect()
+        account.disconnect()
 
-            current_count += 1
-            done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+        current_count += 1
+        done_percent = current_count / max_count
+        await edit_message_loading(message, done_percent)
 
-            if not (account_iter + 1 == count and last_iter):
-                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-                new_delay = delay + random.randint(-del_delay, del_delay)
-                await asyncio.sleep(new_delay)
+        if not (account_iter + 1 == count and last_iter):
+            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+            new_delay = delay + random.randint(-del_delay, del_delay)
+            await asyncio.sleep(new_delay)
 
-        disconnect_all(accounts)
-        return True
-    else:
-        disconnect_all(accounts)
-        return False
+        gc.collect()
+    disconnect_all(accounts)
+    return True
+    # else:
+    #     disconnect_all(accounts)
+    #     return False
 
 
 async def leave_public_channel(
@@ -415,35 +446,37 @@ async def leave_public_channel(
         shuffle(accounts)
         disconnect_all(accounts[count:])
     accounts_len = len(accounts)
-    if count <= accounts_len:
-        for account_iter in range(count):
-            account = accounts[account_iter]
-            phone = await account.get_me()
-            try:
-                await account(
-                    functions.account.UpdateStatusRequest(offline=False)
-                )  # Go to online
-                await account(LeaveChannelRequest(channel_link))
-                print(f"{phone.phone} покинул {channel_link}")
-            except Exception as error:
-                print(str(error))
+    if count > accounts_len:
+        count = accounts_len
+    for account_iter in range(count):
+        account = accounts[account_iter]
+        phone = await account.get_me()
+        try:
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
+            await account(LeaveChannelRequest(channel_link))
+            print(f"{phone.phone} покинул {channel_link}")
+        except Exception as error:
+            print(str(error))
 
-            account.disconnect()
+        account.disconnect()
 
-            current_count += 1
-            done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+        current_count += 1
+        done_percent = current_count / max_count
+        await edit_message_loading(message, done_percent)
 
-            if not (account_iter + 1 == count and last_iter):
-                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-                new_delay = delay + random.randint(-del_delay, del_delay)
-                await asyncio.sleep(new_delay)
+        if not (account_iter + 1 == count and last_iter):
+            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+            new_delay = delay + random.randint(-del_delay, del_delay)
+            await asyncio.sleep(new_delay)
 
-        disconnect_all(accounts)
-        return True
-    else:
-        disconnect_all(accounts)
-        return False
+        gc.collect()
+    disconnect_all(accounts)
+    return True
+    # else:
+    #     disconnect_all(accounts)
+    #     return False
 
 
 async def leave_private_channel(
@@ -468,48 +501,50 @@ async def leave_private_channel(
         shuffle(accounts)
         disconnect_all(accounts[count:])
     accounts_len = len(accounts)
-    if count <= accounts_len:
-        if "https://t.me/+" in channel_link:
-            channel_link = channel_link.replace(
-                "https://t.me/+", "https://t.me/joinchat/"
-            )
-        elif "t.me/+" in channel_link:
-            channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
-        for account_iter in range(count):
-            account = accounts[account_iter]
-            phone = await account.get_me()
+    if count > accounts_len:
+        count = accounts_len
+    if "https://t.me/+" in channel_link:
+        channel_link = channel_link.replace(
+            "https://t.me/+", "https://t.me/joinchat/"
+        )
+    elif "t.me/+" in channel_link:
+        channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
+    for account_iter in range(count):
+        account = accounts[account_iter]
+        phone = await account.get_me()
+        try:
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
             try:
-                await account(
-                    functions.account.UpdateStatusRequest(offline=False)
-                )  # Go to online
-                try:
-                    chat = await account.get_entity(channel_link)
-                    chat_title = chat.title
-                except:
-                    return
-                async for dialog in account.iter_dialogs():
-                    if dialog.title == chat_title:
-                        await dialog.delete()
-                        print(f"{phone.phone} покинул {channel_link}")
-            except Exception as error:
-                print(str(error))
+                chat = await account.get_entity(channel_link)
+                chat_title = chat.title
+            except:
+                return
+            async for dialog in account.iter_dialogs():
+                if dialog.title == chat_title:
+                    await dialog.delete()
+                    print(f"{phone.phone} покинул {channel_link}")
+        except Exception as error:
+            print(str(error))
 
-            account.disconnect()
+        account.disconnect()
 
-            current_count += 1
-            done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+        current_count += 1
+        done_percent = current_count / max_count
+        await edit_message_loading(message, done_percent)
 
-            if not (account_iter + 1 == count and last_iter):
-                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-                new_delay = delay + random.randint(-del_delay, del_delay)
-                await asyncio.sleep(new_delay)
+        if not (account_iter + 1 == count and last_iter):
+            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+            new_delay = delay + random.randint(-del_delay, del_delay)
+            await asyncio.sleep(new_delay)
 
-        disconnect_all(accounts)
-        return True
-    else:
-        disconnect_all(accounts)
-        return False
+        gc.collect()
+    disconnect_all(accounts)
+    return True
+    # else:
+    #     disconnect_all(accounts)
+    #     return False
 
 
 async def view_post(
@@ -536,52 +571,54 @@ async def view_post(
         shuffle(accounts)
         disconnect_all(accounts[count_accounts:])
     accounts_len = len(accounts)
-    if count_accounts <= accounts_len:
-        if "https://t.me/+" in channel_link:
-            channel_link = channel_link.replace(
-                "https://t.me/+", "https://t.me/joinchat/"
-            )
-        elif "t.me/+" in channel_link:
-            channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
-        for account_iter in range(count_accounts):
-            account = accounts[account_iter]
-            phone = await account.get_me()
-            try:
-                await account(
-                    functions.account.UpdateStatusRequest(offline=False)
-                )  # Go to online
-                await account(
-                    functions.messages.GetMessagesViewsRequest(
-                        peer=channel_link,
-                        id=[
-                            post_id
-                            for post_id in range(
-                                last_post_id, last_post_id - count_posts, -1
-                            )
-                        ],
-                        increment=True,
-                    )
+    if count_accounts > accounts_len:
+        count_accounts = accounts_len
+    if "https://t.me/+" in channel_link:
+        channel_link = channel_link.replace(
+            "https://t.me/+", "https://t.me/joinchat/"
+        )
+    elif "t.me/+" in channel_link:
+        channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
+    for account_iter in range(count_accounts):
+        account = accounts[account_iter]
+        phone = await account.get_me()
+        try:
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
+            await account(
+                functions.messages.GetMessagesViewsRequest(
+                    peer=channel_link,
+                    id=[
+                        post_id
+                        for post_id in range(
+                            last_post_id, last_post_id - count_posts, -1
+                        )
+                    ],
+                    increment=True,
                 )
-                print(f"{phone.phone} посмторел посты в {channel_link}")
-            except Exception as error:
-                print(str(error))
+            )
+            print(f"{phone.phone} посмторел посты в {channel_link}")
+        except Exception as error:
+            print(str(error))
 
-            account.disconnect()
+        account.disconnect()
 
-            current_count += 1
-            done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+        current_count += 1
+        done_percent = current_count / max_count
+        await edit_message_loading(message, done_percent)
 
-            if not (account_iter + 1 == count_accounts and last_iter):
-                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-                new_delay = delay + random.randint(-del_delay, del_delay)
-                await asyncio.sleep(new_delay)
+        if not (account_iter + 1 == count_accounts and last_iter):
+            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+            new_delay = delay + random.randint(-del_delay, del_delay)
+            await asyncio.sleep(new_delay)
 
-        disconnect_all(accounts)
-        return True
-    else:
-        disconnect_all(accounts)
-        return False
+        gc.collect()
+    disconnect_all(accounts)
+    return True
+    # else:
+    #     disconnect_all(accounts)
+    #     return False
 
 
 async def click_on_button(
@@ -608,39 +645,41 @@ async def click_on_button(
         shuffle(accounts)
         disconnect_all(accounts[count:])
     accounts_len = len(accounts)
-    if count <= accounts_len:
-        if "https://t.me/+" in channel_link:
-            channel_link = channel_link.replace(
-                "https://t.me/+", "https://t.me/joinchat/"
-            )
-        elif "t.me/+" in channel_link:
-            channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
-        for account_iter in range(count):
+    if count > accounts_len:
+        count = accounts_len
+    if "https://t.me/+" in channel_link:
+        channel_link = channel_link.replace(
+            "https://t.me/+", "https://t.me/joinchat/"
+        )
+    elif "t.me/+" in channel_link:
+        channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
+    for account_iter in range(count):
+        try:
             account = accounts[account_iter]
             phone = await account.get_me()
-            try:
-                await account(
-                    functions.account.UpdateStatusRequest(offline=False)
-                )  # Go to online
-                message = await account.get_messages(channel_link, ids=[int(post_id)])
-                await message[0].click(position - 1)
-                print(f"{phone.phone} нажал на кнопку в {channel_link}")
-            except Exception as error:
-                print(str(error))
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
+            message = await account.get_messages(channel_link, ids=[int(post_id)])
+            await message[0].click(position - 1)
+            print(f"{phone.phone} нажал на кнопку в {channel_link}")
+        except Exception as error:
+            print(str(error))
 
-            account.disconnect()
+        account.disconnect()
 
-            current_count += 1
-            done_percent = current_count / max_count
-            await edit_message_loading(edit_message, done_percent)
+        current_count += 1
+        done_percent = current_count / max_count
+        await edit_message_loading(edit_message, done_percent)
 
-            if not (account_iter + 1 == count and last_iter):
-                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-                new_delay = delay + random.randint(-del_delay, del_delay)
-                await asyncio.sleep(new_delay)
+        if not (account_iter + 1 == count and last_iter):
+            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+            new_delay = delay + random.randint(-del_delay, del_delay)
+            await asyncio.sleep(new_delay)
 
-        disconnect_all(accounts)
-        return True
-    else:
-        disconnect_all(accounts)
-        return False
+        gc.collect()
+    disconnect_all(accounts)
+    return True
+    # else:
+    #     disconnect_all(accounts)
+    #     return False
