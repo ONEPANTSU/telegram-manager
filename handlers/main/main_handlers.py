@@ -14,6 +14,8 @@ async def help_command(message: Message):
 
 async def start_command(message: Message):
     await main_menu(message, message_text=MESSAGES["start"].format(message.from_user))
+    accounts = get_list_of_numbers()
+    print(accounts)
 
 
 async def back_by_button(message: Message):

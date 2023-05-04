@@ -235,6 +235,50 @@ async def get_all_accounts_len():
                 accounts_len += 1
     return accounts_len
 
+def get_list_of_numbers():
+    accounts = []
+    for _, _, sessions in walk("base"):
+        for session in sessions:
+            if session.endswith("session"):
+                accounts.append(session)
+    return accounts
+
+
+def connect_to_account(session):
+    for _, _, sessions in walk("base"):
+        if not session + "-journal" in sessions:
+            try:
+                addr, port, user, pasw = get_proxies().split(":")
+
+                proxy = {
+                    "proxy_type": "socks5",
+                    "addr": addr,
+                    "port": int(port),
+                    "username": user,
+                    "password": pasw,
+                    "rdns": True,
+                }
+
+                client = TelegramClient(
+                    f"base/{session}", API_ID, API_HASH, proxy=proxy
+                )
+            except:
+                client = TelegramClient(f"base/{session}", API_ID, API_HASH)
+
+            try:
+                await client.connect()
+                if not await client.get_me():
+                    await client.disconnect()
+                    remove(f"base/{session}")
+                else:
+                    print(f"{session} connected")
+                    return client
+            except:
+                await client.disconnect()
+                remove(f"base/{session}")
+            return None
+
+
 async def get_accounts_len():
     accounts_len = 0
     for _, _, sessions in walk("base"):
@@ -317,7 +361,7 @@ async def subscribe_public_channel(
         await prev_message.delete()
 
     if accounts is None:
-        accounts = await get_accounts()
+        accounts = get_list_of_numbers()
         shuffle(accounts)
         disconnect_all(accounts[count:])
     accounts_len = len(accounts)
@@ -326,27 +370,31 @@ async def subscribe_public_channel(
         for account_iter in range(count):
             start = time.time()
 
-            account = accounts[account_iter]
-            phone = await account.get_me()
-            try:
-                await account(
-                    functions.account.UpdateStatusRequest(offline=False)
-                )  # Go to online
-                await account(JoinChannelRequest(channel_link))
-                print(f"{phone.phone} вступил в {channel_link}")
-            except Exception as error:
-                print(str(error))
+            account = connect_to_account(accounts[account_iter])
+            if account is not None:
 
-            account.disconnect()
+                phone = await account.get_me()
+                try:
+                    await account(
+                        functions.account.UpdateStatusRequest(offline=False)
+                    )  # Go to online
+                    await account(JoinChannelRequest(channel_link))
+                    print(f"{phone.phone} вступил в {channel_link}")
+                except Exception as error:
+                    print(str(error))
 
-            current_count += 1
-            done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+                account.disconnect()
 
-            if not (account_iter + 1 == count and last_iter):
-                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-                new_delay = delay + random.randint(-del_delay, del_delay)
-                await asyncio.sleep(new_delay)
+                current_count += 1
+                done_percent = current_count / max_count
+                await edit_message_loading(message, done_percent)
+
+                if not (account_iter + 1 == count and last_iter):
+                    del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                    new_delay = delay + random.randint(-del_delay, del_delay)
+                    await asyncio.sleep(new_delay)
+            else:
+                print("connection error")
 
             end = time.time()
             print(end - start)
