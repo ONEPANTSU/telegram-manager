@@ -63,9 +63,9 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
     await prev_message.delete()
 
     count = args[1]
-    accounts = await get_accounts()
+    accounts = get_list_of_numbers()
     shuffle(accounts)
-    disconnect_all(accounts[count:])
+    accounts = accounts[count:]
 
     keys = list(timing.keys())
     sum_current_count = 0
@@ -182,12 +182,12 @@ def delete_journals_files():
                     print("Deleting was excepted")
 
 
-def disconnect_all(accounts):
-    for account in accounts:
-        try:
-            account.disconnect()
-        except:
-            pass
+# def disconnect_all(accounts):
+#     for account in accounts:
+#         try:
+#             account.disconnect()
+#         except:
+#             pass
 
 
 async def get_accounts():
@@ -365,7 +365,8 @@ async def subscribe_public_channel(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        disconnect_all(accounts[count:])
+        #disconnect_all(accounts[count:])
+        accounts = accounts[count:]
     accounts_len = len(accounts)
     if count <= accounts_len:
         shuffle(accounts)
@@ -402,10 +403,10 @@ async def subscribe_public_channel(
             print(end - start)
 
             gc.collect()
-        disconnect_all(accounts)
+        #disconnect_all(accounts)
         return True
     else:
-        disconnect_all(accounts)
+        #disconnect_all(accounts)
         return False
 
 
@@ -438,7 +439,8 @@ async def subscribe_private_channel(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        disconnect_all(accounts[count:])
+        #disconnect_all(accounts[count:])
+        accounts = accounts[count:]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -470,7 +472,7 @@ async def subscribe_private_channel(
             print("Connection error")
 
         gc.collect()
-    disconnect_all(accounts)
+    #disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -497,7 +499,8 @@ async def leave_public_channel(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        disconnect_all(accounts[count:])
+        #disconnect_all(accounts[count:])
+        accounts = accounts[count:]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -528,7 +531,7 @@ async def leave_public_channel(
             print("Connection error")
 
         gc.collect()
-    disconnect_all(accounts)
+    #disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -555,7 +558,8 @@ async def leave_private_channel(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        disconnect_all(accounts[count:])
+        #disconnect_all(accounts[count:])
+        accounts = accounts[count:]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -599,7 +603,7 @@ async def leave_private_channel(
             await asyncio.sleep(new_delay)
 
         gc.collect()
-    disconnect_all(accounts)
+    #disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -628,7 +632,8 @@ async def view_post(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        disconnect_all(accounts[count_accounts:])
+        #disconnect_all(accounts[count_accounts:])
+        accounts = accounts[count_accounts:]
     accounts_len = len(accounts)
     if count_accounts > accounts_len:
         count_accounts = accounts_len
@@ -676,7 +681,7 @@ async def view_post(
             print("Connection error")
 
         gc.collect()
-    disconnect_all(accounts)
+    #disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -705,7 +710,8 @@ async def click_on_button(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        disconnect_all(accounts[count:])
+        #disconnect_all(accounts[count:])
+        accounts = accounts[count:]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -741,7 +747,7 @@ async def click_on_button(
                 gc.collect()
         except Exception as error:
             print(str(error))
-    disconnect_all(accounts)
+    #disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
