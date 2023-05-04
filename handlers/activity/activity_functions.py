@@ -244,7 +244,7 @@ def get_list_of_numbers():
     return accounts
 
 
-def connect_to_account(session):
+async def connect_to_account(session):
     for _, _, sessions in walk("base"):
         if not session + "-journal" in sessions:
             try:
@@ -370,7 +370,7 @@ async def subscribe_public_channel(
         for account_iter in range(count):
             start = time.time()
 
-            account = connect_to_account(accounts[account_iter])
+            account = await connect_to_account(accounts[account_iter])
             if account is not None:
 
                 phone = await account.get_me()
@@ -394,7 +394,7 @@ async def subscribe_public_channel(
                     new_delay = delay + random.randint(-del_delay, del_delay)
                     await asyncio.sleep(new_delay)
             else:
-                print("connection error")
+                print("Connection error")
 
             end = time.time()
             print(end - start)
