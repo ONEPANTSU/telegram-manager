@@ -65,7 +65,7 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
     count = args[1]
     accounts = get_list_of_numbers()
     shuffle(accounts)
-    accounts = accounts[count:]
+    accounts = accounts[:count]
 
     keys = list(timing.keys())
     sum_current_count = 0
@@ -366,7 +366,7 @@ async def subscribe_public_channel(
         accounts = get_list_of_numbers()
         shuffle(accounts)
         #disconnect_all(accounts[count:])
-        accounts = accounts[count:]
+        accounts = accounts[:count]
     accounts_len = len(accounts)
     if count <= accounts_len:
         shuffle(accounts)
@@ -440,7 +440,7 @@ async def subscribe_private_channel(
         accounts = get_list_of_numbers()
         shuffle(accounts)
         #disconnect_all(accounts[count:])
-        accounts = accounts[count:]
+        accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -500,7 +500,7 @@ async def leave_public_channel(
         accounts = get_list_of_numbers()
         shuffle(accounts)
         #disconnect_all(accounts[count:])
-        accounts = accounts[count:]
+        accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -559,7 +559,7 @@ async def leave_private_channel(
         accounts = get_list_of_numbers()
         shuffle(accounts)
         #disconnect_all(accounts[count:])
-        accounts = accounts[count:]
+        accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
@@ -633,7 +633,7 @@ async def view_post(
         accounts = get_list_of_numbers()
         shuffle(accounts)
         #disconnect_all(accounts[count_accounts:])
-        accounts = accounts[count_accounts:]
+        accounts = accounts[:count_accounts]
     accounts_len = len(accounts)
     if count_accounts > accounts_len:
         count_accounts = accounts_len
@@ -711,7 +711,7 @@ async def click_on_button(
         accounts = get_list_of_numbers()
         shuffle(accounts)
         #disconnect_all(accounts[count:])
-        accounts = accounts[count:]
+        accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
