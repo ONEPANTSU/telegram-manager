@@ -2,6 +2,7 @@ from aiogram import Dispatcher
 from aiogram.types import Message
 
 from handlers.activity.activity_functions import get_all_accounts_len, delete_journals_files
+from handlers.activity.database import get_phones
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -14,8 +15,7 @@ async def help_command(message: Message):
 
 async def start_command(message: Message):
     await main_menu(message, message_text=MESSAGES["start"].format(message.from_user))
-    accounts = get_list_of_numbers()
-    print(accounts)
+    get_phones("t.me/asdfghvtuywer")
 
 
 async def back_by_button(message: Message):
