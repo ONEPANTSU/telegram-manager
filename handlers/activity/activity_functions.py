@@ -10,8 +10,10 @@ from random import shuffle
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 from telethon import TelegramClient, functions
+from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import JoinChannelRequest, LeaveChannelRequest
 from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.tl.types import InputPeerNotifySettings
 
 from config import API_HASH, API_ID, MILES_IN_HOUR, RANDOM_PERCENT
 from handlers.main.main_functions import get_main_keyboard
@@ -382,6 +384,10 @@ async def subscribe_public_channel(
                         functions.account.UpdateStatusRequest(offline=False)
                     )  # Go to online
                     await account(JoinChannelRequest(channel_link))
+                    await account(UpdateNotifySettingsRequest(
+                        peer=channel_link,
+                        settings=InputPeerNotifySettings(mute_until=2**31-1))
+                    )
                     print(f"{phone.phone} вступил в {channel_link}")
                 except Exception as error:
                     print(str(error))
@@ -454,6 +460,10 @@ async def subscribe_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(ImportChatInviteRequest(channel_link))
+                await account(UpdateNotifySettingsRequest(
+                    peer=channel_link,
+                    settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
+                )
                 print(f"{phone.phone} вступил в {channel_link}")
             except Exception as error:
                 print(str(error))
