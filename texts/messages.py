@@ -122,5 +122,5 @@ MESSAGES = {
     "confirm_no": confirm_no_message,
     "confirm_yes": confirm_yes_message,
     "get_timing": get_timing_error,
-    "clear_journals" : clear_journals_message,
+    "clear_journals": clear_journals_message,
 }

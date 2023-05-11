@@ -1,8 +1,10 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 
-from handlers.activity.activity_functions import get_all_accounts_len, delete_journals_files
-from handlers.activity.database import get_phones
+from handlers.activity.activity_functions import (
+    delete_journals_files,
+    get_all_accounts_len,
+)
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS

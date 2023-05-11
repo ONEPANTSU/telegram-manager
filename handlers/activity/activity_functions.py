@@ -1,4 +1,5 @@
 import asyncio
+import gc
 import math
 import os
 import random
@@ -15,7 +16,7 @@ from telethon.tl.functions.channels import JoinChannelRequest, LeaveChannelReque
 from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.types import InputPeerNotifySettings
 
-from config import API_HASH, API_ID, MILES_IN_HOUR, RANDOM_PERCENT
+from config import API_HASH, API_ID, HOURS_IN_WEEK, MILES_IN_HOUR, RANDOM_PERCENT
 from handlers.main.main_functions import get_main_keyboard
 from handlers.users.users_handler import add_user_button
 from texts.buttons import BUTTONS
@@ -24,7 +25,6 @@ from texts.messages import LOADING, MESSAGES
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
-import gc
 
 
 def get_timing(timing_str, message: Message):
@@ -51,8 +51,60 @@ def get_timing(timing_str, message: Message):
         return None
 
 
-async def percent_timer(timing, function, args, prev_message: Message = None):
+async def unsubscribe_timing(accounts, channel_link):
+    if len(accounts) >= 6:
+        week_percents = {
+            1: math.ceil(len(accounts) * 0.1),
+            2: math.ceil(len(accounts) * 0.08),
+            3: math.ceil(len(accounts) * 0.05),
+            4: math.ceil(len(accounts) * 0.03),
+            5: math.ceil(len(accounts) * 0.02),
+            6: math.ceil(len(accounts) * 0.02),
+        }
+        keys = []
+        for week in range(6):
+            for acc in range(week_percents[week + 1]):
+                hour = week * HOURS_IN_WEEK + random.randint(1, HOURS_IN_WEEK)
+                keys.append(hour)
+
+        shuffle(accounts)
+
+        args = [channel_link, 1, 1]
+
+        account_iter = 0
+        start = time.time()
+
+        for time_iter in range(1, max(keys) + 1):
+            if time_iter in keys:
+                print("trying to unsub")
+                gc.collect()
+                current_account = []
+                try:
+                    try:
+                        current_account.append(accounts[account_iter])
+                    except:
+                        print("IndexError: list index out of range")
+
+                    is_success = await leave_channel(args=args, accounts=current_account)
+                    print(is_success)
+                    account_iter += 1
+
+                    if not is_success:
+                        return False
+                except:
+                    print("IndexError: list index out of range II")
+            else:
+                await asyncio.sleep(MILES_IN_HOUR)
+
+            end = time.time()
+            print(start - end)
+
+        return True
+
+
+async def percent_timer(timing, function, args, prev_message: Message = None, return_accounts=False):
     """
+    :param return_accounts: for unsubscribe timing
     :param prev_message:
     :param timing: get_timing()
     :param function: function of account's activity
@@ -67,7 +119,7 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
     count = args[1]
     accounts = get_list_of_numbers()
     shuffle(accounts)
-    accounts = accounts[:count]
+    accounts_for_timing = accounts[:count]
 
     keys = list(timing.keys())
     sum_current_count = 0
@@ -77,7 +129,6 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
 
     for time_iter in range(1, max(keys) + 1):
         if time_iter in keys:
-
             gc.collect()
 
             last_iter = False
@@ -99,10 +150,10 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
             current_accounts = []
             try:
                 for account_iter in range(
-                    last_account_iter, last_account_iter + current_count
+                        last_account_iter, last_account_iter + current_count
                 ):
                     try:
-                        current_accounts.append(accounts[account_iter])
+                        current_accounts.append(accounts_for_timing[account_iter])
                     except:
                         print("IndexError: list index out of range")
 
@@ -120,6 +171,8 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
                 last_account_iter += current_count
 
                 if not is_success:
+                    if return_accounts:
+                        return False, accounts_for_timing
                     return False
             except:
                 print("IndexError: list index out of range II")
@@ -129,6 +182,8 @@ async def percent_timer(timing, function, args, prev_message: Message = None):
         end = time.time()
         print(start - end)
 
+    if return_accounts:
+        return True, accounts_for_timing
     return True
 
 
@@ -348,11 +403,12 @@ async def edit_message_loading(message: Message, percent=0):
 
 
 async def subscribe_public_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+    message = None
 
     if loading_args is not None:
         current_count = loading_args[0]
@@ -361,13 +417,14 @@ async def subscribe_public_channel(
     else:
         current_count = 0
         max_count = count
-        message = await prev_message.answer(text=LOADING[0])
-        await prev_message.delete()
+        if prev_message is not None:
+            message = await prev_message.answer(text=LOADING[0])
+            await prev_message.delete()
 
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        #disconnect_all(accounts[count:])
+        # disconnect_all(accounts[count:])
         accounts = accounts[:count]
     accounts_len = len(accounts)
     if count <= accounts_len:
@@ -377,7 +434,6 @@ async def subscribe_public_channel(
 
             account = await connect_to_account(accounts[account_iter])
             if account is not None:
-
                 phone = await account.get_me()
                 try:
                     await account(
@@ -396,7 +452,8 @@ async def subscribe_public_channel(
 
                 current_count += 1
                 done_percent = current_count / max_count
-                await edit_message_loading(message, done_percent)
+                if message is not None:
+                    await edit_message_loading(message, done_percent)
 
                 if not (account_iter + 1 == count and last_iter):
                     del_delay = math.floor(delay * RANDOM_PERCENT / 100)
@@ -409,19 +466,20 @@ async def subscribe_public_channel(
             print(end - start)
 
             gc.collect()
-        #disconnect_all(accounts)
+        # disconnect_all(accounts)
         return True
     else:
-        #disconnect_all(accounts)
+        # disconnect_all(accounts)
         return False
 
 
 async def subscribe_private_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+    message = None
 
     if loading_args is not None:
         current_count = loading_args[0]
@@ -430,8 +488,9 @@ async def subscribe_private_channel(
     else:
         current_count = 0
         max_count = count
-        message = await prev_message.answer(text=LOADING[0])
-        await prev_message.delete()
+        if prev_message is not None:
+            message = await prev_message.answer(text=LOADING[0])
+            await prev_message.delete()
 
     if "https://t.me/+" in channel_link:
         channel_link = channel_link.replace("https://t.me/+", "")
@@ -445,7 +504,7 @@ async def subscribe_private_channel(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        #disconnect_all(accounts[count:])
+        # disconnect_all(accounts[count:])
         accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
@@ -472,7 +531,8 @@ async def subscribe_private_channel(
 
             current_count += 1
             done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+            if message is not None:
+                await edit_message_loading(message, done_percent)
 
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
@@ -482,19 +542,63 @@ async def subscribe_private_channel(
             print("Connection error")
 
         gc.collect()
-    #disconnect_all(accounts)
+    # disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
     #     return False
 
 
+async def subscribe_channel(
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+):
+    if "t.me/+" in args[0]:
+        is_success = await subscribe_private_channel(
+            args=args,
+            accounts=accounts,
+            last_iter=last_iter,
+            prev_message=prev_message,
+            loading_args=loading_args,
+        )
+    else:
+        is_success = await subscribe_public_channel(
+            args=args,
+            accounts=accounts,
+            last_iter=last_iter,
+            prev_message=prev_message,
+            loading_args=loading_args,
+        )
+    return is_success
+
+
+async def leave_channel(
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+):
+    if "t.me/+" in args[0]:
+        is_success = await leave_private_channel(
+            args=args,
+            accounts=accounts,
+            last_iter=last_iter,
+            prev_message=prev_message,
+            loading_args=loading_args,
+        )
+    else:
+        is_success = await leave_public_channel(
+            args=args,
+            accounts=accounts,
+            last_iter=last_iter,
+            prev_message=prev_message,
+            loading_args=loading_args,
+        )
+    return is_success
+
 async def leave_public_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+    message = None
 
     if loading_args is not None:
         current_count = loading_args[0]
@@ -503,13 +607,14 @@ async def leave_public_channel(
     else:
         current_count = 0
         max_count = count
-        message = await prev_message.answer(text=LOADING[0])
-        await prev_message.delete()
+        if prev_message is not None:
+            message = await prev_message.answer(text=LOADING[0])
+            await prev_message.delete()
 
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        #disconnect_all(accounts[count:])
+        # disconnect_all(accounts[count:])
         accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
@@ -531,7 +636,8 @@ async def leave_public_channel(
 
             current_count += 1
             done_percent = current_count / max_count
-            await edit_message_loading(message, done_percent)
+            if message is not None:
+                await edit_message_loading(message, done_percent)
 
             if not (account_iter + 1 == count and last_iter):
                 del_delay = math.floor(delay * RANDOM_PERCENT / 100)
@@ -541,7 +647,7 @@ async def leave_public_channel(
             print("Connection error")
 
         gc.collect()
-    #disconnect_all(accounts)
+    # disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -549,11 +655,12 @@ async def leave_public_channel(
 
 
 async def leave_private_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
     delay = args[2]
+    message = None
 
     if loading_args is not None:
         current_count = loading_args[0]
@@ -562,21 +669,20 @@ async def leave_private_channel(
     else:
         current_count = 0
         max_count = count
-        message = await prev_message.answer(text=LOADING[0])
-        await prev_message.delete()
+        if prev_message is not None:
+            message = await prev_message.answer(text=LOADING[0])
+            await prev_message.delete()
 
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        #disconnect_all(accounts[count:])
+        # disconnect_all(accounts[count:])
         accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
     if "https://t.me/+" in channel_link:
-        channel_link = channel_link.replace(
-            "https://t.me/+", "https://t.me/joinchat/"
-        )
+        channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
     for account_iter in range(count):
@@ -605,7 +711,8 @@ async def leave_private_channel(
 
         current_count += 1
         done_percent = current_count / max_count
-        await edit_message_loading(message, done_percent)
+        if message is not None:
+            await edit_message_loading(message, done_percent)
 
         if not (account_iter + 1 == count and last_iter):
             del_delay = math.floor(delay * RANDOM_PERCENT / 100)
@@ -613,7 +720,7 @@ async def leave_private_channel(
             await asyncio.sleep(new_delay)
 
         gc.collect()
-    #disconnect_all(accounts)
+    # disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -621,7 +728,7 @@ async def leave_private_channel(
 
 
 async def view_post(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count_accounts = args[1]
@@ -642,15 +749,13 @@ async def view_post(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        #disconnect_all(accounts[count_accounts:])
+        # disconnect_all(accounts[count_accounts:])
         accounts = accounts[:count_accounts]
     accounts_len = len(accounts)
     if count_accounts > accounts_len:
         count_accounts = accounts_len
     if "https://t.me/+" in channel_link:
-        channel_link = channel_link.replace(
-            "https://t.me/+", "https://t.me/joinchat/"
-        )
+        channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
     for account_iter in range(count_accounts):
@@ -691,7 +796,7 @@ async def view_post(
             print("Connection error")
 
         gc.collect()
-    #disconnect_all(accounts)
+    # disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)
@@ -699,7 +804,7 @@ async def view_post(
 
 
 async def click_on_button(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -720,15 +825,13 @@ async def click_on_button(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        #disconnect_all(accounts[count:])
+        # disconnect_all(accounts[count:])
         accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
         count = accounts_len
     if "https://t.me/+" in channel_link:
-        channel_link = channel_link.replace(
-            "https://t.me/+", "https://t.me/joinchat/"
-        )
+        channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
     for account_iter in range(count):
@@ -757,7 +860,7 @@ async def click_on_button(
                 gc.collect()
         except Exception as error:
             print(str(error))
-    #disconnect_all(accounts)
+    # disconnect_all(accounts)
     return True
     # else:
     #     disconnect_all(accounts)

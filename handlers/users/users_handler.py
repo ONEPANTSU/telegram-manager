@@ -111,10 +111,15 @@ async def sms_state(message: Message, state: FSMContext):
         if is_password == BUTTONS["yes"]:
             password = (await state.get_data())["password"]
             await clients[phone]._start(
-                phone=phone, password=password, code_callback=code[phone], message=message
+                phone=phone,
+                password=password,
+                code_callback=code[phone],
+                message=message,
             )
         else:
-            await clients[phone]._start(phone=phone, code_callback=code[phone], message=message)
+            await clients[phone]._start(
+                phone=phone, code_callback=code[phone], message=message
+            )
         await state.finish()
 
 

@@ -97,7 +97,7 @@ async def subscribe_number_of_accounts_state(message: Message, state: FSMContext
 
 
 async def subscribe_ask_delay_state(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
+        query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -208,14 +208,9 @@ async def subscribe_confirm(args, is_public, message):
 
 
 async def subscribe_percent_confirm(args, is_public, timing, message):
-    if is_public:
-        is_success = await percent_timer(
-            timing, subscribe_public_channel, args, prev_message=message
-        )
-    else:
-        is_success = await percent_timer(
-            timing, subscribe_private_channel, args, prev_message=message
-        )
+    is_success, accounts = await percent_timer(
+        timing, subscribe_channel, args, prev_message=message, return_accounts=True
+    )
 
     if is_success:
         await message.answer(
@@ -230,6 +225,15 @@ async def subscribe_percent_confirm(args, is_public, timing, message):
         await message.answer(text=MESSAGES["channel_link"])
         await SubscribeStates.channel_link.set()
 
+    try:
+        is_success = await unsubscribe_timing(accounts=accounts, channel_link=args[0])
+        if is_success:
+            await message.answer(
+                text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
+            )
+    except:
+        print("Unsubscribe wasn't successfully")
+
 
 """
     UNSUBSCRIBE CHANNEL STATES⠀⠀⠀⠀⠀⠀⠀⠀
@@ -237,7 +241,7 @@ async def subscribe_percent_confirm(args, is_public, timing, message):
 
 
 async def unsubscribe_query(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
+        query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     is_public = callback_data.get("is_public")
@@ -295,7 +299,7 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
 
 
 async def unsubscribe_ask_delay_state(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
+        query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -515,7 +519,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
 
 
 async def viewer_ask_delay_state(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
+        query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -736,7 +740,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
 
 
 async def reactions_ask_delay_state(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
+        query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
