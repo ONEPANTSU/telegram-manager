@@ -17,7 +17,6 @@ async def help_command(message: Message):
 
 async def start_command(message: Message):
     await main_menu(message, message_text=MESSAGES["start"].format(message.from_user))
-    get_phones("t.me/asdfghvtuywer")
 
 
 async def back_by_button(message: Message):

@@ -52,7 +52,7 @@ async def subscribe_channel_link_state(message: Message, state: FSMContext):
         answer = message.text
         if answer.startswith("https://t.me/"):
             await state.update_data(channel_link=answer)
-            accounts_len = await get_accounts_len()
+            accounts_len = await get_accounts_len(link=answer, sub=True)
             await message.answer(
                 text=MESSAGES["number_of_accounts"].format(count=accounts_len)
             )
@@ -209,7 +209,7 @@ async def subscribe_confirm(args, is_public, message):
 
 async def subscribe_percent_confirm(args, is_public, timing, message):
     is_success, accounts = await percent_timer(
-        timing, subscribe_channel, args, prev_message=message, return_accounts=True
+        timing, subscribe_channel, args, prev_message=message, return_accounts=True, is_sub=1
     )
 
     if is_success:
@@ -254,7 +254,7 @@ async def unsubscribe_channel_link_state(message: Message, state: FSMContext):
         answer = message.text
         if answer.startswith("https://t.me/"):
             await state.update_data(channel_link=answer)
-            accounts_len = await get_accounts_len()
+            accounts_len = await get_accounts_len(link=answer, sub=False)
             await message.answer(
                 text=MESSAGES["number_of_accounts"].format(count=accounts_len)
             )
@@ -413,11 +413,11 @@ async def unsubscribe_confirm(args, is_public, message):
 async def unsubscribe_percent_confirm(args, is_public, timing, message):
     if is_public:
         is_success = await percent_timer(
-            timing, leave_public_channel, args, prev_message=message
+            timing, leave_public_channel, args, prev_message=message, is_sub=-1
         )
     else:
         is_success = await percent_timer(
-            timing, leave_private_channel, args, prev_message=message
+            timing, leave_private_channel, args, prev_message=message, is_sub=-1
         )
 
     if is_success:

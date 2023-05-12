@@ -17,6 +17,7 @@ from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.types import InputPeerNotifySettings
 
 from config import API_HASH, API_ID, HOURS_IN_WEEK, MILES_IN_HOUR, RANDOM_PERCENT
+from handlers.activity.database import *
 from handlers.main.main_functions import get_main_keyboard
 from handlers.users.users_handler import add_user_button
 from texts.buttons import BUTTONS
@@ -102,8 +103,9 @@ async def unsubscribe_timing(accounts, channel_link):
         return True
 
 
-async def percent_timer(timing, function, args, prev_message: Message = None, return_accounts=False):
+async def percent_timer(timing, function, args, prev_message: Message = None, return_accounts=False, is_sub=0):
     """
+    :param is_sub: False = -1; True = 1.
     :param return_accounts: for unsubscribe timing
     :param prev_message:
     :param timing: get_timing()
@@ -117,7 +119,12 @@ async def percent_timer(timing, function, args, prev_message: Message = None, re
     await prev_message.delete()
 
     count = args[1]
-    accounts = get_list_of_numbers()
+    if is_sub == 1:
+        accounts = get_list_of_numbers(link=args[0], sub=True)
+    elif is_sub == -1:
+        accounts = get_list_of_numbers(link=args[0], sub=False)
+    else:
+        accounts = get_list_of_numbers()
     shuffle(accounts)
     accounts_for_timing = accounts[:count]
 
@@ -143,39 +150,39 @@ async def percent_timer(timing, function, args, prev_message: Message = None, re
             else:
                 last_iter = True
                 current_count = count - sum_current_count
+            if current_count != 0:
+                delay = round(MILES_IN_HOUR / current_count)
+                current_args = copy(args)
+                current_args.append(delay)
+                current_accounts = []
+                try:
+                    for account_iter in range(
+                            last_account_iter, last_account_iter + current_count
+                    ):
+                        try:
+                            current_accounts.append(accounts_for_timing[account_iter])
+                        except:
+                            print("IndexError: list index out of range")
 
-            delay = round(MILES_IN_HOUR / current_count)
-            current_args = copy(args)
-            current_args.append(delay)
-            current_accounts = []
-            try:
-                for account_iter in range(
-                        last_account_iter, last_account_iter + current_count
-                ):
-                    try:
-                        current_accounts.append(accounts_for_timing[account_iter])
-                    except:
-                        print("IndexError: list index out of range")
+                    current_args[1] = current_count
 
-                current_args[1] = current_count
+                    loading_args = [last_account_iter, count]
 
-                loading_args = [last_account_iter, count]
+                    is_success = await function(
+                        args=current_args,
+                        accounts=current_accounts,
+                        last_iter=last_iter,
+                        prev_message=message,
+                        loading_args=loading_args,
+                    )
+                    last_account_iter += current_count
 
-                is_success = await function(
-                    args=current_args,
-                    accounts=current_accounts,
-                    last_iter=last_iter,
-                    prev_message=message,
-                    loading_args=loading_args,
-                )
-                last_account_iter += current_count
-
-                if not is_success:
-                    if return_accounts:
-                        return False, accounts_for_timing
-                    return False
-            except:
-                print("IndexError: list index out of range II")
+                    if not is_success:
+                        if return_accounts:
+                            return False, accounts_for_timing
+                        return False
+                except:
+                    print("IndexError: list index out of range II")
         else:
             await asyncio.sleep(MILES_IN_HOUR)
 
@@ -294,13 +301,30 @@ async def get_all_accounts_len():
     return accounts_len
 
 
-def get_list_of_numbers():
-    accounts = []
-    for _, _, sessions in walk("base"):
-        for session in sessions:
-            if session.endswith("session"):
-                accounts.append(session)
-    return accounts
+def get_list_of_numbers(link=None, sub=False):
+    if link is None:
+        accounts = []
+        for _, _, sessions in walk("base"):
+            for session in sessions:
+                if session.endswith("session"):
+                    accounts.append(session)
+        return accounts
+    else:
+        already_exists = get_phones(link=link)
+        if sub:
+            accounts = []
+            for _, _, sessions in walk("base"):
+                for session in sessions:
+                    if session.endswith("session") and not (session in already_exists):
+                        accounts.append(session)
+            return accounts
+        else:
+            accounts = []
+            for _, _, sessions in walk("base"):
+                for session in sessions:
+                    if session.endswith("session") and (session in already_exists):
+                        accounts.append(session)
+            return accounts
 
 
 async def connect_to_account(session):
@@ -338,15 +362,29 @@ async def connect_to_account(session):
             return None
 
 
-async def get_accounts_len():
-    accounts_len = 0
-    for _, _, sessions in walk("base"):
-        for session in sessions:
-            if session.endswith("session"):
-                accounts_len += 1
-            elif session.endswith("session-journal"):
-                accounts_len -= 1
-    return accounts_len
+async def get_accounts_len(link=None, sub=False):
+    if link is None:
+        accounts_len = 0
+        for _, _, sessions in walk("base"):
+            for session in sessions:
+                if session.endswith("session"):
+                    accounts_len += 1
+                elif session.endswith("session-journal"):
+                    accounts_len -= 1
+        return accounts_len
+    else:
+        already_exists = len(get_phones(link=link))
+        if sub:
+            accounts_len = 0
+            for _, _, sessions in walk("base"):
+                for session in sessions:
+                    if session.endswith("session"):
+                        accounts_len += 1
+                    elif session.endswith("session-journal"):
+                        accounts_len -= 1
+            return accounts_len - already_exists
+        else:
+            return already_exists
 
 
 async def edit_message_loading(message: Message, percent=0):
@@ -422,7 +460,7 @@ async def subscribe_public_channel(
             await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers()
+        accounts = get_list_of_numbers(link=channel_link, sub=True)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -442,9 +480,13 @@ async def subscribe_public_channel(
                     await account(JoinChannelRequest(channel_link))
                     await account(UpdateNotifySettingsRequest(
                         peer=channel_link,
-                        settings=InputPeerNotifySettings(mute_until=2**31-1))
+                        settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
                     )
                     print(f"{phone.phone} вступил в {channel_link}")
+                    try:
+                        add_phone(link=channel_link, phone=accounts[account_iter])
+                    except:
+                        print("Не удалось добавить в БД")
                 except Exception as error:
                     print(str(error))
 
@@ -502,7 +544,7 @@ async def subscribe_private_channel(
         channel_link = channel_link.replace("t.me/joinchat/", "")
 
     if accounts is None:
-        accounts = get_list_of_numbers()
+        accounts = get_list_of_numbers(link=channel_link, sub=True)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -524,6 +566,10 @@ async def subscribe_private_channel(
                     settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
                 )
                 print(f"{phone.phone} вступил в {channel_link}")
+                try:
+                    add_phone(link=channel_link, phone=accounts[account_iter])
+                except:
+                    print("Не удалось добавить в БД")
             except Exception as error:
                 print(str(error))
 
@@ -568,6 +614,7 @@ async def subscribe_channel(
             prev_message=prev_message,
             loading_args=loading_args,
         )
+
     return is_success
 
 
@@ -592,6 +639,7 @@ async def leave_channel(
         )
     return is_success
 
+
 async def leave_public_channel(
         args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
@@ -612,7 +660,7 @@ async def leave_public_channel(
             await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers()
+        accounts = get_list_of_numbers(link=channel_link, sub=False)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -629,6 +677,10 @@ async def leave_public_channel(
                 )  # Go to online
                 await account(LeaveChannelRequest(channel_link))
                 print(f"{phone.phone} покинул {channel_link}")
+                try:
+                    delete_phone(link=channel_link, phone=accounts[account_iter])
+                except:
+                    print("Не удалось удалить из БД")
             except Exception as error:
                 print(str(error))
 
@@ -674,7 +726,7 @@ async def leave_private_channel(
             await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers()
+        accounts = get_list_of_numbers(link=channel_link, sub=False)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -702,6 +754,10 @@ async def leave_private_channel(
                     if dialog.title == chat_title:
                         await dialog.delete()
                         print(f"{phone.phone} покинул {channel_link}")
+                        try:
+                            delete_phone(link=channel_link, phone=accounts[account_iter])
+                        except:
+                            print("Не удалось удалить из БД")
             except Exception as error:
                 print(str(error))
         else:
