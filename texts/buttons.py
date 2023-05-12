@@ -1,9 +1,7 @@
 activity_button = "Активность 🍌"
 
-subscribe_public_button = "Подписаться на открытый канал ➕"
-subscribe_private_button = "Подписаться на приватный канал ➕"
-unsubscribe_public_button = "Отписаться от открытого канала ➖"
-unsubscribe_private_button = "Отписаться от приватного канала ➖"
+subscribe_button = "Подписаться на канал ➕"
+unsubscribe_button = "Отписаться от канала ➖"
 unsubscribe_all_button = "Отписаться от всех каналов ➖"
 view_button = "Посмотреть посты 👀"
 react_button = "Накрутить реакции 💥"
@@ -32,10 +30,8 @@ BUTTONS = {
     "parse": parse_button,
     "users": users_button,
     "count_users": count_users_button,
-    "subscribe_public": subscribe_public_button,
-    "subscribe_private": subscribe_private_button,
-    "unsubscribe_public": unsubscribe_public_button,
-    "unsubscribe_private": unsubscribe_private_button,
+    "subscribe": subscribe_button,
+    "unsubscribe": unsubscribe_button,
     "unsubscribe_all": unsubscribe_all_button,
     "view": view_button,
     "react": react_button,

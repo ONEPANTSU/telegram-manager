@@ -190,10 +190,11 @@ async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict)
 
 
 async def subscribe_confirm(args, is_public, message):
-    if is_public:
-        is_success = await subscribe_public_channel(args=args, prev_message=message)
-    else:
-        is_success = await subscribe_private_channel(args=args, prev_message=message)
+    is_success = await subscribe_channel(args=args, prev_message=message)
+    # if is_public:
+    #     is_success = await subscribe_public_channel(args=args, prev_message=message)
+    # else:
+    #     is_success = await subscribe_private_channel(args=args, prev_message=message)
     if is_success:
         await message.answer(
             text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
@@ -393,10 +394,11 @@ async def unsubscribe_ask_confirm_query(query: CallbackQuery, callback_data: dic
 
 
 async def unsubscribe_confirm(args, is_public, message):
-    if is_public:
-        is_success = await leave_public_channel(args=args, prev_message=message)
-    else:
-        is_success = await leave_private_channel(args=args, prev_message=message)
+    is_success = await leave_channel(args=args, prev_message=message)
+    # if is_public:
+    #     is_success = await leave_public_channel(args=args, prev_message=message)
+    # else:
+    #     is_success = await leave_private_channel(args=args, prev_message=message)
     if is_success:
         await message.answer(
             text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
@@ -419,6 +421,15 @@ async def unsubscribe_percent_confirm(args, is_public, timing, message):
         is_success = await percent_timer(
             timing, leave_private_channel, args, prev_message=message, is_sub=-1
         )
+
+    # if is_public:
+    #     is_success = await percent_timer(
+    #         timing, leave_public_channel, args, prev_message=message
+    #     )
+    # else:
+    #     is_success = await percent_timer(
+    #         timing, leave_private_channel, args, prev_message=message
+    #     )
 
     if is_success:
         await message.answer(
