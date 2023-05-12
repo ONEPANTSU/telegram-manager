@@ -413,14 +413,9 @@ async def unsubscribe_confirm(args, is_public, message):
 
 
 async def unsubscribe_percent_confirm(args, is_public, timing, message):
-    if is_public:
-        is_success = await percent_timer(
-            timing, leave_public_channel, args, prev_message=message, is_sub=-1
-        )
-    else:
-        is_success = await percent_timer(
-            timing, leave_private_channel, args, prev_message=message, is_sub=-1
-        )
+    is_success, accounts = await percent_timer(
+        timing, leave_channel, args, prev_message=message, return_accounts=True, is_sub=-1
+    )
 
     # if is_public:
     #     is_success = await percent_timer(
