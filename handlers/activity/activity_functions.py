@@ -778,20 +778,16 @@ async def leave_private_channel(
                 try:
                     chat = await account.get_entity(channel_link)
                     chat_title = chat.title
-                    async for dialog in account.iter_dialogs():
-                        if dialog.title == chat_title:
-                            await dialog.delete()
-                            print(f"{phone.phone} покинул {channel_link}")
-                            break
-                except Exception as error:
-                    print(str(error))
-                    # return False
-
-                try:
-                    delete_phone(link=link_for_db, phone=accounts[account_iter])
-                except Exception as error:
-                    print(str(error))
-
+                except:
+                    return False
+                async for dialog in account.iter_dialogs():
+                    if dialog.title == chat_title:
+                        await dialog.delete()
+                        print(f"{phone.phone} покинул {channel_link}")
+                        try:
+                            delete_phone(link=channel_link, phone=accounts[account_iter])
+                        except:
+                            print("Не удалось удалить из БД")
             except Exception as error:
                 print(str(error))
         else:
