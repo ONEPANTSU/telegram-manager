@@ -53,8 +53,8 @@ def ask_keyboard(phone):
     return act_keyboard
 
 
-def ask_delay_keyboard(user_id, link, count, is_public, callback):
-    callback_dict[user_id] = [link, count, is_public]
+def ask_delay_keyboard(user_id, link, count, callback):
+    callback_dict[user_id] = [link, count]
     delay_1 = InlineKeyboardButton(
         text=BUTTONS["delay_1"],
         callback_data=callback.new(answer=BUTTONS["delay_1"], user_id=user_id),

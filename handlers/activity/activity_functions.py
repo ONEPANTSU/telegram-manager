@@ -310,6 +310,14 @@ def get_list_of_numbers(link=None, sub=False):
                     accounts.append(session)
         return accounts
     else:
+        if "https://t.me/+" in link:
+            link = link.replace("https://t.me/+", "")
+        elif "https://t.me/joinchat/" in link:
+            link = link.replace("https://t.me/joinchat/", "")
+        elif "t.me/+" in link:
+            link = link.replace("t.me/+", "")
+        elif "t.me/joinchat/" in link:
+            link = link.replace("t.me/joinchat/", "")
         already_exists = get_phones(link=link)
         if sub:
             accounts = []
@@ -373,6 +381,14 @@ async def get_accounts_len(link=None, sub=False):
                     accounts_len -= 1
         return accounts_len
     else:
+        if "https://t.me/+" in link:
+            link = link.replace("https://t.me/+", "")
+        elif "https://t.me/joinchat/" in link:
+            link = link.replace("https://t.me/joinchat/", "")
+        elif "t.me/+" in link:
+            link = link.replace("t.me/+", "")
+        elif "t.me/joinchat/" in link:
+            link = link.replace("t.me/joinchat/", "")
         already_exists = len(get_phones(link=link))
         if sub:
             accounts_len = 0
@@ -561,10 +577,10 @@ async def subscribe_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(ImportChatInviteRequest(channel_link))
-                await account(UpdateNotifySettingsRequest(
-                    peer=channel_link,
-                    settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
-                )
+                # await account(UpdateNotifySettingsRequest(
+                #     peer=channel_link,
+                #     settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
+                # )
                 print(f"{phone.phone} вступил в {channel_link}")
                 try:
                     add_phone(link=channel_link, phone=accounts[account_iter])
@@ -749,7 +765,7 @@ async def leave_private_channel(
                     chat = await account.get_entity(channel_link)
                     chat_title = chat.title
                 except:
-                    return
+                    return False
                 async for dialog in account.iter_dialogs():
                     if dialog.title == chat_title:
                         await dialog.delete()

@@ -42,8 +42,6 @@ async def chose_activity(message: Message):
 
 async def subscribe_query(query: CallbackQuery, callback_data: dict, state: FSMContext):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
-    is_public = callback_data.get("is_public")
-    await state.update_data(is_public=is_public)
     await SubscribeStates.channel_link.set()
 
 
@@ -82,14 +80,12 @@ async def subscribe_number_of_accounts_state(message: Message, state: FSMContext
             data = await state.get_data()
             link = data["channel_link"]
             count = int(answer)
-            is_public = data["is_public"]
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
                     message.from_user.id,
                     link,
                     count,
-                    is_public,
                     callback=subscribe_delay_callback,
                 ),
             )
@@ -102,11 +98,10 @@ async def subscribe_ask_delay_state(
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
         user_id = int(callback_data["user_id"])
-        link, count, is_public = callback_dict[user_id]
+        link, count = callback_dict[user_id]
         callback_dict.pop(user_id)
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
-        await state.update_data(is_public=is_public)
         await state.update_data(delay_ask=answer)
         if answer == BUTTONS["delay_1"]:  # Обычная задержка
             await query.message.edit_text(
@@ -131,10 +126,9 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
         else:
             await state.update_data(delay=int(answer))
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             user_id = message.from_user.id
             args = [data["channel_link"], data["count"], data["delay"]]
-            callback_dict[user_id] = [is_public, args]
+            callback_dict[user_id] = args
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -157,10 +151,9 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
             await SubscribeStates.delay_percent.set()
         else:
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             user_id = message.from_user.id
-            callback_dict[user_id] = [timing, is_public, args]
+            callback_dict[user_id] = [timing, args]
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -178,18 +171,18 @@ async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict)
     answer = callback_data["answer"]
     if answer == BUTTONS["yes_confirm"]:  # Подтверждено
         if is_percent:
-            timing, is_public, args = callback_dict[user_id]
-            await subscribe_percent_confirm(args, is_public, timing, query.message)
+            timing, args = callback_dict[user_id]
+            await subscribe_percent_confirm(args, timing, query.message)
         else:
-            is_public, args = callback_dict[user_id]
-            await subscribe_confirm(args, is_public, query.message)
+            args = callback_dict[user_id]
+            await subscribe_confirm(args, query.message)
         callback_dict.pop(user_id)
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         callback_dict.pop(user_id)
 
 
-async def subscribe_confirm(args, is_public, message):
+async def subscribe_confirm(args, message):
     is_success = await subscribe_channel(args=args, prev_message=message)
     # if is_public:
     #     is_success = await subscribe_public_channel(args=args, prev_message=message)
@@ -208,7 +201,7 @@ async def subscribe_confirm(args, is_public, message):
         await SubscribeStates.channel_link.set()
 
 
-async def subscribe_percent_confirm(args, is_public, timing, message):
+async def subscribe_percent_confirm(args, timing, message):
     is_success, accounts = await percent_timer(
         timing, subscribe_channel, args, prev_message=message, return_accounts=True, is_sub=1
     )
@@ -245,8 +238,6 @@ async def unsubscribe_query(
         query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
-    is_public = callback_data.get("is_public")
-    await state.update_data(is_public=is_public)
     await UnsubscribeStates.channel_link.set()
 
 
@@ -285,14 +276,13 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
             data = await state.get_data()
             link = data["channel_link"]
             count = int(answer)
-            is_public = data["is_public"]
+            #is_public = data["is_public"]
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
                     message.from_user.id,
                     link,
                     count,
-                    is_public,
                     callback=unsubscribe_delay_callback,
                 ),
             )
@@ -305,11 +295,10 @@ async def unsubscribe_ask_delay_state(
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
         user_id = int(callback_data["user_id"])
-        link, count, is_public = callback_dict[user_id]
+        link, count = callback_dict[user_id]
         callback_dict.pop(user_id)
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
-        await state.update_data(is_public=is_public)
         await state.update_data(delay_ask=answer)
         if answer == BUTTONS["delay_1"]:  # Обычная задержка
             await query.message.edit_text(
@@ -334,10 +323,9 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
         else:
             await state.update_data(delay=int(answer))
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             user_id = message.from_user.id
             args = [data["channel_link"], data["count"], data["delay"]]
-            callback_dict[user_id] = [is_public, args]
+            callback_dict[user_id] = args
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -361,10 +349,9 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
             await UnsubscribeStates.delay_percent.set()
         else:
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             user_id = message.from_user.id
-            callback_dict[user_id] = [timing, is_public, args]
+            callback_dict[user_id] = [timing, args]
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -382,18 +369,18 @@ async def unsubscribe_ask_confirm_query(query: CallbackQuery, callback_data: dic
     answer = callback_data["answer"]
     if answer == BUTTONS["yes_confirm"]:  # Подтверждено
         if is_percent:
-            timing, is_public, args = callback_dict[user_id]
-            await unsubscribe_percent_confirm(args, is_public, timing, query.message)
+            timing, args = callback_dict[user_id]
+            await unsubscribe_percent_confirm(args, timing, query.message)
         else:
-            is_public, args = callback_dict[user_id]
-            await unsubscribe_confirm(args, is_public, query.message)
+            args = callback_dict[user_id]
+            await unsubscribe_confirm(args, query.message)
         callback_dict.pop(user_id)
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         callback_dict.pop(user_id)
 
 
-async def unsubscribe_confirm(args, is_public, message):
+async def unsubscribe_confirm(args, message):
     is_success = await leave_channel(args=args, prev_message=message)
     # if is_public:
     #     is_success = await leave_public_channel(args=args, prev_message=message)
@@ -412,7 +399,7 @@ async def unsubscribe_confirm(args, is_public, message):
         await UnsubscribeStates.channel_link.set()
 
 
-async def unsubscribe_percent_confirm(args, is_public, timing, message):
+async def unsubscribe_percent_confirm(args, timing, message):
     is_success, accounts = await percent_timer(
         timing, leave_channel, args, prev_message=message, return_accounts=True, is_sub=-1
     )
@@ -569,7 +556,7 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                 data["delay"],
             ]
             user_id = message.from_user.id
-            callback_dict[user_id] = [args]
+            callback_dict[user_id] = args
 
             await state.finish()
             await message.answer(
@@ -791,7 +778,7 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                 data["delay"],
             ]
             user_id = message.from_user.id
-            callback_dict[user_id] = [args]
+            callback_dict[user_id] = args
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
