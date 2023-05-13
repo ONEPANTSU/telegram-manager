@@ -484,7 +484,7 @@ async def subscribe_public_channel(
                     )
                     print(f"{phone.phone} вступил в {channel_link}")
                     try:
-                        add_phone(link=channel_link, phone=accounts[account_iter])
+                        add_link(link=channel_link, phone=accounts[account_iter])
                     except:
                         print("Не удалось добавить в БД")
                 except Exception as error:
@@ -561,13 +561,15 @@ async def subscribe_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(ImportChatInviteRequest(channel_link))
+                channel_id = await account(ImportChatInviteRequest(channel_link))
+                channel_id = channel_id.chats[0].id
                 await account(UpdateNotifySettingsRequest(
-                    peer=channel_link,
-                    settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
-                )
+                    peer=channel_id,
+                    settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1)
+                ))
                 print(f"{phone.phone} вступил в {channel_link}")
                 try:
-                    add_phone(link=channel_link, phone=accounts[account_iter])
+                    add_link(link=channel_link, phone=accounts[account_iter])
                 except:
                     print("Не удалось добавить в БД")
             except Exception as error:
