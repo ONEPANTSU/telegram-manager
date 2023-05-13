@@ -279,7 +279,7 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
             data = await state.get_data()
             link = data["channel_link"]
             count = int(answer)
-            #is_public = data["is_public"]
+            # is_public = data["is_public"]
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
