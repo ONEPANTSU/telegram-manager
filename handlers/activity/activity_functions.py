@@ -28,7 +28,7 @@ from useful.instruments import bot
 from useful.keyboards import activity_keyboard
 
 
-def get_timing(timing_str, message: Message):
+def get_timing(timing_str):
     timing_arr = timing_str.split("\n")
     timing_dict = {}
     for timing in timing_arr:
@@ -86,7 +86,9 @@ async def unsubscribe_timing(accounts, channel_link):
                     except:
                         print("IndexError: list index out of range")
 
-                    is_success = await leave_channel(args=args, accounts=current_account)
+                    is_success = await leave_channel(
+                        args=args, accounts=current_account
+                    )
                     print(is_success)
                     account_iter += 1
 
@@ -103,7 +105,14 @@ async def unsubscribe_timing(accounts, channel_link):
         return True
 
 
-async def percent_timer(timing, function, args, prev_message: Message = None, return_accounts=False, is_sub=0):
+async def percent_timer(
+    timing,
+    function,
+    args,
+    prev_message: Message = None,
+    return_accounts=False,
+    is_sub=0,
+):
     """
     :param is_sub: False = -1; True = 1.
     :param return_accounts: for unsubscribe timing
@@ -157,7 +166,7 @@ async def percent_timer(timing, function, args, prev_message: Message = None, re
                 current_accounts = []
                 try:
                     for account_iter in range(
-                            last_account_iter, last_account_iter + current_count
+                        last_account_iter, last_account_iter + current_count
                     ):
                         try:
                             current_accounts.append(accounts_for_timing[account_iter])
@@ -457,7 +466,7 @@ async def edit_message_loading(message: Message, percent=0):
 
 
 async def subscribe_public_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -494,9 +503,11 @@ async def subscribe_public_channel(
                         functions.account.UpdateStatusRequest(offline=False)
                     )  # Go to online
                     await account(JoinChannelRequest(channel_link))
-                    await account(UpdateNotifySettingsRequest(
-                        peer=channel_link,
-                        settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
+                    await account(
+                        UpdateNotifySettingsRequest(
+                            peer=channel_link,
+                            settings=InputPeerNotifySettings(mute_until=2**31 - 1),
+                        )
                     )
                     print(f"{phone.phone} вступил в {channel_link}")
                     try:
@@ -532,7 +543,7 @@ async def subscribe_public_channel(
 
 
 async def subscribe_private_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -612,7 +623,7 @@ async def subscribe_private_channel(
 
 
 async def subscribe_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     if "t.me/+" in args[0]:
         is_success = await subscribe_private_channel(
@@ -635,7 +646,7 @@ async def subscribe_channel(
 
 
 async def leave_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     if "t.me/+" in args[0]:
         is_success = await leave_private_channel(
@@ -657,7 +668,7 @@ async def leave_channel(
 
 
 async def leave_public_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -723,7 +734,7 @@ async def leave_public_channel(
 
 
 async def leave_private_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -753,6 +764,9 @@ async def leave_private_channel(
         channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
+
+    link_for_db = channel_link.replace("https://t.me/joinchat/", "")
+
     for account_iter in range(count):
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -764,16 +778,20 @@ async def leave_private_channel(
                 try:
                     chat = await account.get_entity(channel_link)
                     chat_title = chat.title
-                except:
-                    return False
-                async for dialog in account.iter_dialogs():
-                    if dialog.title == chat_title:
-                        await dialog.delete()
-                        print(f"{phone.phone} покинул {channel_link}")
-                        try:
-                            delete_phone(link=channel_link, phone=accounts[account_iter])
-                        except:
-                            print("Не удалось удалить из БД")
+                    async for dialog in account.iter_dialogs():
+                        if dialog.title == chat_title:
+                            await dialog.delete()
+                            print(f"{phone.phone} покинул {channel_link}")
+                            break
+                except Exception as error:
+                    print(str(error))
+                    # return False
+
+                try:
+                    delete_phone(link=link_for_db, phone=accounts[account_iter])
+                except Exception as error:
+                    print(str(error))
+
             except Exception as error:
                 print(str(error))
         else:
@@ -800,7 +818,7 @@ async def leave_private_channel(
 
 
 async def view_post(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count_accounts = args[1]
@@ -876,7 +894,7 @@ async def view_post(
 
 
 async def click_on_button(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]

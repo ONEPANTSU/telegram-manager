@@ -40,7 +40,7 @@ async def chose_activity(message: Message):
 """
 
 
-async def subscribe_query(query: CallbackQuery, callback_data: dict, state: FSMContext):
+async def subscribe_query(query: CallbackQuery):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await SubscribeStates.channel_link.set()
 
@@ -93,7 +93,7 @@ async def subscribe_number_of_accounts_state(message: Message, state: FSMContext
 
 
 async def subscribe_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -143,7 +143,7 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
 async def subscribe_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -203,7 +203,12 @@ async def subscribe_confirm(args, message):
 
 async def subscribe_percent_confirm(args, timing, message):
     is_success, accounts = await percent_timer(
-        timing, subscribe_channel, args, prev_message=message, return_accounts=True, is_sub=1
+        timing,
+        subscribe_channel,
+        args,
+        prev_message=message,
+        return_accounts=True,
+        is_sub=1,
     )
 
     if is_success:
@@ -234,9 +239,7 @@ async def subscribe_percent_confirm(args, timing, message):
 """
 
 
-async def unsubscribe_query(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
-):
+async def unsubscribe_query(query: CallbackQuery):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await UnsubscribeStates.channel_link.set()
 
@@ -276,7 +279,7 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
             data = await state.get_data()
             link = data["channel_link"]
             count = int(answer)
-            #is_public = data["is_public"]
+            # is_public = data["is_public"]
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
@@ -290,7 +293,7 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
 
 
 async def unsubscribe_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -341,7 +344,7 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -401,7 +404,12 @@ async def unsubscribe_confirm(args, message):
 
 async def unsubscribe_percent_confirm(args, timing, message):
     is_success, accounts = await percent_timer(
-        timing, leave_channel, args, prev_message=message, return_accounts=True, is_sub=-1
+        timing,
+        leave_channel,
+        args,
+        prev_message=message,
+        return_accounts=True,
+        is_sub=-1,
     )
 
     # if is_public:
@@ -512,7 +520,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
 
 
 async def viewer_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -573,7 +581,7 @@ async def viewer_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -733,7 +741,7 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
 
 
 async def reactions_ask_delay_state(
-        query: CallbackQuery, callback_data: dict, state: FSMContext
+    query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -794,7 +802,7 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()

@@ -15,7 +15,7 @@ def add_phone(link, phone):
     try:
         with sqlite3.connect("TelegramManager.db") as con:
             cur = con.cursor()
-            cur.execute('INSERT INTO Bot (link, phone) VALUES (?, ?)', (link, phone))
+            cur.execute("INSERT INTO Bot (link, phone) VALUES (?, ?)", (link, phone))
             print(f"Added data to database: link={link}, phone={phone}")
     except Exception as e:
         print(f"Error adding data to database: {e}")
@@ -24,10 +24,16 @@ def add_phone(link, phone):
 def delete_phone(link, phone):
     with sqlite3.connect("TelegramManager.db") as con:
         cursor = con.cursor()
-        cursor.execute('DELETE FROM Bot WHERE link=? AND phone=?', (link, phone,))
+        cursor.execute(
+            "DELETE FROM Bot WHERE link=? AND phone=?",
+            (
+                link,
+                phone,
+            ),
+        )
 
 
 def delete_link(link):
     with sqlite3.connect("TelegramManager.db") as con:
         cursor = con.cursor()
-        cursor.execute('DELETE FROM Bot WHERE link=?', (link, ))
+        cursor.execute("DELETE FROM Bot WHERE link=?", (link,))
