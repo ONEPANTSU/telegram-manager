@@ -106,12 +106,12 @@ async def unsubscribe_timing(accounts, channel_link):
 
 
 async def percent_timer(
-    timing,
-    function,
-    args,
-    prev_message: Message = None,
-    return_accounts=False,
-    is_sub=0,
+        timing,
+        function,
+        args,
+        prev_message: Message = None,
+        return_accounts=False,
+        is_sub=0,
 ):
     """
     :param is_sub: False = -1; True = 1.
@@ -166,7 +166,7 @@ async def percent_timer(
                 current_accounts = []
                 try:
                     for account_iter in range(
-                        last_account_iter, last_account_iter + current_count
+                            last_account_iter, last_account_iter + current_count
                     ):
                         try:
                             current_accounts.append(accounts_for_timing[account_iter])
@@ -466,7 +466,7 @@ async def edit_message_loading(message: Message, percent=0):
 
 
 async def subscribe_public_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -506,7 +506,7 @@ async def subscribe_public_channel(
                     await account(
                         UpdateNotifySettingsRequest(
                             peer=channel_link,
-                            settings=InputPeerNotifySettings(mute_until=2**31 - 1),
+                            settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1),
                         )
                     )
                     print(f"{phone.phone} вступил в {channel_link}")
@@ -531,6 +531,11 @@ async def subscribe_public_channel(
             else:
                 print("Connection error")
 
+                current_count += 1
+                done_percent = current_count / max_count
+                if message is not None:
+                    await edit_message_loading(message, done_percent)
+
             end = time.time()
             print(end - start)
 
@@ -543,7 +548,7 @@ async def subscribe_public_channel(
 
 
 async def subscribe_private_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -614,6 +619,11 @@ async def subscribe_private_channel(
         else:
             print("Connection error")
 
+            current_count += 1
+            done_percent = current_count / max_count
+            if message is not None:
+                await edit_message_loading(message, done_percent)
+
         gc.collect()
     # disconnect_all(accounts)
     return True
@@ -623,7 +633,7 @@ async def subscribe_private_channel(
 
 
 async def subscribe_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     if "t.me/+" in args[0]:
         is_success = await subscribe_private_channel(
@@ -646,7 +656,7 @@ async def subscribe_channel(
 
 
 async def leave_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     if "t.me/+" in args[0]:
         is_success = await leave_private_channel(
@@ -668,7 +678,7 @@ async def leave_channel(
 
 
 async def leave_public_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -725,6 +735,11 @@ async def leave_public_channel(
         else:
             print("Connection error")
 
+            current_count += 1
+            done_percent = current_count / max_count
+            if message is not None:
+                await edit_message_loading(message, done_percent)
+
         gc.collect()
     # disconnect_all(accounts)
     return True
@@ -734,7 +749,7 @@ async def leave_public_channel(
 
 
 async def leave_private_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -818,7 +833,7 @@ async def leave_private_channel(
 
 
 async def view_post(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count_accounts = args[1]
@@ -885,6 +900,11 @@ async def view_post(
         else:
             print("Connection error")
 
+            current_count += 1
+            done_percent = current_count / max_count
+            if message is not None:
+                await edit_message_loading(message, done_percent)
+
         gc.collect()
     # disconnect_all(accounts)
     return True
@@ -894,7 +914,7 @@ async def view_post(
 
 
 async def click_on_button(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
