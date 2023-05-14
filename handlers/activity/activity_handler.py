@@ -30,9 +30,14 @@ from useful.keyboards import (
 
 
 async def chose_activity(message: Message):
-    await message.answer(
-        text=MESSAGES["chose_activity"], reply_markup=activity_keyboard()
-    )
+    admin_list = get_admin()
+    admin = message.from_user.username
+    if admin in admin_list:
+        await message.answer(
+            text=MESSAGES["chose_activity"], reply_markup=activity_keyboard()
+        )
+    else:
+        await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
 """

@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from telethon import TelegramClient
 
 from config import *
+from handlers.activity.database import get_admin
 from handlers.main.main_functions import get_main_keyboard
 from states import AddUserStates
 from texts.buttons import BUTTONS
@@ -43,8 +44,13 @@ async def not_command_checker(message: Message, state: FSMContext):
 
 
 async def add_user_button(message: Message):
-    await message.answer(text=MESSAGES["user_phone"])
-    await AddUserStates.phone.set()
+    admin_list = get_admin()
+    admin = message.from_user.username
+    if admin in admin_list:
+        await message.answer(text=MESSAGES["user_phone"])
+        await AddUserStates.phone.set()
+    else:
+        await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
 async def phone_state(message: Message, state: FSMContext):

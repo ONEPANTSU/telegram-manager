@@ -226,6 +226,9 @@ async def not_command_checker(message: Message, state: FSMContext):
         )
         await state.finish()
         return False
+    elif answer == BUTTONS["count_users"]:
+        accounts_len = await get_all_accounts_len()
+        await message.answer(text=MESSAGES["available_bot"].format(count_user=accounts_len))
     else:
         return True
 
@@ -511,7 +514,7 @@ async def subscribe_public_channel(
                     )
                     print(f"{phone.phone} вступил в {channel_link}")
                     try:
-                        add_phone(link=channel_link, phone=accounts[account_iter])
+                        add_database(link=channel_link, phone=accounts[account_iter])
                     except:
                         print("Не удалось добавить в БД")
                 except Exception as error:
@@ -599,7 +602,7 @@ async def subscribe_private_channel(
                 # )
                 print(f"{phone.phone} вступил в {channel_link}")
                 try:
-                    add_phone(link=channel_link, phone=accounts[account_iter])
+                    add_database(phone=accounts[account_iter], link=channel_link)
                 except:
                     print("Не удалось добавить в БД")
             except Exception as error:
@@ -715,7 +718,7 @@ async def leave_public_channel(
                 await account(LeaveChannelRequest(channel_link))
                 print(f"{phone.phone} покинул {channel_link}")
                 try:
-                    delete_phone(link=channel_link, phone=accounts[account_iter])
+                    delete_phone_link(link=channel_link, phone=accounts[account_iter])
                 except:
                     print("Не удалось удалить из БД")
             except Exception as error:
@@ -803,7 +806,7 @@ async def leave_private_channel(
                     # return False
 
                 try:
-                    delete_phone(link=link_for_db, phone=accounts[account_iter])
+                    delete_phone_link(link=link_for_db, phone=accounts[account_iter])
                 except Exception as error:
                     print(str(error))
 

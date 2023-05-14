@@ -5,6 +5,7 @@ from handlers.activity.activity_functions import (
     delete_journals_files,
     get_all_accounts_len,
 )
+from handlers.activity.database import get_admin
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -28,8 +29,13 @@ async def back_by_command(message: Message):
 
 
 async def count_users_button(message: Message):
-    accounts_len = await get_all_accounts_len()
-    await message.answer(text=MESSAGES["available_bot"].format(count_user=accounts_len))
+    admin_list = get_admin()
+    admin = message.from_user.username
+    if admin in admin_list:
+        accounts_len = await get_all_accounts_len()
+        await message.answer(text=MESSAGES["available_bot"].format(count_user=accounts_len))
+    else:
+        await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
 async def clear_journals_button(message: Message):

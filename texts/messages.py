@@ -67,6 +67,8 @@ confirm_no_message = "Действие не произведено!"
 confirm_yes_message = "Действие произведено!"
 get_timing_error = "Введен неправильный формат задержки. Действие не выполнено!"
 
+access_message = "Доступ ограничен"
+
 clear_journals_message = "Все активные сессии удалены!"
 
 LOADING = [
@@ -123,4 +125,5 @@ MESSAGES = {
     "confirm_yes": confirm_yes_message,
     "get_timing": get_timing_error,
     "clear_journals": clear_journals_message,
+    "access": access_message,
 }
