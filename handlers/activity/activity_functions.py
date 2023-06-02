@@ -105,13 +105,26 @@ async def unsubscribe_timing(accounts, channel_link):
         return True
 
 
+def add_task_to_db(link, count, timing, is_sub):
+    if is_sub == 1:
+        accounts = get_list_of_numbers(link=link, sub=True)
+    elif is_sub == -1:
+        accounts = get_list_of_numbers(link=link, sub=False)
+    else:
+        accounts = get_list_of_numbers()
+    shuffle(accounts)
+    accounts_for_timing = accounts[:count]
+    task_id = add_task(accounts=accounts_for_timing, count=count, timing=timing)
+    return task_id
+
+
 async def percent_timer(
-        timing,
-        function,
-        args,
-        prev_message: Message = None,
-        return_accounts=False,
-        is_sub=0,
+    timing,
+    function,
+    args,
+    prev_message: Message = None,
+    return_accounts=False,
+    is_sub=0,
 ):
     """
     :param is_sub: False = -1; True = 1.
@@ -124,18 +137,14 @@ async def percent_timer(
                 [channel_link, count, post_id, position]
     :return: None
     """
-    message = await prev_message.answer(text=LOADING[0])
-    await prev_message.delete()
 
     count = args[1]
-    if is_sub == 1:
-        accounts = get_list_of_numbers(link=args[0], sub=True)
-    elif is_sub == -1:
-        accounts = get_list_of_numbers(link=args[0], sub=False)
-    else:
-        accounts = get_list_of_numbers()
-    shuffle(accounts)
-    accounts_for_timing = accounts[:count]
+    link = args[0]
+    task_id = add_task_to_db(link=link, count=count, timing=timing, is_sub=is_sub)
+
+    await prev_message.answer(text="Задача #" + str(task_id))
+    message = await prev_message.answer(text=LOADING[0])
+    await prev_message.delete()
 
     keys = list(timing.keys())
     sum_current_count = 0
@@ -164,14 +173,14 @@ async def percent_timer(
                 current_args = copy(args)
                 current_args.append(delay)
                 current_accounts = []
+
                 try:
-                    for account_iter in range(
-                            last_account_iter, last_account_iter + current_count
-                    ):
-                        try:
-                            current_accounts.append(accounts_for_timing[account_iter])
-                        except:
-                            print("IndexError: list index out of range")
+                    try:
+                        current_accounts = get_phone_by_task(task_id)[
+                            last_account_iter : last_account_iter + current_count
+                        ]
+                    except:
+                        print("IndexError: list index out of range")
 
                     current_args[1] = current_count
 
@@ -188,7 +197,7 @@ async def percent_timer(
 
                     if not is_success:
                         if return_accounts:
-                            return False, accounts_for_timing
+                            return False, get_phone_by_task(task_id)
                         return False
                 except:
                     print("IndexError: list index out of range II")
@@ -198,8 +207,10 @@ async def percent_timer(
         end = time.time()
         print(start - end)
 
+    delete_task(task_id)
+
     if return_accounts:
-        return True, accounts_for_timing
+        return True, get_phone_by_task(task_id)
     return True
 
 
@@ -228,7 +239,9 @@ async def not_command_checker(message: Message, state: FSMContext):
         return False
     elif answer == BUTTONS["count_users"]:
         accounts_len = await get_all_accounts_len()
-        await message.answer(text=MESSAGES["available_bot"].format(count_user=accounts_len))
+        await message.answer(
+            text=MESSAGES["available_bot"].format(count_user=accounts_len)
+        )
     else:
         return True
 
@@ -469,7 +482,7 @@ async def edit_message_loading(message: Message, percent=0):
 
 
 async def subscribe_public_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -509,7 +522,7 @@ async def subscribe_public_channel(
                     await account(
                         UpdateNotifySettingsRequest(
                             peer=channel_link,
-                            settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1),
+                            settings=InputPeerNotifySettings(mute_until=2**31 - 1),
                         )
                     )
                     print(f"{phone.phone} вступил в {channel_link}")
@@ -551,7 +564,7 @@ async def subscribe_public_channel(
 
 
 async def subscribe_private_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -636,7 +649,7 @@ async def subscribe_private_channel(
 
 
 async def subscribe_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     if "t.me/+" in args[0]:
         is_success = await subscribe_private_channel(
@@ -659,7 +672,7 @@ async def subscribe_channel(
 
 
 async def leave_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     if "t.me/+" in args[0]:
         is_success = await leave_private_channel(
@@ -681,7 +694,7 @@ async def leave_channel(
 
 
 async def leave_public_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -752,7 +765,7 @@ async def leave_public_channel(
 
 
 async def leave_private_channel(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -836,7 +849,7 @@ async def leave_private_channel(
 
 
 async def view_post(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count_accounts = args[1]
@@ -917,7 +930,7 @@ async def view_post(
 
 
 async def click_on_button(
-        args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
 ):
     channel_link = args[0]
     count = args[1]

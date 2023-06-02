@@ -33,7 +33,9 @@ async def count_users_button(message: Message):
     admin = message.from_user.username
     if admin in admin_list:
         accounts_len = await get_all_accounts_len()
-        await message.answer(text=MESSAGES["available_bot"].format(count_user=accounts_len))
+        await message.answer(
+            text=MESSAGES["available_bot"].format(count_user=accounts_len)
+        )
     else:
         await message.answer(text=MESSAGES["access"], reply_markup=None)
 
