@@ -191,11 +191,25 @@ def delete_phone_link(link, phone):
         print(f"Error deleting data from database: {e}")
 
 
-def get_task():
+def get_tasks():
     try:
         with sqlite3.connect("TelegramManager.db") as con:
             cur = con.cursor()
-            cur.execute("SELECT id, data_time FROM Task WHERE status = 1")
+            cur.execute("SELECT * FROM Task")
+            result = cur.fetchall()
+            if result is not None:
+                return result
+            else:
+                print(f"No matching data found in database")
+    except Exception as e:
+        print(f"Error getting task from database: {e}")
+
+
+def get_task_by_id(id_task):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT * FROM Task WHERE id_task = ? ", id_task)
             result = cur.fetchone()
             if result is not None:
                 return result

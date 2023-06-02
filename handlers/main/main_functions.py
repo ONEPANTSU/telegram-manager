@@ -10,7 +10,7 @@ def get_main_keyboard():
     task = KeyboardButton(BUTTONS["task"])
     count_users = KeyboardButton(BUTTONS["count_users"])
 
-    markup.add(activity, users, task, count_users)
+    markup.add(activity, task, users, count_users)
     return markup
 
 
