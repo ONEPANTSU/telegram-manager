@@ -7,9 +7,10 @@ def get_main_keyboard():
     markup = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     activity = KeyboardButton(BUTTONS["activity"])
     users = KeyboardButton(BUTTONS["users"])
+    task = KeyboardButton(BUTTONS["task"])
     count_users = KeyboardButton(BUTTONS["count_users"])
-    # clear_journals = KeyboardButton(BUTTONS["clear_journals"])
-    markup.add(activity, users, count_users)
+
+    markup.add(activity, users, task, count_users)
     return markup
 
 

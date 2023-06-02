@@ -10,6 +10,7 @@ react_button = "Накрутить реакции 💥"
 users_button = "Аккаунты ➕"
 parse_button = "Парсер 👥"
 count_users_button = "База 👥"
+task_button = "Задачи 📊"
 
 yes_button = "Да"
 no_button = "Нет"
@@ -29,6 +30,7 @@ BUTTONS = {
     "back": back_button,
     "parse": parse_button,
     "users": users_button,
+    "task": task_button,
     "count_users": count_users_button,
     "subscribe": subscribe_button,
     "unsubscribe": unsubscribe_button,

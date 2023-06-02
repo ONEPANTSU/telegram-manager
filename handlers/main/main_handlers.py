@@ -38,7 +38,7 @@ async def count_users_button(message: Message):
         await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
-async def clear_journals_button(message: Message):
+async def task_button(message: Message):
     delete_journals_files()
     await message.answer(text=MESSAGES["clear_journals"])
 
@@ -49,4 +49,4 @@ def register_main_handlers(dp: Dispatcher):
     dp.register_message_handler(back_by_button, text=[BUTTONS["back"]])
     dp.register_message_handler(back_by_command, commands=[COMMANDS["back"]])
     dp.register_message_handler(count_users_button, text=[BUTTONS["count_users"]])
-    dp.register_message_handler(clear_journals_button, text=[BUTTONS["clear_journals"]])
+    dp.register_message_handler(task_button, text=[BUTTONS["task"]])

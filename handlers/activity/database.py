@@ -182,6 +182,23 @@ def get_task():
         print(f"Error getting task from database: {e}")
 
 
+def get_phone_by_task(id_task):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            cur.execute(
+                'SELECT phone FROM Phone '
+                'INNER JOIN Task_phone ON Phone.id = Task_phone.id_phone '
+                'WHERE Task_phone.id_task = ?', id_task)
+            result = cur.fetchone()
+            if result is not None:
+                return result
+            else:
+                print(f"No matching data found in database")
+    except Exception as e:
+        print(f"Error getting task from database: {e}")
+
+
 def add_task(accounts, count, timing):
     try:
         with sqlite3.connect("TelegramManager.db") as con:
