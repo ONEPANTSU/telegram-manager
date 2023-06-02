@@ -165,3 +165,91 @@ def delete_phone_link(link, phone):
                 print(f"No matching data found in database: link={link}, phone={phone}")
     except Exception as e:
         print(f"Error deleting data from database: {e}")
+
+
+def get_task():
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            cur.execute(
+                'SELECT id, data_time FROM Task WHERE status = 1')
+            result = cur.fetchone()
+            if result is not None:
+                return result
+            else:
+                print(f"No matching data found in database")
+    except Exception as e:
+        print(f"Error getting task from database: {e}")
+
+
+def add_task(accounts, count, timing):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            status = 1
+            cur = con.cursor()
+            cur.execute('INSERT INTO Task (count, status, timing) VALUES (?, ?, ?)', (count, status, timing))
+            id_task = cur.lastrowid
+            for phone in accounts:
+                phones = cur.execute(
+                    'SELECT id FROM Phone WHERE phone = ?',
+                    (phone,))
+            for id_phone in phones:
+                cur.execute('INSERT INTO Task_phone (id_task, id_phone) VALUES (?, ?)', (id_task, id_phone))
+            print(f"Added task to database")
+        return id_task
+    except Exception as e:
+        print(f"Error adding data to database: {e}")
+
+
+def change_task_status(id_task):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            cur.execute('UPDATE Task SET status = 0 WHERE id = ?', (id_task,))
+            print(f"Changed status in database: id_task={id_task}")
+    except Exception as e:
+        print(f"Error changing status in database: {e}")
+
+
+def delete_task(id_tasks):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            for id_task in id_tasks:
+                cur.execute('SELECT id FROM Task WHERE id = ? ', (id_task, ))
+            result = cur.fetchone()
+            if result is not None:
+                id_task = result
+                cur.execute('DELETE FROM Task WHERE id = ?', id_task)
+                print(f"Deleted data from database: id_task={id_task}")
+            else:
+                print(f"No matching data found in database: id_task={id_task}")
+    except Exception as e:
+        print(f"Error deleting data from database: {e}")
+
+
+def delete_task_phone(id_task, phone):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            id_phone = cur.execute(
+                'SELECT id FROM Phone '
+                'INNER JOIN Phone_link ON Phone.id = Phone_link.id_phone '
+                'WHERE phone = ?',
+                (phone,))
+            cur.execute('DELETE FROM Task_phone WHERE id_task = ? AND id_phone = ?', (id_task, id_phone))
+            print(f"Deleted data from database: id_task={id_task}")
+
+    except Exception as e:
+        print(f"Error deleting data from database: {e}")
+
+
+def count_task_phone(id_task):
+    try:
+        with sqlite3.connect("TelegramManager.db") as con:
+            cur = con.cursor()
+            remaining_rows = cur.execute('SELECT COUNT(*) FROM Task_phone WHERE id_task = ?', (id_task,)).fetchone()[0]
+            print(f"Number of remaining rows in Task_phone with id_task {id_task}: {remaining_rows}")
+
+    except Exception as e:
+        print(f"Error deleting data from database: {e}")
