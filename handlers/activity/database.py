@@ -80,12 +80,14 @@ def get_phone_by_task(id_task):
 
 
 def add_task(accounts, count, timing):
-    print(accounts)
-    print(count)
-    print(timing)
+    accounts_dict = {}
+    iteration = 0
+    for account in accounts:
+        accounts_dict[str(iteration)] = account
+        iteration += 1
     res = requests.post(
         DATABASE_SERVER + "task",
-        params={"accounts": accounts, "count": count, "timing": timing},
+        params={"accounts": str(accounts_dict), "count": count, "timing": str(timing)},
     ).json()
     print(res)
     id_task = res["id_task"]
