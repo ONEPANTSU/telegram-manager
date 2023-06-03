@@ -209,12 +209,13 @@ def get_task_by_id(id_task):
     try:
         with sqlite3.connect("TelegramManager.db") as con:
             cur = con.cursor()
-            cur.execute("SELECT * FROM Task WHERE id_task = ? ", id_task)
+            cur.execute("SELECT * FROM Task WHERE id = ? ", (id_task,))
             result = cur.fetchone()
             if result is not None:
                 return result
             else:
                 print(f"No matching data found in database")
+                return None
     except Exception as e:
         print(f"Error getting task from database: {e}")
 
@@ -279,7 +280,7 @@ def delete_task(id_task):
     try:
         with sqlite3.connect("TelegramManager.db") as con:
             cur = con.cursor()
-            cur.execute("DELETE * FROM Task_phone WHERE id = ?", id_task)
+            cur.execute("DELETE * FROM Task_phone WHERE id = ?", (id_task,))
             print(f"Deleted data from database Task_phone: id_task={id_task}")
             cur.execute("DELETE FROM Task WHERE id = ?", id_task)
             print(f"Deleted data from database Task: id_task={id_task}")

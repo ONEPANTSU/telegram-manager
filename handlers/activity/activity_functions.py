@@ -153,6 +153,26 @@ async def percent_timer(
     start = time.time()
 
     for time_iter in range(1, max(keys) + 1):
+
+        try:
+            task_status = get_task_by_id(task_id)
+            if task_status is not None:
+                task_status = task_status[2]
+            else:
+                print("Task #" + str(task_id) + " was stopped")
+                break
+            print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+            while task_status == 0:
+                await asyncio.sleep(60)
+                task_status = get_task_by_id(task_id)
+                if task_status is not None:
+                    task_status = task_status[2]
+            if task_status is None:
+                print("Task #" + str(task_id) + " was stopped")
+                break
+        except:
+            print("TaskStatus Error")
+
         if time_iter in keys:
             gc.collect()
 
@@ -192,6 +212,7 @@ async def percent_timer(
                         last_iter=last_iter,
                         prev_message=message,
                         loading_args=loading_args,
+                        task_id=task_id
                     )
                     last_account_iter += current_count
 
@@ -207,7 +228,10 @@ async def percent_timer(
         end = time.time()
         print(start - end)
 
-    delete_task(task_id)
+    try:
+        delete_task(task_id)
+    except:
+        print("DeleteTask Error (#" + str(task_id) + ")")
 
     if return_accounts:
         return True, get_phone_by_task(task_id)
@@ -286,14 +310,14 @@ async def get_accounts():
             if session.endswith("session"):
                 if not session + "-journal" in sessions:
                     try:
-                        addr, port, user, pasw = get_proxies().split(":")
+                        addr, port, user, passwd = get_proxies().split(":")
 
                         proxy = {
                             "proxy_type": "socks5",
                             "addr": addr,
                             "port": int(port),
                             "username": user,
-                            "password": pasw,
+                            "password": passwd,
                             "rdns": True,
                         }
 
@@ -364,14 +388,14 @@ async def connect_to_account(session):
     for _, _, sessions in walk("base"):
         if not session + "-journal" in sessions:
             try:
-                addr, port, user, pasw = get_proxies().split(":")
+                addr, port, user, passwd = get_proxies().split(":")
 
                 proxy = {
                     "proxy_type": "socks5",
                     "addr": addr,
                     "port": int(port),
                     "username": user,
-                    "password": pasw,
+                    "password": passwd,
                     "rdns": True,
                 }
 
@@ -482,7 +506,7 @@ async def edit_message_loading(message: Message, percent=0):
 
 
 async def subscribe_public_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -509,6 +533,27 @@ async def subscribe_public_channel(
     if count <= accounts_len:
         shuffle(accounts)
         for account_iter in range(count):
+
+            if task_id is not None:
+                try:
+                    task_status = get_task_by_id(task_id)
+                    if task_status is not None:
+                        task_status = task_status[2]
+                    else:
+                        print("Task #" + str(task_id) + " was stopped")
+                        break
+                    print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                    while task_status == 0:
+                        await asyncio.sleep(60)
+                        task_status = get_task_by_id(task_id)
+                        if task_status is not None:
+                            task_status = task_status[2]
+                    if task_status is None:
+                        print("Task #" + str(task_id) + " was stopped")
+                        break
+                except:
+                    print("TaskStatus Error")
+
             start = time.time()
 
             account = await connect_to_account(accounts[account_iter])
@@ -564,7 +609,7 @@ async def subscribe_public_channel(
 
 
 async def subscribe_private_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -601,6 +646,27 @@ async def subscribe_private_channel(
         count = accounts_len
     shuffle(accounts)
     for account_iter in range(count):
+
+        if task_id is not None:
+            try:
+                task_status = get_task_by_id(task_id)
+                if task_status is not None:
+                    task_status = task_status[2]
+                else:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                while task_status == 0:
+                    await asyncio.sleep(60)
+                    task_status = get_task_by_id(task_id)
+                    if task_status is not None:
+                        task_status = task_status[2]
+                if task_status is None:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+            except:
+                print("TaskStatus Error")
+
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
             phone = await account.get_me()
@@ -649,7 +715,7 @@ async def subscribe_private_channel(
 
 
 async def subscribe_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     if "t.me/+" in args[0]:
         is_success = await subscribe_private_channel(
@@ -658,6 +724,7 @@ async def subscribe_channel(
             last_iter=last_iter,
             prev_message=prev_message,
             loading_args=loading_args,
+            task_id=task_id
         )
     else:
         is_success = await subscribe_public_channel(
@@ -666,13 +733,14 @@ async def subscribe_channel(
             last_iter=last_iter,
             prev_message=prev_message,
             loading_args=loading_args,
+            task_id=task_id
         )
 
     return is_success
 
 
 async def leave_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     if "t.me/+" in args[0]:
         is_success = await leave_private_channel(
@@ -681,6 +749,7 @@ async def leave_channel(
             last_iter=last_iter,
             prev_message=prev_message,
             loading_args=loading_args,
+            task_id=task_id
         )
     else:
         is_success = await leave_public_channel(
@@ -689,12 +758,13 @@ async def leave_channel(
             last_iter=last_iter,
             prev_message=prev_message,
             loading_args=loading_args,
+            task_id=task_id
         )
     return is_success
 
 
 async def leave_public_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -721,6 +791,27 @@ async def leave_public_channel(
     if count > accounts_len:
         count = accounts_len
     for account_iter in range(count):
+
+        if task_id is not None:
+            try:
+                task_status = get_task_by_id(task_id)
+                if task_status is not None:
+                    task_status = task_status[2]
+                else:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                while task_status == 0:
+                    await asyncio.sleep(60)
+                    task_status = get_task_by_id(task_id)
+                    if task_status is not None:
+                        task_status = task_status[2]
+                if task_status is None:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+            except:
+                print("TaskStatus Error")
+
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
             phone = await account.get_me()
@@ -765,7 +856,7 @@ async def leave_public_channel(
 
 
 async def leave_private_channel(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -799,6 +890,27 @@ async def leave_private_channel(
     link_for_db = channel_link.replace("https://t.me/joinchat/", "")
 
     for account_iter in range(count):
+
+        if task_id is not None:
+            try:
+                task_status = get_task_by_id(task_id)
+                if task_status is not None:
+                    task_status = task_status[2]
+                else:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                while task_status == 0:
+                    await asyncio.sleep(60)
+                    task_status = get_task_by_id(task_id)
+                    if task_status is not None:
+                        task_status = task_status[2]
+                if task_status is None:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+            except:
+                print("TaskStatus Error")
+
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
             phone = await account.get_me()
@@ -849,7 +961,7 @@ async def leave_private_channel(
 
 
 async def view_post(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     channel_link = args[0]
     count_accounts = args[1]
@@ -880,6 +992,27 @@ async def view_post(
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
     for account_iter in range(count_accounts):
+
+        if task_id is not None:
+            try:
+                task_status = get_task_by_id(task_id)
+                if task_status is not None:
+                    task_status = task_status[2]
+                else:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                while task_status == 0:
+                    await asyncio.sleep(60)
+                    task_status = get_task_by_id(task_id)
+                    if task_status is not None:
+                        task_status = task_status[2]
+                if task_status is None:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+            except:
+                print("TaskStatus Error")
+
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
             phone = await account.get_me()
@@ -930,7 +1063,7 @@ async def view_post(
 
 
 async def click_on_button(
-    args, accounts=None, last_iter=True, prev_message=None, loading_args=None
+    args, accounts=None, last_iter=True, prev_message=None, loading_args=None, task_id=None
 ):
     channel_link = args[0]
     count = args[1]
@@ -961,6 +1094,27 @@ async def click_on_button(
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
     for account_iter in range(count):
+
+        if task_id is not None:
+            try:
+                task_status = get_task_by_id(task_id)
+                if task_status is not None:
+                    task_status = task_status[2]
+                else:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                while task_status == 0:
+                    await asyncio.sleep(60)
+                    task_status = get_task_by_id(task_id)
+                    if task_status is not None:
+                        task_status = task_status[2]
+                if task_status is None:
+                    print("Task #" + str(task_id) + " was stopped")
+                    break
+            except:
+                print("TaskStatus Error")
+
         try:
             account = await connect_to_account(accounts[account_iter])
             if account is not None:
