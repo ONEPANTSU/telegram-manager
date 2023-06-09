@@ -214,7 +214,6 @@ async def percent_timer(
                             loading_args=loading_args,
                             task_id=task_id,
                         )
-                        await asyncio.sleep(MILES_IN_HOUR)
                         last_account_iter += current_count
 
                         if not is_success:
