@@ -25,6 +25,13 @@ back_button = "Назад 👈️"
 
 clear_journals_button = "Очистить журнал 🚫"
 
+delete_task_button = "🗑 Удалить задачу 🗑"
+prev_button = "⏪ Назад"
+next_button = "Вперёд ⏩"
+stop_task_button = "Stop"
+play_task_button = "Play"
+
+
 BUTTONS = {
     "activity": activity_button,
     "back": back_button,
@@ -44,4 +51,9 @@ BUTTONS = {
     "delay_1": delay_1_button,
     "delay_2": delay_2_button,
     "clear_journals": clear_journals_button,
+    "delete_task": delete_task_button,
+    "prev": prev_button,
+    "next": next_button,
+    "stop_task": stop_task_button,
+    "play_task": play_task_button,
 }

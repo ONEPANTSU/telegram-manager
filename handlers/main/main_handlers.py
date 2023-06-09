@@ -2,14 +2,14 @@ from aiogram import Dispatcher
 from aiogram.types import Message
 
 from handlers.activity.activity_functions import (
-    delete_journals_files,
     get_all_accounts_len,
 )
-from handlers.activity.database import get_admin
+from handlers.activity.database import get_admin, get_tasks, get_task_by_id
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
+from useful.task_keyboard import task_index
 
 
 async def help_command(message: Message):
@@ -41,8 +41,10 @@ async def count_users_button(message: Message):
 
 
 async def task_button(message: Message):
-    delete_journals_files()
-    await message.answer(text=MESSAGES["clear_journals"])
+    task_list = get_tasks()
+    await task_index(
+        message=message, task_list=task_list
+    )
 
 
 def register_main_handlers(dp: Dispatcher):
