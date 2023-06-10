@@ -1,3 +1,5 @@
+from random import shuffle
+
 import requests
 
 from config import DATABASE_SERVER
@@ -76,6 +78,7 @@ def get_phone_by_task(id_task):
         DATABASE_SERVER + "phones_by_task", params={"id_task": id_task}
     ).json()
     phones = list(json.values())
+    shuffle(phones)
     return phones
 
 

@@ -195,9 +195,7 @@ async def percent_timer(
 
                     try:
                         try:
-                            current_accounts = get_phone_by_task(task_id)[
-                                last_account_iter : last_account_iter + current_count
-                            ]
+                            current_accounts = get_phone_by_task(task_id)[:current_count]
                         except:
                             print("IndexError: list index out of range")
 
@@ -583,6 +581,7 @@ async def subscribe_public_channel(
                     print(f"{phone.phone} вступил в {channel_link}")
                     try:
                         add_database(link=channel_link, phone=accounts[account_iter])
+                        delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                     except:
                         print("Не удалось добавить в БД")
                 except Exception as error:
@@ -696,6 +695,7 @@ async def subscribe_private_channel(
                 print(f"{phone.phone} вступил в {channel_link}")
                 try:
                     add_database(phone=accounts[account_iter], link=channel_link)
+                    delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except:
                     print("Не удалось добавить в БД")
             except Exception as error:
@@ -851,6 +851,7 @@ async def leave_public_channel(
                 print(f"{phone.phone} покинул {channel_link}")
                 try:
                     delete_phone_link(link=channel_link, phone=accounts[account_iter])
+                    delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except:
                     print("Не удалось удалить из БД")
             except Exception as error:
@@ -964,6 +965,7 @@ async def leave_private_channel(
 
                 try:
                     delete_phone_link(link=link_for_db, phone=accounts[account_iter])
+                    delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as error:
                     print(str(error))
 
@@ -1068,6 +1070,10 @@ async def view_post(
                         increment=True,
                     )
                 )
+                try:
+                    delete_task_phone(id_task=task_id, phone=accounts[account_iter])
+                except:
+                    pass
                 print(f"{phone.phone} посмторел посты в {channel_link}")
             except Exception as error:
                 print(str(error))
@@ -1164,6 +1170,12 @@ async def click_on_button(
                 )  # Go to online
                 message = await account.get_messages(channel_link, ids=[int(post_id)])
                 await message[0].click(position - 1)
+
+                try:
+                    delete_task_phone(id_task=task_id, phone=accounts[account_iter])
+                except:
+                    pass
+
                 print(f"{phone.phone} нажал на кнопку в {channel_link}")
 
                 account.disconnect()
