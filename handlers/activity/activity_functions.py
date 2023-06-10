@@ -6,7 +6,6 @@ import random
 import time
 from copy import copy
 from os import remove, walk
-from random import shuffle
 
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
@@ -370,6 +369,11 @@ def get_list_of_numbers(link=None, sub=False):
         elif "t.me/joinchat/" in link:
             link = link.replace("t.me/joinchat/", "")
         already_exists = get_phones(link=link)
+        try:
+            for iteration in range(len(already_exists)):
+                already_exists[iteration] = already_exists[iteration][0]
+        except:
+            pass
         if sub:
             accounts = []
             for _, _, sessions in walk("base"):
