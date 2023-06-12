@@ -876,7 +876,7 @@ async def leave_public_channel(
             if message is not None:
                 await edit_message_loading(message, done_percent)
 
-        gc.collect()
+        # gc.collect()
     # disconnect_all(accounts)
     return True
     # else:

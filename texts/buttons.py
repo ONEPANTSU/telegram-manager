@@ -28,8 +28,8 @@ clear_journals_button = "Очистить журнал 🚫"
 delete_task_button = "🗑 Удалить задачу 🗑"
 prev_button = "⏪ Назад"
 next_button = "Вперёд ⏩"
-stop_task_button = "Stop"
-play_task_button = "Play"
+stop_task_button = "⏸"
+play_task_button = "▶️"
 
 
 BUTTONS = {
