@@ -195,7 +195,9 @@ async def percent_timer(
 
                     try:
                         try:
-                            current_accounts = get_phone_by_task(task_id)[:current_count]
+                            current_accounts = get_phone_by_task(task_id)[
+                                :current_count
+                            ]
                         except:
                             print("IndexError: list index out of range")
 

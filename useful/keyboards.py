@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from texts.buttons import BUTTONS
 from useful.callbacks import (
+    confirm_delete_task_callback,
     reactions_callback,
     reactions_delay_callback,
     subscribe_callback,
@@ -9,7 +10,7 @@ from useful.callbacks import (
     unsubscribe_callback,
     viewer_post_callback,
     viewer_post_delay_callback,
-    yes_no_callback, confirm_delete_task_callback,
+    yes_no_callback,
 )
 from useful.instruments import callback_dict
 
@@ -130,15 +131,13 @@ def confirm_deleting_task_keyboard(task_id):
     yes_confirm = InlineKeyboardButton(
         text=BUTTONS["yes_confirm"],
         callback_data=confirm_delete_task_callback.new(
-            answer=BUTTONS["yes_confirm"],
-            task_id=task_id
+            answer=BUTTONS["yes_confirm"], task_id=task_id
         ),
     )
     no_confirm = InlineKeyboardButton(
         text=BUTTONS["no_confirm"],
         callback_data=confirm_delete_task_callback.new(
-            answer=BUTTONS["no_confirm"],
-            task_id=task_id
+            answer=BUTTONS["no_confirm"], task_id=task_id
         ),
     )
     yes_no_confirm_keyboard = InlineKeyboardMarkup(row_width=2).add(

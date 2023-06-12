@@ -1,10 +1,8 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 
-from handlers.activity.activity_functions import (
-    get_all_accounts_len,
-)
-from handlers.activity.database import get_admin, get_tasks, get_task_by_id
+from handlers.activity.activity_functions import get_all_accounts_len
+from handlers.activity.database import get_admin, get_task_by_id, get_tasks
 from handlers.main.main_functions import main_menu
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -42,9 +40,7 @@ async def count_users_button(message: Message):
 
 async def task_button(message: Message):
     task_list = get_tasks()
-    await task_index(
-        message=message, task_list=task_list
-    )
+    await task_index(message=message, task_list=task_list)
 
 
 def register_main_handlers(dp: Dispatcher):

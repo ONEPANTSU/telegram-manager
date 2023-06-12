@@ -1,15 +1,18 @@
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
-from handlers.activity.database import get_tasks, count_task_phone
+from handlers.activity.database import count_task_phone, get_tasks
 from texts.buttons import BUTTONS
-from texts.messages import MESSAGES, LOADING
-from useful.callbacks import task_callback, delete_task_callback, stop_task_callback
+from texts.messages import LOADING, MESSAGES
+from useful.callbacks import delete_task_callback, stop_task_callback, task_callback
 from useful.instruments import bot
 
 
-def get_task_keyboard(
-    task_list,  page: int = 0
-) -> InlineKeyboardMarkup:
+def get_task_keyboard(task_list, page: int = 0) -> InlineKeyboardMarkup:
     has_next_page = len(task_list) > page + 1
 
     page_num_button = create_page_num_button(page, len(task_list))
@@ -58,27 +61,21 @@ def add_page_buttons(has_next_page, keyboard, back_button, next_button, page):
 def create_next_button(page):
     return InlineKeyboardButton(
         text=BUTTONS["next"],
-        callback_data=task_callback.new(
-            page=page + 1
-        ),
+        callback_data=task_callback.new(page=page + 1),
     )
 
 
 def create_back_button(page):
     return InlineKeyboardButton(
         text=BUTTONS["prev"],
-        callback_data=task_callback.new(
-            page=page - 1
-        ),
+        callback_data=task_callback.new(page=page - 1),
     )
 
 
 def create_delete_button(page, task_list):
     return InlineKeyboardButton(
         text=BUTTONS["delete_task"],
-        callback_data=delete_task_callback.new(
-            task_id=task_list[page][0], page=0
-        ),
+        callback_data=delete_task_callback.new(task_id=task_list[page][0], page=0),
     )
 
 
@@ -87,16 +84,12 @@ def create_stop_button(page, task_list):
     if status == 1:
         return InlineKeyboardButton(
             text=BUTTONS["stop_task"],
-            callback_data=stop_task_callback.new(
-                task_id=task_list[page][0], page=page
-            ),
+            callback_data=stop_task_callback.new(task_id=task_list[page][0], page=page),
         )
     elif status == 0:
         return InlineKeyboardButton(
             text=BUTTONS["play_task"],
-            callback_data=stop_task_callback.new(
-                task_id=task_list[page][0], page=page
-            ),
+            callback_data=stop_task_callback.new(task_id=task_list[page][0], page=page),
         )
 
 
@@ -125,13 +118,9 @@ async def refresh_pages(query: CallbackQuery, callback_data: dict):
 
 async def update_page(page, task_list, query):
     if len(task_list) != 0:
-        await edit_task_page(
-            query=query, task_list=task_list, page=page
-        )
+        await edit_task_page(query=query, task_list=task_list, page=page)
     else:
-        await query.message.edit_text(
-            text=MESSAGES["empty_task"], reply_markup=None
-        )
+        await query.message.edit_text(text=MESSAGES["empty_task"], reply_markup=None)
 
 
 async def edit_task_page(query: CallbackQuery, task_list, page):
@@ -154,24 +143,19 @@ async def create_task_page(chat_id, task_list, page):
 
 def get_page_content(page, task_list):
     task_info = create_task_info(task_list[page])
-    keyboard = get_task_keyboard(
-        task_list=task_list, page=page
-    )
+    keyboard = get_task_keyboard(task_list=task_list, page=page)
     return keyboard, task_info
 
 
 def create_task_info(task_data):
     loading = edit_message_loading(task_data)
-    task_info = MESSAGES["show_task"].format(
-        task_id=task_data[0],
-        loading=loading
-    )
+    task_info = MESSAGES["show_task"].format(task_id=task_data[0], loading=loading)
     return task_info
 
 
 def edit_message_loading(task_data):
     current_count = count_task_phone(task_data[0])
-    percent = current_count[0] / task_data[1]
+    percent = (task_data[1] - current_count[0]) / task_data[1]
     if percent == 1:
         return LOADING[10]
     elif percent >= 0.9:
@@ -192,3 +176,5 @@ def edit_message_loading(task_data):
         return LOADING[2]
     elif percent >= 0.1:
         return LOADING[1]
+    else:
+        return LOADING[0]

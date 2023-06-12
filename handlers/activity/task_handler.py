@@ -1,12 +1,17 @@
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery
 
-from handlers.activity.database import delete_task, get_tasks, change_task_status
+from handlers.activity.database import change_task_status, delete_task, get_tasks
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
-from useful.callbacks import task_callback, confirm_delete_task_callback, delete_task_callback, stop_task_callback
+from useful.callbacks import (
+    confirm_delete_task_callback,
+    delete_task_callback,
+    stop_task_callback,
+    task_callback,
+)
 from useful.keyboards import confirm_deleting_task_keyboard
-from useful.task_keyboard import refresh_pages, create_task_page
+from useful.task_keyboard import create_task_page, refresh_pages
 
 
 async def task_page_handler(query: CallbackQuery, callback_data: dict):
@@ -15,8 +20,10 @@ async def task_page_handler(query: CallbackQuery, callback_data: dict):
 
 async def delete_task_handler(query: CallbackQuery, callback_data: dict):
     id_task = callback_data["task_id"]
-    await query.message.edit_text(text=MESSAGES["confirm_deleting_task"],
-                                  reply_markup=confirm_deleting_task_keyboard(id_task))
+    await query.message.edit_text(
+        text=MESSAGES["confirm_deleting_task"],
+        reply_markup=confirm_deleting_task_keyboard(id_task),
+    )
 
 
 async def delete_confirm_query(query: CallbackQuery, callback_data: dict):
@@ -33,7 +40,9 @@ async def delete_confirm_query(query: CallbackQuery, callback_data: dict):
                 page=0,
             )
         else:
-            await query.message.edit_text(text=MESSAGES["empty_task"], reply_markup=None)
+            await query.message.edit_text(
+                text=MESSAGES["empty_task"], reply_markup=None
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
 
@@ -41,7 +50,6 @@ async def delete_confirm_query(query: CallbackQuery, callback_data: dict):
 async def stop_task_handler(query: CallbackQuery, callback_data: dict):
     id_task = callback_data["task_id"]
     page = int(callback_data["page"])
-    chat_id = query.message.chat.id
     task_list = get_tasks()
     status = task_list[page][2]
     if status == 1:
@@ -52,15 +60,11 @@ async def stop_task_handler(query: CallbackQuery, callback_data: dict):
 
 
 def register_task_handlers(dp: Dispatcher):
-    dp.register_callback_query_handler(
-        task_page_handler, task_callback.filter()
-    )
+    dp.register_callback_query_handler(task_page_handler, task_callback.filter())
     dp.register_callback_query_handler(
         delete_task_handler, delete_task_callback.filter()
     )
-    dp.register_callback_query_handler(
-        stop_task_handler, stop_task_callback.filter()
-    )
+    dp.register_callback_query_handler(stop_task_handler, stop_task_callback.filter())
     dp.register_callback_query_handler(
         delete_confirm_query, confirm_delete_task_callback.filter()
     )
