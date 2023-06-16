@@ -131,14 +131,21 @@ async def edit_task_page(query: CallbackQuery, task_list, page):
     )
 
 
-async def create_task_page(chat_id, task_list, page):
+async def create_task_page(chat_id, task_list, page, message:Message=None):
     keyboard, task_info = get_page_content(page, task_list)
-    await bot.send_message(
-        chat_id=chat_id,
-        text=task_info,
-        parse_mode="HTML",
-        reply_markup=keyboard,
-    )
+    if message is None:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=task_info,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
+    else:
+        await message.edit_text(
+            text=task_info,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
 
 
 def get_page_content(page, task_list):

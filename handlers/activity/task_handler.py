@@ -29,15 +29,16 @@ async def delete_task_handler(query: CallbackQuery, callback_data: dict):
 async def delete_confirm_query(query: CallbackQuery, callback_data: dict):
     answer = callback_data["answer"]
     id_task = callback_data["task_id"]
-    chat_id = query.message.chat.id
+    await query.message.delete()
     if answer == BUTTONS["yes_confirm"]:
         delete_task(id_task)  # удаляем задачу
         task_list = get_tasks()
         if len(task_list) != 0:
             await create_task_page(
-                chat_id=chat_id,
+                chat_id=query.message.chat.id,
                 task_list=task_list,
                 page=0,
+                message=query.message,
             )
         else:
             await query.message.edit_text(

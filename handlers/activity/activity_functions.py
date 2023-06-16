@@ -25,6 +25,7 @@ from texts.messages import LOADING, MESSAGES
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
+from useful.task_keyboard import create_task_page
 
 
 def get_timing(timing_str):
@@ -267,6 +268,19 @@ async def not_command_checker(message: Message, state: FSMContext):
         await message.answer(
             text=MESSAGES["available_bot"].format(count_user=accounts_len)
         )
+    elif answer == BUTTONS["task"]:
+        task_list = get_tasks()
+        if len(task_list) != 0:
+            await create_task_page(
+                chat_id=message.chat.id,
+                task_list=task_list,
+                page=0,
+                message=message,
+            )
+        else:
+            await message.answer(
+                text=MESSAGES["empty_task"], reply_markup=None
+            )
     else:
         return True
 
