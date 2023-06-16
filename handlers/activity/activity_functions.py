@@ -1,5 +1,5 @@
 import asyncio
-import gc
+#import gc
 import math
 import os
 import random
@@ -78,7 +78,7 @@ async def unsubscribe_timing(accounts, channel_link):
         for time_iter in range(1, max(keys) + 1):
             if time_iter in keys:
                 print("trying to unsub")
-                gc.collect()
+                #gc.collect()
                 current_account = []
                 try:
                     try:
@@ -156,7 +156,7 @@ async def percent_timer(
         for time_iter in range(1, max(keys) + 1):
             try:
                 task_status = get_task_by_id(task_id)
-                if task_status is not None:
+                if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
                     print("Task #" + str(task_id) + " was stopped")
@@ -165,16 +165,16 @@ async def percent_timer(
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
-                if task_status is None:
+                if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
             except:
                 print("TaskStatus Error")
 
             if time_iter in keys:
-                gc.collect()
+                #gc.collect()
 
                 last_iter = False
                 hour = time_iter
@@ -561,7 +561,7 @@ async def subscribe_public_channel(
             if task_id is not None:
                 try:
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                     else:
                         print("Task #" + str(task_id) + " was stopped")
@@ -570,13 +570,14 @@ async def subscribe_public_channel(
                     while task_status == 0:
                         await asyncio.sleep(60)
                         task_status = get_task_by_id(task_id)
-                        if task_status is not None:
+                        if task_status is not None and task_status != 200:
                             task_status = task_status[2]
-                    if task_status is None:
+                    if task_status is None or task_status == 200:
                         print("Task #" + str(task_id) + " was stopped")
                         break
                 except:
                     print("TaskStatus Error")
+                    break
 
             start = time.time()
 
@@ -625,7 +626,7 @@ async def subscribe_public_channel(
             end = time.time()
             print(end - start)
 
-            gc.collect()
+            #gc.collect()
         # disconnect_all(accounts)
         return True
     else:
@@ -679,7 +680,7 @@ async def subscribe_private_channel(
         if task_id is not None:
             try:
                 task_status = get_task_by_id(task_id)
-                if task_status is not None:
+                if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
                     print("Task #" + str(task_id) + " was stopped")
@@ -688,9 +689,9 @@ async def subscribe_private_channel(
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
-                if task_status is None:
+                if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
             except:
@@ -736,7 +737,7 @@ async def subscribe_private_channel(
             if message is not None:
                 await edit_message_loading(message, done_percent)
 
-        gc.collect()
+        #gc.collect()
     # disconnect_all(accounts)
     return True
     # else:
@@ -839,7 +840,7 @@ async def leave_public_channel(
         if task_id is not None:
             try:
                 task_status = get_task_by_id(task_id)
-                if task_status is not None:
+                if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
                     print("Task #" + str(task_id) + " was stopped")
@@ -848,9 +849,9 @@ async def leave_public_channel(
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
-                if task_status is None:
+                if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
             except:
@@ -943,7 +944,7 @@ async def leave_private_channel(
         if task_id is not None:
             try:
                 task_status = get_task_by_id(task_id)
-                if task_status is not None:
+                if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
                     print("Task #" + str(task_id) + " was stopped")
@@ -952,9 +953,9 @@ async def leave_private_channel(
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
-                if task_status is None:
+                if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
             except:
@@ -1002,7 +1003,7 @@ async def leave_private_channel(
             new_delay = delay + random.randint(-del_delay, del_delay)
             await asyncio.sleep(new_delay)
 
-        gc.collect()
+        #gc.collect()
     # disconnect_all(accounts)
     return True
     # else:
@@ -1050,7 +1051,7 @@ async def view_post(
         if task_id is not None:
             try:
                 task_status = get_task_by_id(task_id)
-                if task_status is not None:
+                if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
                     print("Task #" + str(task_id) + " was stopped")
@@ -1059,9 +1060,9 @@ async def view_post(
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
-                if task_status is None:
+                if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
             except:
@@ -1112,7 +1113,7 @@ async def view_post(
             if message is not None:
                 await edit_message_loading(message, done_percent)
 
-        gc.collect()
+        #gc.collect()
     # disconnect_all(accounts)
     return True
     # else:
@@ -1160,7 +1161,7 @@ async def click_on_button(
         if task_id is not None:
             try:
                 task_status = get_task_by_id(task_id)
-                if task_status is not None:
+                if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
                     print("Task #" + str(task_id) + " was stopped")
@@ -1169,9 +1170,9 @@ async def click_on_button(
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
-                    if task_status is not None:
+                    if task_status is not None and task_status != 200:
                         task_status = task_status[2]
-                if task_status is None:
+                if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
             except:
@@ -1205,7 +1206,7 @@ async def click_on_button(
                     new_delay = delay + random.randint(-del_delay, del_delay)
                     await asyncio.sleep(new_delay)
 
-                gc.collect()
+                #gc.collect()
         except Exception as error:
             print(str(error))
     # disconnect_all(accounts)
