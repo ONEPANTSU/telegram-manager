@@ -25,7 +25,7 @@ back_button = "Назад 👈️"
 
 clear_journals_button = "Очистить журнал 🚫"
 
-delete_task_button = "🗑 Удалить задачу 🗑"
+delete_task_button = "🗑"
 prev_button = "⏪ Назад"
 next_button = "Вперёд ⏩"
 stop_task_button = "⏸"

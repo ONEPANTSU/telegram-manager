@@ -42,8 +42,7 @@ def create_task_keyboard(
 ):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.row(page_num_button)
-    keyboard.row(delete_button)
-    keyboard.row(stop_button)
+    keyboard.row(delete_button, stop_button)
     return add_page_buttons(has_next_page, keyboard, back_button, next_button, page)
 
 
