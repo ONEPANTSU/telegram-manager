@@ -1,8 +1,8 @@
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery
-from task_keyboard import create_task_page, refresh_pages
 
 from handlers.activity.database import change_task_status, delete_task, get_tasks
+from handlers.task.task_keyboard import create_task_page, refresh_pages
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
 from useful.callbacks import (

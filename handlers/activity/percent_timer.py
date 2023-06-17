@@ -131,7 +131,7 @@ async def percent_timer(
             start,
         ) = await initialize_variables_for_timer(args, timing, is_sub, prev_message)
 
-        return_accounts = timer_cycle(
+        return_accounts = await timer_cycle(
             message,
             count,
             task_id,
@@ -169,10 +169,11 @@ async def timer_cycle(
     return_accounts,
 ):
     for time_iter in range(1, max(keys) + 1):
-        if not check_task_status(task_id):
+        checked_status = await check_task_status(task_id)
+        if not checked_status:
             break
         if time_iter in keys:
-            is_success, last_account_iter = timing_iteration(
+            is_success, last_account_iter = await timing_iteration(
                 time_iter,
                 timing,
                 keys,
@@ -193,7 +194,7 @@ async def timer_cycle(
         return return_accounts
 
 
-def timing_iteration(
+async def timing_iteration(
     time_iter,
     timing,
     keys,

@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
-from percent_timer import *
 
+from handlers.activity.percent_timer import *
 from states import ReactionsStates, SubscribeStates, UnsubscribeStates, ViewerPostStates
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
@@ -107,7 +107,9 @@ async def subscribe_ask_delay_state(
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Subscribe Ask Delay State Error (Callback {user_id} is not exist) {e}")
+            print(
+                f"Subscribe Ask Delay State Error (Callback {user_id} is not exist) {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
         await state.update_data(delay_ask=answer)
@@ -187,14 +189,18 @@ async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict)
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Subscribe Ask Confirm Query Error (Callback {user_id} is not exist) {e}")
+            print(
+                f"Subscribe Ask Confirm Query Error (Callback {user_id} is not exist) {e}"
+            )
 
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Subscribe Ask Confirm Query Error (Callback {user_id} is not exist) {e}")
+            print(
+                f"Subscribe Ask Confirm Query Error (Callback {user_id} is not exist) {e}"
+            )
 
 
 async def subscribe_confirm(args, message):
@@ -317,7 +323,9 @@ async def unsubscribe_ask_delay_state(
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Unsubscribe Ask Delay State Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Unsubscribe Ask Delay State Error (Callback {user_id} is not exist): {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
         await state.update_data(delay_ask=answer)
@@ -398,13 +406,17 @@ async def unsubscribe_ask_confirm_query(query: CallbackQuery, callback_data: dic
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Unsubscribe Ask Confirm Query Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Unsubscribe Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Unsubscribe Ask Confirm Query Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Unsubscribe Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
 
 
 async def unsubscribe_confirm(args, message):
@@ -553,7 +565,9 @@ async def viewer_ask_delay_state(
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Viewer Ask Delay State Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Viewer Ask Delay State Error (Callback {user_id} is not exist): {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count_accounts=count_accounts)
         await state.update_data(count_posts=count_posts)
@@ -649,13 +663,17 @@ async def viewer_ask_confirm_query(query: CallbackQuery, callback_data: dict):
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Viewer Ask Confirm Query Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Viewer Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Viewer Ask Confirm Query Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Viewer Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
 
 
 async def viewer_confirm(args, message):
@@ -784,7 +802,9 @@ async def reactions_ask_delay_state(
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Reaction Ask Delay State Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Reaction Ask Delay State Error (Callback {user_id} is not exist): {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
         await state.update_data(post_id=post_id)
@@ -879,13 +899,17 @@ async def reactions_ask_confirm_query(query: CallbackQuery, callback_data: dict)
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Reaction Ask Confirm Query Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Reaction Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
         try:
             callback_dict.pop(user_id)
         except Exception as e:
-            print(f"Reaction Ask Confirm Query Error (Callback {user_id} is not exist): {e}")
+            print(
+                f"Reaction Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
 
 
 async def reactions_confirm(args, message):

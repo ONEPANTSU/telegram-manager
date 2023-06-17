@@ -139,10 +139,13 @@ async def update_page(page, task_list, query):
 
 async def edit_task_page(query: CallbackQuery, task_list, page):
     keyboard, task_info = get_page_content(page, task_list)
-    await query.message.edit_text(
-        text=task_info,
-        reply_markup=keyboard,
-    )
+    try:
+        await query.message.edit_text(
+            text=task_info,
+            reply_markup=keyboard,
+        )
+    except Exception as e:
+        print(f"Edit Task Page Error: {e}")
 
 
 async def create_task_page(chat_id, task_list, page, message: Message = None):
