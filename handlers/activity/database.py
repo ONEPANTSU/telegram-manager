@@ -106,8 +106,11 @@ def change_task_status(id_task, status):
 
 
 def delete_task(id_task):
-    res = requests.delete(DATABASE_SERVER + "task", params={"id_task": id_task})
-    print(res.text)
+    try:
+        res = requests.delete(DATABASE_SERVER + "task", params={"id_task": id_task})
+        print(res.text)
+    except Exception as e:
+        print("Delete Task Error (#" + str(id_task) + f"): {e}")
 
 
 def delete_task_phone(id_task, phone):

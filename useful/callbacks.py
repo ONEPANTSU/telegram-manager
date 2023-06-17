@@ -29,6 +29,7 @@ reactions_yes_no_confirm_callback = CallbackData(
 task_callback = CallbackData("task", "page")
 delete_task_callback = CallbackData("delete_task", "task_id", "page")
 stop_task_callback = CallbackData("stop_task", "task_id", "page")
+refresh_task_callback = CallbackData("refresh_task", "task_id", "page")
 
 confirm_delete_task_callback = CallbackData(
     "task_yes_no_confirm_keyboard", "answer", "task_id"

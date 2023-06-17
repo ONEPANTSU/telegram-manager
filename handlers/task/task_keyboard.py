@@ -8,7 +8,12 @@ from aiogram.types import (
 from handlers.activity.database import count_task_phone, get_tasks
 from texts.buttons import BUTTONS
 from texts.messages import LOADING, MESSAGES
-from useful.callbacks import delete_task_callback, stop_task_callback, task_callback
+from useful.callbacks import (
+    delete_task_callback,
+    refresh_task_callback,
+    stop_task_callback,
+    task_callback,
+)
 from useful.instruments import bot
 
 
@@ -18,12 +23,14 @@ def get_task_keyboard(task_list, page: int = 0) -> InlineKeyboardMarkup:
     page_num_button = create_page_num_button(page, len(task_list))
     delete_button = create_delete_button(page, task_list)
     stop_button = create_stop_button(page, task_list)
+    refresh_button = create_refresh_button(page, task_list)
     back_button = create_back_button(page)
     next_button = create_next_button(page)
     return create_task_keyboard(
         back_button,
         delete_button,
         stop_button,
+        refresh_button,
         has_next_page,
         next_button,
         page,
@@ -35,6 +42,7 @@ def create_task_keyboard(
     back_button,
     delete_button,
     stop_button,
+    refresh_button,
     has_next_page,
     next_button,
     page,
@@ -42,7 +50,7 @@ def create_task_keyboard(
 ):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.row(page_num_button)
-    keyboard.row(delete_button, stop_button)
+    keyboard.row(delete_button, stop_button, refresh_button)
     return add_page_buttons(has_next_page, keyboard, back_button, next_button, page)
 
 
@@ -92,6 +100,13 @@ def create_stop_button(page, task_list):
         )
 
 
+def create_refresh_button(page, task_list):
+    return InlineKeyboardButton(
+        text=BUTTONS["refresh_task"],
+        callback_data=refresh_task_callback.new(task_id=task_list[page][0], page=0),
+    )
+
+
 def create_page_num_button(page, task_list_len):
     return InlineKeyboardButton(
         text=f"{page + 1} / {task_list_len}", callback_data="dont_click_me"
@@ -130,7 +145,7 @@ async def edit_task_page(query: CallbackQuery, task_list, page):
     )
 
 
-async def create_task_page(chat_id, task_list, page, message:Message=None):
+async def create_task_page(chat_id, task_list, page, message: Message = None):
     keyboard, task_info = get_page_content(page, task_list)
     if message is None:
         await bot.send_message(

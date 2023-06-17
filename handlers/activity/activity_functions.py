@@ -1,10 +1,8 @@
 import asyncio
-#import gc
 import math
 import os
 import random
 import time
-from copy import copy
 from os import remove, walk
 
 from aiogram.dispatcher import FSMContext
@@ -15,9 +13,10 @@ from telethon.tl.functions.channels import JoinChannelRequest, LeaveChannelReque
 from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.types import InputPeerNotifySettings
 
-from config import API_HASH, API_ID, HOURS_IN_WEEK, MILES_IN_HOUR, RANDOM_PERCENT
+from config import API_HASH, API_ID, RANDOM_PERCENT
 from handlers.activity.database import *
 from handlers.main.main_functions import get_main_keyboard
+from handlers.task.task_keyboard import create_task_page
 from handlers.users.users_handler import add_user_button
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -25,219 +24,6 @@ from texts.messages import LOADING, MESSAGES
 from useful.commands_handler import commands_handler
 from useful.instruments import bot
 from useful.keyboards import activity_keyboard
-from useful.task_keyboard import create_task_page
-
-
-def get_timing(timing_str):
-    timing_arr = timing_str.split("\n")
-    timing_dict = {}
-    for timing in timing_arr:
-        try:
-            hour, percent = map(int, timing.split(" - "))
-        except:
-            try:
-                hour, percent = map(int, timing.split("-"))
-            except:
-                try:
-                    hour, percent = map(int, timing.split(" -"))
-                except:
-                    try:
-                        hour, percent = map(int, timing.split("- "))
-                    except:
-                        return None
-        timing_dict[hour] = percent
-    if sum(timing_dict.values()) == 100:
-        return timing_dict
-    else:
-        return None
-
-
-async def unsubscribe_timing(accounts, channel_link):
-    if len(accounts) >= 6:
-        week_percents = {
-            1: math.ceil(len(accounts) * 0.1),
-            2: math.ceil(len(accounts) * 0.08),
-            3: math.ceil(len(accounts) * 0.05),
-            4: math.ceil(len(accounts) * 0.03),
-            5: math.ceil(len(accounts) * 0.02),
-            6: math.ceil(len(accounts) * 0.02),
-        }
-        keys = []
-        for week in range(6):
-            for acc in range(week_percents[week + 1]):
-                hour = week * HOURS_IN_WEEK + random.randint(1, HOURS_IN_WEEK)
-                keys.append(hour)
-
-        shuffle(accounts)
-
-        args = [channel_link, 1, 1]
-
-        account_iter = 0
-        start = time.time()
-
-        for time_iter in range(1, max(keys) + 1):
-            if time_iter in keys:
-                print("trying to unsub")
-                #gc.collect()
-                current_account = []
-                try:
-                    try:
-                        current_account.append(accounts[account_iter])
-                    except:
-                        print("IndexError: list index out of range")
-
-                    is_success = await leave_channel(
-                        args=args, accounts=current_account
-                    )
-                    print(is_success)
-                    account_iter += 1
-
-                    if not is_success:
-                        return False
-                except:
-                    print("IndexError: list index out of range II")
-            else:
-                await asyncio.sleep(MILES_IN_HOUR)
-
-            end = time.time()
-            print(start - end)
-
-        return True
-
-
-def add_task_to_db(link, count, timing, is_sub):
-    if is_sub == 1:
-        accounts = get_list_of_numbers(link=link, sub=True)
-    elif is_sub == -1:
-        accounts = get_list_of_numbers(link=link, sub=False)
-    else:
-        accounts = get_list_of_numbers()
-    shuffle(accounts)
-    accounts_for_timing = accounts[:count]
-    task_id = add_task(accounts=accounts_for_timing, count=count, timing=timing)
-    return task_id
-
-
-async def percent_timer(
-    timing,
-    function,
-    args,
-    prev_message: Message = None,
-    return_accounts=False,
-    is_sub=0,
-):
-    """
-    :param is_sub: False = -1; True = 1.
-    :param return_accounts: for unsubscribe timing
-    :param prev_message:
-    :param timing: get_timing()
-    :param function: function of account's activity
-    :param args: [channel_link, count],
-                [channel_link, count, last_post_id, count_posts],
-                [channel_link, count, post_id, position]
-    :return: None
-    """
-
-    count = args[1]
-    link = args[0]
-    try:
-        task_id = add_task_to_db(link=link, count=count, timing=timing, is_sub=is_sub)
-
-        await prev_message.answer(text="Задача #" + str(task_id))
-        message = await prev_message.answer(text=LOADING[0])
-        await prev_message.delete()
-
-        keys = list(timing.keys())
-        sum_current_count = 0
-        last_account_iter = 0
-
-        start = time.time()
-
-        for time_iter in range(1, max(keys) + 1):
-            try:
-                task_status = get_task_by_id(task_id)
-                if task_status is not None and task_status != 200:
-                    task_status = task_status[2]
-                else:
-                    print("Task #" + str(task_id) + " was stopped")
-                    break
-                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
-                while task_status == 0:
-                    await asyncio.sleep(60)
-                    task_status = get_task_by_id(task_id)
-                    if task_status is not None and task_status != 200:
-                        task_status = task_status[2]
-                if task_status is None or task_status == 200:
-                    print("Task #" + str(task_id) + " was stopped")
-                    break
-            except:
-                print("TaskStatus Error")
-
-            if time_iter in keys:
-                #gc.collect()
-
-                last_iter = False
-                hour = time_iter
-                percent = timing[hour]
-                if time_iter != max(keys):
-                    current_count = round(count * percent / 100)
-                    if current_count + sum_current_count <= count:
-                        sum_current_count += current_count
-                    else:
-                        current_count = count - sum_current_count
-                else:
-                    last_iter = True
-                    current_count = count - sum_current_count
-                if current_count != 0:
-                    delay = round(MILES_IN_HOUR / current_count)
-                    current_args = copy(args)
-                    current_args.append(delay)
-                    current_accounts = []
-
-                    try:
-                        try:
-                            current_accounts = get_phone_by_task(task_id)[
-                                :current_count
-                            ]
-                        except:
-                            print("IndexError: list index out of range")
-
-                        current_args[1] = current_count
-
-                        loading_args = [last_account_iter, count]
-
-                        is_success = await function(
-                            args=current_args,
-                            accounts=current_accounts,
-                            last_iter=last_iter,
-                            prev_message=message,
-                            loading_args=loading_args,
-                            task_id=task_id,
-                        )
-                        last_account_iter += current_count
-
-                        if not is_success:
-                            if return_accounts:
-                                return False, get_phone_by_task(task_id)
-                            return False
-                    except:
-                        print("IndexError: list index out of range II")
-            else:
-                await asyncio.sleep(MILES_IN_HOUR)
-
-            end = time.time()
-            print(start - end)
-
-        try:
-            delete_task(task_id)
-        except:
-            print("DeleteTask Error (#" + str(task_id) + ")")
-
-        if return_accounts:
-            return True, get_phone_by_task(task_id)
-        return True
-    except:
-        print("Can't create the task")
 
 
 async def not_command_checker(message: Message, state: FSMContext):
@@ -278,9 +64,7 @@ async def not_command_checker(message: Message, state: FSMContext):
                 message=message,
             )
         else:
-            await message.answer(
-                text=MESSAGES["empty_task"], reply_markup=None
-            )
+            await message.answer(text=MESSAGES["empty_task"], reply_markup=None)
     else:
         return True
 
@@ -306,16 +90,8 @@ def delete_journals_files():
             if session.endswith("journal"):
                 try:
                     os.remove("base/" + session)
-                except:
-                    print("Deleting was excepted")
-
-
-# def disconnect_all(accounts):
-#     for account in accounts:
-#         try:
-#             account.disconnect()
-#         except:
-#             pass
+                except Exception as e:
+                    print(f"Delete Journals Files Error: {e}")
 
 
 async def get_accounts():
@@ -339,7 +115,8 @@ async def get_accounts():
                         client = TelegramClient(
                             f"base/{session}", API_ID, API_HASH, proxy=proxy
                         )
-                    except:
+                    except Exception as e:
+                        print(f"Get Accounts Error: {e}")
                         client = TelegramClient(f"base/{session}", API_ID, API_HASH)
 
                     try:
@@ -350,7 +127,8 @@ async def get_accounts():
                         else:
                             print(f"{session} connected")
                             accounts.append(client)
-                    except:
+                    except Exception as e:
+                        print(f"Get Accounts Error: {e}")
                         await client.disconnect()
                         remove(f"base/{session}")
         return accounts
@@ -386,8 +164,8 @@ def get_list_of_numbers(link=None, sub=False):
         try:
             for iteration in range(len(already_exists)):
                 already_exists[iteration] = already_exists[iteration][0]
-        except:
-            pass
+        except Exception as e:
+            print(f"Get List Of Numbers Error: {e}")
         if sub:
             accounts = []
             for _, _, sessions in walk("base"):
@@ -422,7 +200,8 @@ async def connect_to_account(session):
                 client = TelegramClient(
                     f"base/{session}", API_ID, API_HASH, proxy=proxy
                 )
-            except:
+            except Exception as e:
+                print(f"Connection To Account Error: {e}")
                 client = TelegramClient(f"base/{session}", API_ID, API_HASH)
 
             try:
@@ -433,7 +212,8 @@ async def connect_to_account(session):
                 else:
                     print(f"{session} connected")
                     return client
-            except:
+            except Exception as e:
+                print(f"Connection To Account Error: {e}")
                 await client.disconnect()
                 remove(f"base/{session}")
             return None
@@ -476,53 +256,53 @@ async def edit_message_loading(message: Message, percent=0):
     if percent == 1:
         try:
             await message.edit_text(text=LOADING[10])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.9:
         try:
             await message.edit_text(text=LOADING[9])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.8:
         try:
             await message.edit_text(text=LOADING[8])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.7:
         try:
             await message.edit_text(text=LOADING[7])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.6:
         try:
             await message.edit_text(text=LOADING[6])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.5:
         try:
             await message.edit_text(text=LOADING[5])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.4:
         try:
             await message.edit_text(text=LOADING[4])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.3:
         try:
             await message.edit_text(text=LOADING[3])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.2:
         try:
             await message.edit_text(text=LOADING[2])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
     elif percent >= 0.1:
         try:
             await message.edit_text(text=LOADING[1])
-        except:
-            pass
+        except Exception as e:
+            print(f"Edit Message Loading Error: {e}")
 
 
 async def subscribe_public_channel(
@@ -575,8 +355,8 @@ async def subscribe_public_channel(
                     if task_status is None or task_status == 200:
                         print("Task #" + str(task_id) + " was stopped")
                         break
-                except:
-                    print("TaskStatus Error")
+                except Exception as e:
+                    print(f"Subscribe Public Channel Error: {e}")
                     break
 
             start = time.time()
@@ -599,8 +379,8 @@ async def subscribe_public_channel(
                     try:
                         add_database(link=channel_link, phone=accounts[account_iter])
                         delete_task_phone(id_task=task_id, phone=accounts[account_iter])
-                    except:
-                        print("Не удалось добавить в БД")
+                    except Exception as e:
+                        print(f"Subscribe Public Channel Error: {e}")
                 except Exception as error:
                     print(str(error))
 
@@ -625,12 +405,8 @@ async def subscribe_public_channel(
 
             end = time.time()
             print(end - start)
-
-            #gc.collect()
-        # disconnect_all(accounts)
         return True
     else:
-        # disconnect_all(accounts)
         return False
 
 
@@ -694,8 +470,8 @@ async def subscribe_private_channel(
                 if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
-            except:
-                print("TaskStatus Error")
+            except Exception as e:
+                print(f"Subscribe Private Channel Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -705,16 +481,12 @@ async def subscribe_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(ImportChatInviteRequest(channel_link))
-                # await account(UpdateNotifySettingsRequest(
-                #     peer=channel_link,
-                #     settings=InputPeerNotifySettings(mute_until=2 ** 31 - 1))
-                # )
                 print(f"{phone.phone} вступил в {channel_link}")
                 try:
                     add_database(phone=accounts[account_iter], link=channel_link)
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
-                except:
-                    print("Не удалось добавить в БД")
+                except Exception as e:
+                    print(f"Subscribe Private Channel Error: {e}")
             except Exception as error:
                 print(str(error))
 
@@ -737,12 +509,7 @@ async def subscribe_private_channel(
             if message is not None:
                 await edit_message_loading(message, done_percent)
 
-        #gc.collect()
-    # disconnect_all(accounts)
     return True
-    # else:
-    #     disconnect_all(accounts)
-    #     return False
 
 
 async def subscribe_channel(
@@ -854,8 +621,8 @@ async def leave_public_channel(
                 if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
-            except:
-                print("TaskStatus Error")
+            except Exception as e:
+                print(f"Leave Public Channel Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -869,8 +636,8 @@ async def leave_public_channel(
                 try:
                     delete_phone_link(link=channel_link, phone=accounts[account_iter])
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
-                except:
-                    print("Не удалось удалить из БД")
+                except Exception as e:
+                    print(f"Leave Public Channel Error: {e}")
             except Exception as error:
                 print(str(error))
 
@@ -893,12 +660,7 @@ async def leave_public_channel(
             if message is not None:
                 await edit_message_loading(message, done_percent)
 
-        # gc.collect()
-    # disconnect_all(accounts)
     return True
-    # else:
-    #     disconnect_all(accounts)
-    #     return False
 
 
 async def leave_private_channel(
@@ -928,7 +690,6 @@ async def leave_private_channel(
     if accounts is None:
         accounts = get_list_of_numbers(link=channel_link, sub=False)
         shuffle(accounts)
-        # disconnect_all(accounts[count:])
         accounts = accounts[:count]
     accounts_len = len(accounts)
     if count > accounts_len:
@@ -958,8 +719,8 @@ async def leave_private_channel(
                 if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
-            except:
-                print("TaskStatus Error")
+            except Exception as e:
+                print(f"Leave Private Channel Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -976,9 +737,8 @@ async def leave_private_channel(
                             await dialog.delete()
                             print(f"{phone.phone} покинул {channel_link}")
                             break
-                except Exception as error:
-                    print(str(error))
-                    # return False
+                except Exception as e:
+                    print(f"Leave Private Channel Error: {e}")
 
                 try:
                     delete_phone_link(link=link_for_db, phone=accounts[account_iter])
@@ -1002,13 +762,7 @@ async def leave_private_channel(
             del_delay = math.floor(delay * RANDOM_PERCENT / 100)
             new_delay = delay + random.randint(-del_delay, del_delay)
             await asyncio.sleep(new_delay)
-
-        #gc.collect()
-    # disconnect_all(accounts)
     return True
-    # else:
-    #     disconnect_all(accounts)
-    #     return False
 
 
 async def view_post(
@@ -1038,7 +792,6 @@ async def view_post(
     if accounts is None:
         accounts = get_list_of_numbers()
         shuffle(accounts)
-        # disconnect_all(accounts[count_accounts:])
         accounts = accounts[:count_accounts]
     accounts_len = len(accounts)
     if count_accounts > accounts_len:
@@ -1065,8 +818,8 @@ async def view_post(
                 if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
-            except:
-                print("TaskStatus Error")
+            except Exception as e:
+                print(f"View Post Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -1089,8 +842,8 @@ async def view_post(
                 )
                 try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
-                except:
-                    pass
+                except Exception as e:
+                    print(f"View Post Error: {e}")
                 print(f"{phone.phone} посмторел посты в {channel_link}")
             except Exception as error:
                 print(str(error))
@@ -1112,13 +865,7 @@ async def view_post(
             done_percent = current_count / max_count
             if message is not None:
                 await edit_message_loading(message, done_percent)
-
-        #gc.collect()
-    # disconnect_all(accounts)
     return True
-    # else:
-    #     disconnect_all(accounts)
-    #     return False
 
 
 async def click_on_button(
@@ -1175,8 +922,8 @@ async def click_on_button(
                 if task_status is None or task_status == 200:
                     print("Task #" + str(task_id) + " was stopped")
                     break
-            except:
-                print("TaskStatus Error")
+            except Exception as e:
+                print(f"Click On Button Error: {e}")
 
         try:
             account = await connect_to_account(accounts[account_iter])
@@ -1190,8 +937,8 @@ async def click_on_button(
 
                 try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Click On Button Error: {e}")
 
                 print(f"{phone.phone} нажал на кнопку в {channel_link}")
 
@@ -1205,12 +952,6 @@ async def click_on_button(
                     del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                     new_delay = delay + random.randint(-del_delay, del_delay)
                     await asyncio.sleep(new_delay)
-
-                #gc.collect()
-        except Exception as error:
-            print(str(error))
-    # disconnect_all(accounts)
+        except Exception as e:
+            print(f"Click On Button Error: {e}")
     return True
-    # else:
-    #     disconnect_all(accounts)
-    #     return False

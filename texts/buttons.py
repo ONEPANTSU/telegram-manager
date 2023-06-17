@@ -30,6 +30,7 @@ prev_button = "⏪ Назад"
 next_button = "Вперёд ⏩"
 stop_task_button = "⏸"
 play_task_button = "▶️"
+refresh_task_button = "🔄"
 
 
 BUTTONS = {
@@ -56,4 +57,5 @@ BUTTONS = {
     "next": next_button,
     "stop_task": stop_task_button,
     "play_task": play_task_button,
+    "refresh_task": refresh_task_button,
 }

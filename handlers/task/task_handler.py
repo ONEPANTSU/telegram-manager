@@ -1,5 +1,6 @@
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery
+from task_keyboard import create_task_page, refresh_pages
 
 from handlers.activity.database import change_task_status, delete_task, get_tasks
 from texts.buttons import BUTTONS
@@ -7,11 +8,11 @@ from texts.messages import MESSAGES
 from useful.callbacks import (
     confirm_delete_task_callback,
     delete_task_callback,
+    refresh_task_callback,
     stop_task_callback,
     task_callback,
 )
 from useful.keyboards import confirm_deleting_task_keyboard
-from useful.task_keyboard import create_task_page, refresh_pages
 
 
 async def task_page_handler(query: CallbackQuery, callback_data: dict):
@@ -59,6 +60,10 @@ async def stop_task_handler(query: CallbackQuery, callback_data: dict):
     await refresh_pages(query=query, callback_data=callback_data)
 
 
+async def refresh_task_handler(query: CallbackQuery, callback_data: dict):
+    await refresh_pages(query=query, callback_data=callback_data)
+
+
 def register_task_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(task_page_handler, task_callback.filter())
     dp.register_callback_query_handler(
@@ -67,4 +72,7 @@ def register_task_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(stop_task_handler, stop_task_callback.filter())
     dp.register_callback_query_handler(
         delete_confirm_query, confirm_delete_task_callback.filter()
+    )
+    dp.register_callback_query_handler(
+        refresh_task_handler, refresh_task_callback.filter()
     )
