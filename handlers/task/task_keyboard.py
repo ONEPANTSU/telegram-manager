@@ -14,9 +14,10 @@ from useful.callbacks import (
     stop_task_callback,
     task_callback,
 )
-from useful.instruments import bot
+from useful.instruments import bot, logger
 
 
+@logger.catch
 def get_task_keyboard(task_list, page: int = 0) -> InlineKeyboardMarkup:
     has_next_page = len(task_list) > page + 1
 
@@ -38,6 +39,7 @@ def get_task_keyboard(task_list, page: int = 0) -> InlineKeyboardMarkup:
     )
 
 
+@logger.catch
 def create_task_keyboard(
     back_button,
     delete_button,
@@ -54,6 +56,7 @@ def create_task_keyboard(
     return add_page_buttons(has_next_page, keyboard, back_button, next_button, page)
 
 
+@logger.catch
 def add_page_buttons(has_next_page, keyboard, back_button, next_button, page):
     if page != 0:
         if has_next_page:
@@ -65,6 +68,7 @@ def add_page_buttons(has_next_page, keyboard, back_button, next_button, page):
     return keyboard
 
 
+@logger.catch
 def create_next_button(page):
     return InlineKeyboardButton(
         text=BUTTONS["next"],
@@ -72,6 +76,7 @@ def create_next_button(page):
     )
 
 
+@logger.catch
 def create_back_button(page):
     return InlineKeyboardButton(
         text=BUTTONS["prev"],
@@ -79,6 +84,7 @@ def create_back_button(page):
     )
 
 
+@logger.catch
 def create_delete_button(page, task_list):
     return InlineKeyboardButton(
         text=BUTTONS["delete_task"],
@@ -86,6 +92,7 @@ def create_delete_button(page, task_list):
     )
 
 
+@logger.catch
 def create_stop_button(page, task_list):
     status = task_list[page][2]
     if status == 1:
@@ -100,6 +107,7 @@ def create_stop_button(page, task_list):
         )
 
 
+@logger.catch
 def create_refresh_button(page, task_list):
     return InlineKeyboardButton(
         text=BUTTONS["refresh_task"],
@@ -107,12 +115,14 @@ def create_refresh_button(page, task_list):
     )
 
 
+@logger.catch
 def create_page_num_button(page, task_list_len):
     return InlineKeyboardButton(
         text=f"{page + 1} / {task_list_len}", callback_data="dont_click_me"
     )
 
 
+@logger.catch
 async def task_index(message: Message, task_list):
     if len(task_list) != 0:
         await create_task_page(
@@ -124,12 +134,14 @@ async def task_index(message: Message, task_list):
         await bot.send_message(chat_id=message.chat.id, text=MESSAGES["empty_task"])
 
 
+@logger.catch
 async def refresh_pages(query: CallbackQuery, callback_data: dict):
     page = int(callback_data.get("page"))
     task_list = get_tasks()
     await update_page(page, task_list, query)
 
 
+@logger.catch
 async def update_page(page, task_list, query):
     if len(task_list) != 0:
         await edit_task_page(query=query, task_list=task_list, page=page)
@@ -137,6 +149,7 @@ async def update_page(page, task_list, query):
         await query.message.edit_text(text=MESSAGES["empty_task"], reply_markup=None)
 
 
+@logger.catch
 async def edit_task_page(query: CallbackQuery, task_list, page):
     keyboard, task_info = get_page_content(page, task_list)
     try:
@@ -148,6 +161,7 @@ async def edit_task_page(query: CallbackQuery, task_list, page):
         print(f"Edit Task Page Error: {e}")
 
 
+@logger.catch
 async def create_task_page(chat_id, task_list, page, message: Message = None):
     keyboard, task_info = get_page_content(page, task_list)
     if message is None:
@@ -165,21 +179,24 @@ async def create_task_page(chat_id, task_list, page, message: Message = None):
         )
 
 
+@logger.catch
 def get_page_content(page, task_list):
     task_info = create_task_info(task_list[page])
     keyboard = get_task_keyboard(task_list=task_list, page=page)
     return keyboard, task_info
 
 
+@logger.catch
 def create_task_info(task_data):
     loading = edit_message_loading(task_data)
     task_info = MESSAGES["show_task"].format(task_id=task_data[0], loading=loading)
     return task_info
 
 
+@logger.catch
 def edit_message_loading(task_data):
     current_count = count_task_phone(task_data[0])
-    percent = (task_data[1] - current_count[0]) / task_data[1]
+    percent = (task_data[1] - current_count) / task_data[1]
     if percent == 1:
         return LOADING[10]
     elif percent >= 0.9:

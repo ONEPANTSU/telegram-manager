@@ -12,10 +12,11 @@ from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 from useful.callbacks import yes_no_callback
 from useful.commands_handler import commands_handler
-from useful.instruments import bot, clients, code
+from useful.instruments import bot, clients, code, logger
 from useful.keyboards import activity_keyboard, ask_keyboard
 
 
+@logger.catch
 async def not_command_checker(message: Message, state: FSMContext):
     answer = message.text
     if answer.lstrip("/") in COMMANDS.values():
@@ -43,6 +44,7 @@ async def not_command_checker(message: Message, state: FSMContext):
         return True
 
 
+@logger.catch
 async def add_user_button(message: Message):
     admin_list = get_admin()
     admin = message.from_user.username
@@ -53,6 +55,7 @@ async def add_user_button(message: Message):
         await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
+@logger.catch
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         phone = message.text
@@ -74,6 +77,7 @@ async def phone_state(message: Message, state: FSMContext):
             await AddUserStates.phone.set()
 
 
+@logger.catch
 async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -91,6 +95,7 @@ async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext
             await connect(state=state, phone=phone)
 
 
+@logger.catch
 async def password_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         password = message.text
@@ -109,6 +114,7 @@ async def connect(state, phone, password=None):
         await client.start(phone=phone, state=state)
 
 
+@logger.catch
 async def sms_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         phone = (await state.get_data())["phone"]

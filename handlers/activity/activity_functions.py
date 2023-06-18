@@ -22,10 +22,11 @@ from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import LOADING, MESSAGES
 from useful.commands_handler import commands_handler
-from useful.instruments import bot
+from useful.instruments import bot, logger
 from useful.keyboards import activity_keyboard
 
 
+@logger.catch
 async def not_command_checker(message: Message, state: FSMContext):
     answer = message.text
     if answer.lstrip("/") in COMMANDS.values():
@@ -69,6 +70,7 @@ async def not_command_checker(message: Message, state: FSMContext):
         return True
 
 
+@logger.catch
 def get_proxies():
     with open("proxy.txt") as file:
         proxies = file.read().split("\n")
@@ -84,6 +86,7 @@ def get_proxies():
         return proxies
 
 
+@logger.catch
 def delete_journals_files():
     for _, _, sessions in walk("base"):
         for session in sessions:
@@ -91,9 +94,10 @@ def delete_journals_files():
                 try:
                     os.remove("base/" + session)
                 except Exception as e:
-                    print(f"Delete Journals Files Error: {e}")
+                    logger.error(f"Delete Journals Files Error: {e}")
 
 
+@logger.catch
 async def get_accounts():
     accounts = []
     for _, _, sessions in walk("base"):
@@ -116,7 +120,7 @@ async def get_accounts():
                             f"base/{session}", API_ID, API_HASH, proxy=proxy
                         )
                     except Exception as e:
-                        print(f"Get Accounts Error: {e}")
+                        logger.error(f"Get Accounts Error: {e}")
                         client = TelegramClient(f"base/{session}", API_ID, API_HASH)
 
                     try:
@@ -125,15 +129,16 @@ async def get_accounts():
                             await client.disconnect()
                             remove(f"base/{session}")
                         else:
-                            print(f"{session} connected")
+                            logger.info(f"{session} connected")
                             accounts.append(client)
                     except Exception as e:
-                        print(f"Get Accounts Error: {e}")
+                        logger.error(f"Get Accounts Error: {e}")
                         await client.disconnect()
                         remove(f"base/{session}")
         return accounts
 
 
+@logger.catch
 async def get_all_accounts_len():
     accounts_len = 0
     for _, _, sessions in walk("base"):
@@ -143,6 +148,7 @@ async def get_all_accounts_len():
     return accounts_len
 
 
+@logger.catch
 def get_list_of_numbers(link=None, sub=False):
     if link is None:
         accounts = []
@@ -165,7 +171,7 @@ def get_list_of_numbers(link=None, sub=False):
             for iteration in range(len(already_exists)):
                 already_exists[iteration] = already_exists[iteration][0]
         except Exception as e:
-            print(f"Get List Of Numbers Error: {e}")
+            logger.error(f"Get List Of Numbers Error: {e}")
         if sub:
             accounts = []
             for _, _, sessions in walk("base"):
@@ -182,6 +188,7 @@ def get_list_of_numbers(link=None, sub=False):
             return accounts
 
 
+@logger.catch
 async def connect_to_account(session):
     for _, _, sessions in walk("base"):
         if not session + "-journal" in sessions:
@@ -201,7 +208,7 @@ async def connect_to_account(session):
                     f"base/{session}", API_ID, API_HASH, proxy=proxy
                 )
             except Exception as e:
-                print(f"Connection To Account Error: {e}")
+                logger.warning(f"Connection To Account with proxy Error: {e}")
                 client = TelegramClient(f"base/{session}", API_ID, API_HASH)
 
             try:
@@ -210,15 +217,16 @@ async def connect_to_account(session):
                     await client.disconnect()
                     remove(f"base/{session}")
                 else:
-                    print(f"{session} connected")
+                    logger.info(f"{session} connected")
                     return client
             except Exception as e:
-                print(f"Connection To Account Error: {e}")
+                logger.error(f"Connection To Account Error: {e}")
                 await client.disconnect()
                 remove(f"base/{session}")
             return None
 
 
+@logger.catch
 async def get_accounts_len(link=None, sub=False):
     if link is None:
         accounts_len = 0
@@ -252,59 +260,61 @@ async def get_accounts_len(link=None, sub=False):
             return already_exists
 
 
+@logger.catch
 async def edit_message_loading(message: Message, percent=0):
     if percent == 1:
         try:
             await message.edit_text(text=LOADING[10])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.9:
         try:
             await message.edit_text(text=LOADING[9])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.8:
         try:
             await message.edit_text(text=LOADING[8])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.7:
         try:
             await message.edit_text(text=LOADING[7])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.6:
         try:
             await message.edit_text(text=LOADING[6])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.5:
         try:
             await message.edit_text(text=LOADING[5])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.4:
         try:
             await message.edit_text(text=LOADING[4])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.3:
         try:
             await message.edit_text(text=LOADING[3])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.2:
         try:
             await message.edit_text(text=LOADING[2])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
     elif percent >= 0.1:
         try:
             await message.edit_text(text=LOADING[1])
         except Exception as e:
-            print(f"Edit Message Loading Error: {e}")
+            logger.error(f"Edit Message Loading Error: {e}")
 
 
+@logger.catch
 async def subscribe_public_channel(
     args,
     accounts=None,
@@ -344,19 +354,19 @@ async def subscribe_public_channel(
                     if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                     else:
-                        print("Task #" + str(task_id) + " was stopped")
+                        logger.info("Task #" + str(task_id) + " was stopped")
                         break
-                    print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                    logger.info("#" + str(task_id) + "\tstatus:\t" + str(task_status))
                     while task_status == 0:
                         await asyncio.sleep(60)
                         task_status = get_task_by_id(task_id)
                         if task_status is not None and task_status != 200:
                             task_status = task_status[2]
                     if task_status is None or task_status == 200:
-                        print("Task #" + str(task_id) + " was stopped")
+                        logger.info("Task #" + str(task_id) + " was stopped")
                         break
                 except Exception as e:
-                    print(f"Subscribe Public Channel Error: {e}")
+                    logger.error(f"Subscribe Public Channel Error: {e}")
                     break
 
             start = time.time()
@@ -375,14 +385,14 @@ async def subscribe_public_channel(
                             settings=InputPeerNotifySettings(mute_until=2**31 - 1),
                         )
                     )
-                    print(f"{phone.phone} вступил в {channel_link}")
+                    logger.info(f"{phone.phone} вступил в {channel_link}")
                     try:
                         add_database(link=channel_link, phone=accounts[account_iter])
                         delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                     except Exception as e:
-                        print(f"Subscribe Public Channel Error: {e}")
-                except Exception as error:
-                    print(str(error))
+                        logger.error(f"Subscribe Public Channel Error: {e}")
+                except Exception as e:
+                    logger.error(f"Subscribe Public Channel Error: {e}")
 
                 account.disconnect()
 
@@ -396,7 +406,9 @@ async def subscribe_public_channel(
                     new_delay = delay + random.randint(-del_delay, del_delay)
                     await asyncio.sleep(new_delay)
             else:
-                print("Connection error")
+                logger.warning(
+                    f"Subscribe Public Chanel: Account's Connection Error ({accounts[account_iter]})"
+                )
 
                 current_count += 1
                 done_percent = current_count / max_count
@@ -404,12 +416,13 @@ async def subscribe_public_channel(
                     await edit_message_loading(message, done_percent)
 
             end = time.time()
-            print(end - start)
+            logger.info(f"Subscribe public Chanel Timer: {end - start}")
         return True
     else:
         return False
 
 
+@logger.catch
 async def subscribe_private_channel(
     args,
     accounts=None,
@@ -459,19 +472,19 @@ async def subscribe_private_channel(
                 if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
-                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                logger.info("#" + str(task_id) + "\tstatus:\t" + str(task_status))
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
                     if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                 if task_status is None or task_status == 200:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
             except Exception as e:
-                print(f"Subscribe Private Channel Error: {e}")
+                logger.error(f"Subscribe Private Channel Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -481,14 +494,14 @@ async def subscribe_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(ImportChatInviteRequest(channel_link))
-                print(f"{phone.phone} вступил в {channel_link}")
+                logger.info(f"{phone.phone} вступил в {channel_link}")
                 try:
                     add_database(phone=accounts[account_iter], link=channel_link)
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
-                    print(f"Subscribe Private Channel Error: {e}")
-            except Exception as error:
-                print(str(error))
+                    logger.error(f"Subscribe Private Channel Error: {e}")
+            except Exception as e:
+                logger.error(f"Subscribe Private Channel Error: {e}")
 
             account.disconnect()
 
@@ -502,7 +515,9 @@ async def subscribe_private_channel(
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
         else:
-            print("Connection error")
+            logger.warning(
+                f"Subscribe Private Chanel: Account's Connection Error ({accounts[account_iter]})"
+            )
 
             current_count += 1
             done_percent = current_count / max_count
@@ -512,6 +527,7 @@ async def subscribe_private_channel(
     return True
 
 
+@logger.catch
 async def subscribe_channel(
     args,
     accounts=None,
@@ -542,6 +558,7 @@ async def subscribe_channel(
     return is_success
 
 
+@logger.catch
 async def leave_channel(
     args,
     accounts=None,
@@ -571,6 +588,7 @@ async def leave_channel(
     return is_success
 
 
+@logger.catch
 async def leave_public_channel(
     args,
     accounts=None,
@@ -610,19 +628,19 @@ async def leave_public_channel(
                 if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
-                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                logger.info("#" + str(task_id) + "\tstatus:\t" + str(task_status))
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
                     if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                 if task_status is None or task_status == 200:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
             except Exception as e:
-                print(f"Leave Public Channel Error: {e}")
+                logger.error(f"Leave Public Channel Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -632,14 +650,14 @@ async def leave_public_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(LeaveChannelRequest(channel_link))
-                print(f"{phone.phone} покинул {channel_link}")
+                logger.info(f"{phone.phone} покинул {channel_link}")
                 try:
                     delete_phone_link(link=channel_link, phone=accounts[account_iter])
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
-                    print(f"Leave Public Channel Error: {e}")
-            except Exception as error:
-                print(str(error))
+                    logger.error(f"Leave Public Channel Error: {e}")
+            except Exception as e:
+                logger.error(f"Leave Public Channel Error: {e}")
 
             account.disconnect()
 
@@ -653,7 +671,9 @@ async def leave_public_channel(
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
         else:
-            print("Connection error")
+            logger.warning(
+                f"Leave Public Chanel: Account's Connection Error ({accounts[account_iter]})"
+            )
 
             current_count += 1
             done_percent = current_count / max_count
@@ -663,6 +683,7 @@ async def leave_public_channel(
     return True
 
 
+@logger.catch
 async def leave_private_channel(
     args,
     accounts=None,
@@ -708,19 +729,19 @@ async def leave_private_channel(
                 if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
-                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                logger.info("#" + str(task_id) + "\tstatus:\t" + str(task_status))
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
                     if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                 if task_status is None or task_status == 200:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
             except Exception as e:
-                print(f"Leave Private Channel Error: {e}")
+                logger.error(f"Leave Private Channel Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -735,21 +756,21 @@ async def leave_private_channel(
                     async for dialog in account.iter_dialogs():
                         if dialog.title == chat_title:
                             await dialog.delete()
-                            print(f"{phone.phone} покинул {channel_link}")
+                            logger.info(f"{phone.phone} покинул {channel_link}")
                             break
                 except Exception as e:
-                    print(f"Leave Private Channel Error: {e}")
-
+                    logger.error(f"Leave Private Channel Error: {e}")
                 try:
                     delete_phone_link(link=link_for_db, phone=accounts[account_iter])
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
-                except Exception as error:
-                    print(str(error))
-
-            except Exception as error:
-                print(str(error))
+                except Exception as e:
+                    logger.error(f"Leave Private Channel Error: {e}")
+            except Exception as e:
+                logger.error(f"Leave Private Channel Error: {e}")
         else:
-            print("Connection error")
+            logger.warning(
+                f"Leave Private Chanel: Account's Connection Error ({accounts[account_iter]})"
+            )
 
         account.disconnect()
 
@@ -765,6 +786,7 @@ async def leave_private_channel(
     return True
 
 
+@logger.catch
 async def view_post(
     args,
     accounts=None,
@@ -807,19 +829,19 @@ async def view_post(
                 if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
-                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                logger.info("#" + str(task_id) + "\tstatus:\t" + str(task_status))
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
                     if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                 if task_status is None or task_status == 200:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
             except Exception as e:
-                print(f"View Post Error: {e}")
+                logger.error(f"View Post Error: {e}")
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
@@ -843,10 +865,10 @@ async def view_post(
                 try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
-                    print(f"View Post Error: {e}")
-                print(f"{phone.phone} посмторел посты в {channel_link}")
-            except Exception as error:
-                print(str(error))
+                    logger.error(f"View Post Error: {e}")
+                logger.info(f"{phone.phone} посмторел посты в {channel_link}")
+            except Exception as e:
+                logger.error(f"View Post Error: {e}")
 
             account.disconnect()
 
@@ -859,7 +881,9 @@ async def view_post(
                 new_delay = delay + random.randint(-del_delay, del_delay)
                 await asyncio.sleep(new_delay)
         else:
-            print("Connection error")
+            logger.warning(
+                f"View Post: Account's Connection Error ({accounts[account_iter]})"
+            )
 
             current_count += 1
             done_percent = current_count / max_count
@@ -868,6 +892,7 @@ async def view_post(
     return True
 
 
+@logger.catch
 async def click_on_button(
     args,
     accounts=None,
@@ -911,19 +936,19 @@ async def click_on_button(
                 if task_status is not None and task_status != 200:
                     task_status = task_status[2]
                 else:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
-                print("#" + str(task_id) + "\tstatus:\t" + str(task_status))
+                logger.info("#" + str(task_id) + "\tstatus:\t" + str(task_status))
                 while task_status == 0:
                     await asyncio.sleep(60)
                     task_status = get_task_by_id(task_id)
                     if task_status is not None and task_status != 200:
                         task_status = task_status[2]
                 if task_status is None or task_status == 200:
-                    print("Task #" + str(task_id) + " was stopped")
+                    logger.info("Task #" + str(task_id) + " was stopped")
                     break
             except Exception as e:
-                print(f"Click On Button Error: {e}")
+                logger.error(f"Click On Button Error: {e}")
 
         try:
             account = await connect_to_account(accounts[account_iter])
@@ -938,9 +963,9 @@ async def click_on_button(
                 try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
-                    print(f"Click On Button Error: {e}")
+                    logger.error(f"Click On Button Error: {e}")
 
-                print(f"{phone.phone} нажал на кнопку в {channel_link}")
+                logger.info(f"{phone.phone} нажал на кнопку в {channel_link}")
 
                 account.disconnect()
 
@@ -952,6 +977,10 @@ async def click_on_button(
                     del_delay = math.floor(delay * RANDOM_PERCENT / 100)
                     new_delay = delay + random.randint(-del_delay, del_delay)
                     await asyncio.sleep(new_delay)
+            else:
+                logger.warning(
+                    f"Click Ob Button: Account's Connection Error ({accounts[account_iter]})"
+                )
         except Exception as e:
-            print(f"Click On Button Error: {e}")
+            logger.error(f"Click On Button Error: {e}")
     return True

@@ -1,8 +1,9 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-
+from useful.instruments import logger
 from texts.buttons import BUTTONS
 
 
+@logger.catch
 def get_main_keyboard():
     markup = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     activity = KeyboardButton(BUTTONS["activity"])
@@ -14,6 +15,7 @@ def get_main_keyboard():
     return markup
 
 
+@logger.catch
 async def main_menu(message, message_text):
     await message.answer(
         text=message_text,

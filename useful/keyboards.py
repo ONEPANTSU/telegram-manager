@@ -6,15 +6,15 @@ from useful.callbacks import (
     reactions_callback,
     reactions_delay_callback,
     subscribe_callback,
-    subscribe_yes_no_confirm_callback,
     unsubscribe_callback,
     viewer_post_callback,
     viewer_post_delay_callback,
     yes_no_callback,
 )
-from useful.instruments import callback_dict
+from useful.instruments import callback_dict, logger
 
 
+@logger.catch
 def activity_keyboard():
     subscribe_button = InlineKeyboardButton(
         text=BUTTONS["subscribe"],
@@ -40,6 +40,7 @@ def activity_keyboard():
     return act_keyboard
 
 
+@logger.catch
 def ask_keyboard(phone):
     yes_button = InlineKeyboardButton(
         text=BUTTONS["yes"],
@@ -54,6 +55,7 @@ def ask_keyboard(phone):
     return act_keyboard
 
 
+@logger.catch
 def ask_delay_keyboard(user_id, link, count, callback):
     callback_dict[user_id] = [link, count]
     delay_1 = InlineKeyboardButton(
@@ -69,6 +71,7 @@ def ask_delay_keyboard(user_id, link, count, callback):
     return act_delay_keyboard
 
 
+@logger.catch
 def ask_delay_keyboard_viewer(user_id, link, count, last_post_id, count_posts):
     callback_dict[user_id] = [link, count, last_post_id, count_posts]
     delay_1 = InlineKeyboardButton(
@@ -88,6 +91,7 @@ def ask_delay_keyboard_viewer(user_id, link, count, last_post_id, count_posts):
     return act_delay_keyboard
 
 
+@logger.catch
 def ask_delay_keyboard_reactions(user_id, link, count, post_id, position):
     callback_dict[user_id] = [link, count, post_id, position]
     delay_1 = InlineKeyboardButton(
@@ -107,6 +111,7 @@ def ask_delay_keyboard_reactions(user_id, link, count, post_id, position):
     return act_delay_keyboard
 
 
+@logger.catch
 def confirm_keyboard(user_id, callback, is_percent):
     yes_confirm = InlineKeyboardButton(
         text=BUTTONS["yes_confirm"],
@@ -127,6 +132,7 @@ def confirm_keyboard(user_id, callback, is_percent):
     return yes_no_confirm_keyboard
 
 
+@logger.catch
 def confirm_deleting_task_keyboard(task_id):
     yes_confirm = InlineKeyboardButton(
         text=BUTTONS["yes_confirm"],

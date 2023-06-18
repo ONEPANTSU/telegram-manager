@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
-
+from useful.instruments import logger
 from handlers.activity.activity_functions import get_all_accounts_len
 from handlers.activity.database import get_admin, get_tasks
 from handlers.main.main_functions import main_menu
@@ -10,22 +10,27 @@ from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 
 
+@logger.catch
 async def help_command(message: Message):
     await message.answer(text=MESSAGES["faq"])
 
 
+@logger.catch
 async def start_command(message: Message):
     await main_menu(message, message_text=MESSAGES["start"].format(message.from_user))
 
 
+@logger.catch
 async def back_by_button(message: Message):
     await main_menu(message, message_text=MESSAGES["main_menu"])
 
 
+@logger.catch
 async def back_by_command(message: Message):
     await main_menu(message, message_text=MESSAGES["main_menu"])
 
 
+@logger.catch
 async def count_users_button(message: Message):
     admin_list = get_admin()
     admin = message.from_user.username
@@ -38,6 +43,7 @@ async def count_users_button(message: Message):
         await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
+@logger.catch
 async def task_button(message: Message):
     task_list = get_tasks()
     await task_index(message=message, task_list=task_list)
