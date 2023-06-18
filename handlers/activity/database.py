@@ -112,7 +112,7 @@ def add_task(accounts, count, timing):
         params={"accounts": str(accounts_dict), "count": count, "timing": str(timing)},
     ).json()
     id_task = res["id_task"]
-    logger.info(f"Add Task (#{id_task}) Request: {res.text}")
+    logger.info(f"Add Task (#{id_task}) Request: {res}")
     return id_task
 
 
