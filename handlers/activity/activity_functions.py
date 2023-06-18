@@ -767,22 +767,23 @@ async def leave_private_channel(
                     logger.error(f"Leave Private Channel Error: {e}")
             except Exception as e:
                 logger.error(f"Leave Private Channel Error: {e}")
+
+            account.disconnect()
+
+            current_count += 1
+            done_percent = current_count / max_count
+            if message is not None:
+                await edit_message_loading(message, done_percent)
+
+            if not (account_iter + 1 == count and last_iter):
+                del_delay = math.floor(delay * RANDOM_PERCENT / 100)
+                new_delay = delay + random.randint(-del_delay, del_delay)
+                await asyncio.sleep(new_delay)
+
         else:
             logger.warning(
                 f"Leave Private Chanel: Account's Connection Error ({accounts[account_iter]})"
             )
-
-        account.disconnect()
-
-        current_count += 1
-        done_percent = current_count / max_count
-        if message is not None:
-            await edit_message_loading(message, done_percent)
-
-        if not (account_iter + 1 == count and last_iter):
-            del_delay = math.floor(delay * RANDOM_PERCENT / 100)
-            new_delay = delay + random.randint(-del_delay, del_delay)
-            await asyncio.sleep(new_delay)
     return True
 
 
