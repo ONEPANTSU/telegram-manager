@@ -78,9 +78,11 @@ def refresh_phones():
 
 @logger.catch
 async def refresh_command(message: Message):
+    message = await message.answer("🔄 Идёт обновление...")
     logger.info(f"Refresh Command")
     delete_journals_files()
     refresh_phones()
+    await message.edit_text("✅ Бот обновлён!")
 
 
 def register_main_handlers(dp: Dispatcher):
