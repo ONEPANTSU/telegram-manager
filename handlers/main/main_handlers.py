@@ -77,7 +77,7 @@ def refresh_phones():
 
 
 @logger.catch
-async def refresh_command(message: Message):
+async def update_command(message: Message):
     message = await message.answer("🔄 Идёт обновление...")
     logger.info(f"Refresh Command")
     delete_journals_files()
@@ -92,4 +92,4 @@ def register_main_handlers(dp: Dispatcher):
     dp.register_message_handler(back_by_command, commands=[COMMANDS["back"]])
     dp.register_message_handler(count_users_button, text=[BUTTONS["count_users"]])
     dp.register_message_handler(task_button, text=[BUTTONS["task"]])
-    dp.register_message_handler(refresh_command, commands=[COMMANDS["refresh"]])
+    dp.register_message_handler(update_command, commands=[COMMANDS["update"]])
