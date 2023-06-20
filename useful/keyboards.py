@@ -82,12 +82,12 @@ def ask_delay_keyboard_viewer(user_id, link, count, last_post_id, count_posts):
     #     ),
     # )
     delay_2 = InlineKeyboardButton(
-         text=BUTTONS["delay_2"],
-         callback_data=viewer_post_delay_callback.new(
-             answer=BUTTONS["delay_2"], user_id=user_id
-         ),
-     )
-    #act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
+        text=BUTTONS["delay_2"],
+        callback_data=viewer_post_delay_callback.new(
+            answer=BUTTONS["delay_2"], user_id=user_id
+        ),
+    )
+    # act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
     act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_2)
 
     return act_delay_keyboard
@@ -108,7 +108,7 @@ def ask_delay_keyboard_reactions(user_id, link, count, post_id, position):
             answer=BUTTONS["delay_2"], user_id=user_id
         ),
     )
-    #act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
+    # act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_1, delay_2)
     act_delay_keyboard = InlineKeyboardMarkup(row_width=2).add(delay_2)
 
     return act_delay_keyboard

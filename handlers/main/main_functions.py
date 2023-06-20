@@ -1,6 +1,7 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from useful.instruments import logger
+
 from texts.buttons import BUTTONS
+from useful.instruments import logger
 
 
 @logger.catch

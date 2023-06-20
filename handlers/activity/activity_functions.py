@@ -87,17 +87,6 @@ def get_proxies():
 
 
 @logger.catch
-def delete_journals_files():
-    for _, _, sessions in walk("base"):
-        for session in sessions:
-            if session.endswith("journal"):
-                try:
-                    os.remove("base/" + session)
-                except Exception as e:
-                    logger.error(f"Delete Journals Files Error: {e}")
-
-
-@logger.catch
 async def get_accounts():
     accounts = []
     for _, _, sessions in walk("base"):

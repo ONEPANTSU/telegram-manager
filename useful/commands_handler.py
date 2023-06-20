@@ -1,8 +1,9 @@
 from aiogram.types import ReplyKeyboardRemove
-from useful.instruments import logger
+
 from handlers.main.main_functions import main_menu
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
+from useful.instruments import logger
 
 
 @logger.catch
