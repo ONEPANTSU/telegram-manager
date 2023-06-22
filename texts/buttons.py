@@ -1,9 +1,7 @@
 activity_button = "Активность 🍌"
 
-subscribe_public_button = "Подписаться на открытый канал ➕"
-subscribe_private_button = "Подписаться на приватный канал ➕"
-unsubscribe_public_button = "Отписаться от открытого канала ➖"
-unsubscribe_private_button = "Отписаться от приватного канала ➖"
+subscribe_button = "Подписаться на канал ➕"
+unsubscribe_button = "Отписаться от канала ➖"
 unsubscribe_all_button = "Отписаться от всех каналов ➖"
 view_button = "Посмотреть посты 👀"
 react_button = "Накрутить реакции 💥"
@@ -12,6 +10,7 @@ react_button = "Накрутить реакции 💥"
 users_button = "Аккаунты ➕"
 parse_button = "Парсер 👥"
 count_users_button = "База 👥"
+task_button = "Задачи 📊"
 
 yes_button = "Да"
 no_button = "Нет"
@@ -24,16 +23,25 @@ delay_2_button = "Процентная 📉"
 
 back_button = "Назад 👈️"
 
+clear_journals_button = "Очистить журнал 🚫"
+
+delete_task_button = "🗑"
+prev_button = "⏪ Назад"
+next_button = "Вперёд ⏩"
+stop_task_button = "⏸"
+play_task_button = "▶️"
+refresh_task_button = "🔄"
+
+
 BUTTONS = {
     "activity": activity_button,
     "back": back_button,
     "parse": parse_button,
     "users": users_button,
+    "task": task_button,
     "count_users": count_users_button,
-    "subscribe_public": subscribe_public_button,
-    "subscribe_private": subscribe_private_button,
-    "unsubscribe_public": unsubscribe_public_button,
-    "unsubscribe_private": unsubscribe_private_button,
+    "subscribe": subscribe_button,
+    "unsubscribe": unsubscribe_button,
     "unsubscribe_all": unsubscribe_all_button,
     "view": view_button,
     "react": react_button,
@@ -43,4 +51,11 @@ BUTTONS = {
     "no_confirm": no_confirm_button,
     "delay_1": delay_1_button,
     "delay_2": delay_2_button,
+    "clear_journals": clear_journals_button,
+    "delete_task": delete_task_button,
+    "prev": prev_button,
+    "next": next_button,
+    "stop_task": stop_task_button,
+    "play_task": play_task_button,
+    "refresh_task": refresh_task_button,
 }

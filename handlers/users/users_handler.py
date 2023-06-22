@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from telethon import TelegramClient
 
 from config import *
+from handlers.activity.database import get_admin
 from handlers.main.main_functions import get_main_keyboard
 from states import AddUserStates
 from texts.buttons import BUTTONS
@@ -11,10 +12,11 @@ from texts.commands import COMMANDS
 from texts.messages import MESSAGES
 from useful.callbacks import yes_no_callback
 from useful.commands_handler import commands_handler
-from useful.instruments import bot, clients, code
+from useful.instruments import bot, clients, code, logger
 from useful.keyboards import activity_keyboard, ask_keyboard
 
 
+@logger.catch
 async def not_command_checker(message: Message, state: FSMContext):
     answer = message.text
     if answer.lstrip("/") in COMMANDS.values():
@@ -42,15 +44,29 @@ async def not_command_checker(message: Message, state: FSMContext):
         return True
 
 
+@logger.catch
 async def add_user_button(message: Message):
-    await message.answer(text=MESSAGES["user_phone"])
-    await AddUserStates.phone.set()
+    admin_list = get_admin()
+    admin = message.from_user.username
+    if admin in admin_list:
+        await message.answer(text=MESSAGES["user_phone"])
+        await AddUserStates.phone.set()
+    else:
+        await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
+@logger.catch
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         phone = message.text
         if phone.startswith("+"):
+            await state.update_data(phone=phone)
+            await message.answer(
+                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
+            )
+            await state.finish()
+        elif phone.startswith("8"):
+            phone = phone.replace("8", "+7", 1)
             await state.update_data(phone=phone)
             await message.answer(
                 text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
@@ -61,6 +77,7 @@ async def phone_state(message: Message, state: FSMContext):
             await AddUserStates.phone.set()
 
 
+@logger.catch
 async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
@@ -78,6 +95,7 @@ async def ask_state(query: CallbackQuery, callback_data: dict, state: FSMContext
             await connect(state=state, phone=phone)
 
 
+@logger.catch
 async def password_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         password = message.text
@@ -96,6 +114,7 @@ async def connect(state, phone, password=None):
         await client.start(phone=phone, state=state)
 
 
+@logger.catch
 async def sms_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         phone = (await state.get_data())["phone"]
@@ -104,10 +123,15 @@ async def sms_state(message: Message, state: FSMContext):
         if is_password == BUTTONS["yes"]:
             password = (await state.get_data())["password"]
             await clients[phone]._start(
-                phone=phone, password=password, code_callback=code[phone]
+                phone=phone,
+                password=password,
+                code_callback=code[phone],
+                message=message,
             )
         else:
-            await clients[phone]._start(phone=phone, code_callback=code[phone])
+            await clients[phone]._start(
+                phone=phone, code_callback=code[phone], message=message
+            )
         await state.finish()
 
 

@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 
-from handlers.activity.activity_functions import *
+from handlers.activity.percent_timer import *
 from states import ReactionsStates, SubscribeStates, UnsubscribeStates, ViewerPostStates
 from texts.buttons import BUTTONS
 from texts.messages import MESSAGES
@@ -20,7 +20,7 @@ from useful.callbacks import (
     viewer_post_delay_callback,
     viewer_yes_no_confirm_callback,
 )
-from useful.instruments import callback_dict
+from useful.instruments import callback_dict, logger
 from useful.keyboards import (
     ask_delay_keyboard,
     ask_delay_keyboard_reactions,
@@ -29,10 +29,16 @@ from useful.keyboards import (
 )
 
 
+@logger.catch
 async def chose_activity(message: Message):
-    await message.answer(
-        text=MESSAGES["chose_activity"], reply_markup=activity_keyboard()
-    )
+    admin_list = get_admin()
+    admin = message.from_user.username
+    if admin in admin_list:
+        await message.answer(
+            text=MESSAGES["chose_activity"], reply_markup=activity_keyboard()
+        )
+    else:
+        await message.answer(text=MESSAGES["access"], reply_markup=None)
 
 
 """
@@ -40,19 +46,19 @@ async def chose_activity(message: Message):
 """
 
 
-async def subscribe_query(query: CallbackQuery, callback_data: dict, state: FSMContext):
+@logger.catch
+async def subscribe_query(query: CallbackQuery):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
-    is_public = callback_data.get("is_public")
-    await state.update_data(is_public=is_public)
     await SubscribeStates.channel_link.set()
 
 
+@logger.catch
 async def subscribe_channel_link_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
         if answer.startswith("https://t.me/"):
             await state.update_data(channel_link=answer)
-            accounts_len = await get_accounts_len()
+            accounts_len = await get_accounts_len(link=answer, sub=True)
             await message.answer(
                 text=MESSAGES["number_of_accounts"].format(count=accounts_len)
             )
@@ -62,6 +68,7 @@ async def subscribe_channel_link_state(message: Message, state: FSMContext):
             await SubscribeStates.channel_link.set()
 
 
+@logger.catch
 async def subscribe_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -82,31 +89,34 @@ async def subscribe_number_of_accounts_state(message: Message, state: FSMContext
             data = await state.get_data()
             link = data["channel_link"]
             count = int(answer)
-            is_public = data["is_public"]
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
                     message.from_user.id,
                     link,
                     count,
-                    is_public,
                     callback=subscribe_delay_callback,
                 ),
             )
             await state.finish()
 
 
+@logger.catch
 async def subscribe_ask_delay_state(
     query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
         user_id = int(callback_data["user_id"])
-        link, count, is_public = callback_dict[user_id]
-        callback_dict.pop(user_id)
+        link, count = callback_dict[user_id]
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Subscribe Ask Delay State Error (Callback {user_id} is not exist) {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
-        await state.update_data(is_public=is_public)
         await state.update_data(delay_ask=answer)
         if answer == BUTTONS["delay_1"]:  # Обычная задержка
             await query.message.edit_text(
@@ -120,6 +130,7 @@ async def subscribe_ask_delay_state(
             await SubscribeStates.delay_percent.set()
 
 
+@logger.catch
 async def subscribe_delay_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -131,10 +142,9 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
         else:
             await state.update_data(delay=int(answer))
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             user_id = message.from_user.id
             args = [data["channel_link"], data["count"], data["delay"]]
-            callback_dict[user_id] = [is_public, args]
+            callback_dict[user_id] = args
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -146,10 +156,11 @@ async def subscribe_delay_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def subscribe_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -157,10 +168,9 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
             await SubscribeStates.delay_percent.set()
         else:
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             user_id = message.from_user.id
-            callback_dict[user_id] = [timing, is_public, args]
+            callback_dict[user_id] = [timing, args]
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -172,28 +182,42 @@ async def subscribe_delay_percent_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def subscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict):
     user_id = int(callback_data["user_id"])
     is_percent = callback_data["is_percent"] == "True"
     answer = callback_data["answer"]
     if answer == BUTTONS["yes_confirm"]:  # Подтверждено
         if is_percent:
-            timing, is_public, args = callback_dict[user_id]
-            await subscribe_percent_confirm(args, is_public, timing, query.message)
+            timing, args = callback_dict[user_id]
+            await subscribe_percent_confirm(args, timing, query.message)
         else:
-            is_public, args = callback_dict[user_id]
-            await subscribe_confirm(args, is_public, query.message)
-        callback_dict.pop(user_id)
+            args = callback_dict[user_id]
+            await subscribe_confirm(args, query.message)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Subscribe Ask Confirm Query Error (Callback {user_id} is not exist) {e}"
+            )
+
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Subscribe Ask Confirm Query Error (Callback {user_id} is not exist) {e}"
+            )
 
 
-async def subscribe_confirm(args, is_public, message):
-    if is_public:
-        is_success = await subscribe_public_channel(args=args, prev_message=message)
-    else:
-        is_success = await subscribe_private_channel(args=args, prev_message=message)
+@logger.catch
+async def subscribe_confirm(args, message):
+    is_success = await subscribe_channel(args=args, prev_message=message)
+    # if is_public:
+    #     is_success = await subscribe_public_channel(args=args, prev_message=message)
+    # else:
+    #     is_success = await subscribe_private_channel(args=args, prev_message=message)
     if is_success:
         await message.answer(
             text=MESSAGES["subscribe"], reply_markup=get_main_keyboard()
@@ -207,15 +231,16 @@ async def subscribe_confirm(args, is_public, message):
         await SubscribeStates.channel_link.set()
 
 
-async def subscribe_percent_confirm(args, is_public, timing, message):
-    if is_public:
-        is_success = await percent_timer(
-            timing, subscribe_public_channel, args, prev_message=message
-        )
-    else:
-        is_success = await percent_timer(
-            timing, subscribe_private_channel, args, prev_message=message
-        )
+@logger.catch
+async def subscribe_percent_confirm(args, timing, message):
+    is_success, accounts = await percent_timer(
+        timing,
+        subscribe_channel,
+        args,
+        prev_message=message,
+        return_accounts=True,
+        is_sub=1,
+    )
 
     if is_success:
         await message.answer(
@@ -229,6 +254,15 @@ async def subscribe_percent_confirm(args, is_public, timing, message):
         )
         await message.answer(text=MESSAGES["channel_link"])
         await SubscribeStates.channel_link.set()
+
+    try:
+        is_success = await unsubscribe_timing(accounts=accounts, channel_link=args[0])
+        if is_success:
+            await message.answer(
+                text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
+            )
+    except Exception as e:
+        logger.error(f"Subscribe Percent Confirm Error: {e}")
 
 
 """
@@ -236,21 +270,19 @@ async def subscribe_percent_confirm(args, is_public, timing, message):
 """
 
 
-async def unsubscribe_query(
-    query: CallbackQuery, callback_data: dict, state: FSMContext
-):
+@logger.catch
+async def unsubscribe_query(query: CallbackQuery):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
-    is_public = callback_data.get("is_public")
-    await state.update_data(is_public=is_public)
     await UnsubscribeStates.channel_link.set()
 
 
+@logger.catch
 async def unsubscribe_channel_link_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
         if answer.startswith("https://t.me/"):
             await state.update_data(channel_link=answer)
-            accounts_len = await get_accounts_len()
+            accounts_len = await get_accounts_len(link=answer, sub=False)
             await message.answer(
                 text=MESSAGES["number_of_accounts"].format(count=accounts_len)
             )
@@ -260,6 +292,7 @@ async def unsubscribe_channel_link_state(message: Message, state: FSMContext):
             await UnsubscribeStates.channel_link.set()
 
 
+@logger.catch
 async def unsubscribe_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -280,31 +313,35 @@ async def unsubscribe_number_of_accounts_state(message: Message, state: FSMConte
             data = await state.get_data()
             link = data["channel_link"]
             count = int(answer)
-            is_public = data["is_public"]
+            # is_public = data["is_public"]
             await message.answer(
                 text=MESSAGES["delay_ask"],
                 reply_markup=ask_delay_keyboard(
                     message.from_user.id,
                     link,
                     count,
-                    is_public,
                     callback=unsubscribe_delay_callback,
                 ),
             )
             await state.finish()
 
 
+@logger.catch
 async def unsubscribe_ask_delay_state(
     query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
         user_id = int(callback_data["user_id"])
-        link, count, is_public = callback_dict[user_id]
-        callback_dict.pop(user_id)
+        link, count = callback_dict[user_id]
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Unsubscribe Ask Delay State Error (Callback {user_id} is not exist): {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
-        await state.update_data(is_public=is_public)
         await state.update_data(delay_ask=answer)
         if answer == BUTTONS["delay_1"]:  # Обычная задержка
             await query.message.edit_text(
@@ -318,6 +355,7 @@ async def unsubscribe_ask_delay_state(
             await UnsubscribeStates.delay_percent.set()
 
 
+@logger.catch
 async def unsubscribe_delay_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -329,10 +367,9 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
         else:
             await state.update_data(delay=int(answer))
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             user_id = message.from_user.id
             args = [data["channel_link"], data["count"], data["delay"]]
-            callback_dict[user_id] = [is_public, args]
+            callback_dict[user_id] = args
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -344,11 +381,12 @@ async def unsubscribe_delay_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -356,10 +394,9 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
             await UnsubscribeStates.delay_percent.set()
         else:
             data = await state.get_data()
-            is_public = data["is_public"] == "True"
             args = [data["channel_link"], data["count"]]
             user_id = message.from_user.id
-            callback_dict[user_id] = [timing, is_public, args]
+            callback_dict[user_id] = [timing, args]
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -371,28 +408,41 @@ async def unsubscribe_delay_percent_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def unsubscribe_ask_confirm_query(query: CallbackQuery, callback_data: dict):
     user_id = int(callback_data["user_id"])
     is_percent = callback_data["is_percent"] == "True"
     answer = callback_data["answer"]
     if answer == BUTTONS["yes_confirm"]:  # Подтверждено
         if is_percent:
-            timing, is_public, args = callback_dict[user_id]
-            await unsubscribe_percent_confirm(args, is_public, timing, query.message)
+            timing, args = callback_dict[user_id]
+            await unsubscribe_percent_confirm(args, timing, query.message)
         else:
-            is_public, args = callback_dict[user_id]
-            await unsubscribe_confirm(args, is_public, query.message)
-        callback_dict.pop(user_id)
+            args = callback_dict[user_id]
+            await unsubscribe_confirm(args, query.message)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Unsubscribe Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Unsubscribe Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
 
 
-async def unsubscribe_confirm(args, is_public, message):
-    if is_public:
-        is_success = await leave_public_channel(args=args, prev_message=message)
-    else:
-        is_success = await leave_private_channel(args=args, prev_message=message)
+@logger.catch
+async def unsubscribe_confirm(args, message):
+    is_success = await leave_channel(args=args, prev_message=message)
+    # if is_public:
+    #     is_success = await leave_public_channel(args=args, prev_message=message)
+    # else:
+    #     is_success = await leave_private_channel(args=args, prev_message=message)
     if is_success:
         await message.answer(
             text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
@@ -406,16 +456,16 @@ async def unsubscribe_confirm(args, is_public, message):
         await UnsubscribeStates.channel_link.set()
 
 
-async def unsubscribe_percent_confirm(args, is_public, timing, message):
-    if is_public:
-        is_success = await percent_timer(
-            timing, leave_public_channel, args, prev_message=message
-        )
-    else:
-        is_success = await percent_timer(
-            timing, leave_private_channel, args, prev_message=message
-        )
-
+@logger.catch
+async def unsubscribe_percent_confirm(args, timing, message):
+    is_success, accounts = await percent_timer(
+        timing,
+        leave_channel,
+        args,
+        prev_message=message,
+        return_accounts=True,
+        is_sub=-1,
+    )
     if is_success:
         await message.answer(
             text=MESSAGES["unsubscribe"], reply_markup=get_main_keyboard()
@@ -435,11 +485,13 @@ async def unsubscribe_percent_confirm(args, is_public, timing, message):
 """
 
 
+@logger.catch
 async def viewer_post_button(query: CallbackQuery):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await ViewerPostStates.id_channel.set()
 
 
+@logger.catch
 async def viewer_id_channel_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -452,6 +504,7 @@ async def viewer_id_channel_state(message: Message, state: FSMContext):
             await ViewerPostStates.id_channel.set()
 
 
+@logger.catch
 async def viewer_id_post_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -466,6 +519,7 @@ async def viewer_id_post_state(message: Message, state: FSMContext):
             await ViewerPostStates.number_of_post.set()
 
 
+@logger.catch
 async def number_of_post_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -483,6 +537,7 @@ async def number_of_post_state(message: Message, state: FSMContext):
             await ViewerPostStates.number_of_accounts.set()
 
 
+@logger.catch
 async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -514,6 +569,7 @@ async def viewer_number_of_accounts_state(message: Message, state: FSMContext):
             await state.finish()
 
 
+@logger.catch
 async def viewer_ask_delay_state(
     query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
@@ -521,7 +577,12 @@ async def viewer_ask_delay_state(
         answer = callback_data["answer"]
         user_id = int(callback_data["user_id"])
         link, count_accounts, last_post_id, count_posts = callback_dict[user_id]
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Viewer Ask Delay State Error (Callback {user_id} is not exist): {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count_accounts=count_accounts)
         await state.update_data(count_posts=count_posts)
@@ -540,6 +601,7 @@ async def viewer_ask_delay_state(
             await ViewerPostStates.delay_percent.set()
 
 
+@logger.catch
 async def viewer_delay_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -559,7 +621,7 @@ async def viewer_delay_state(message: Message, state: FSMContext):
                 data["delay"],
             ]
             user_id = message.from_user.id
-            callback_dict[user_id] = [args]
+            callback_dict[user_id] = args
 
             await state.finish()
             await message.answer(
@@ -572,11 +634,12 @@ async def viewer_delay_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def viewer_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -603,6 +666,7 @@ async def viewer_delay_percent_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def viewer_ask_confirm_query(query: CallbackQuery, callback_data: dict):
     user_id = int(callback_data["user_id"])
     is_percent = callback_data["is_percent"] == "True"
@@ -614,12 +678,23 @@ async def viewer_ask_confirm_query(query: CallbackQuery, callback_data: dict):
         else:
             args = callback_dict[user_id][0]
             await viewer_confirm(args, query.message)
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Viewer Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Viewer Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
 
 
+@logger.catch
 async def viewer_confirm(args, message):
     is_success = await view_post(args=args, prev_message=message)
     if is_success:
@@ -635,6 +710,7 @@ async def viewer_confirm(args, message):
         await ViewerPostStates.id_channel.set()
 
 
+@logger.catch
 async def viewer_percent_confirm(args, timing, message):
     is_success = await percent_timer(timing, view_post, args, prev_message=message)
     if is_success:
@@ -656,11 +732,13 @@ async def viewer_percent_confirm(args, timing, message):
 """
 
 
+@logger.catch
 async def reactions_query(query: CallbackQuery):
     await query.message.edit_text(text=MESSAGES["channel_link"], reply_markup=None)
     await ReactionsStates.id_channel.set()
 
 
+@logger.catch
 async def reactions_id_channel_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -673,6 +751,7 @@ async def reactions_id_channel_state(message: Message, state: FSMContext):
             await ReactionsStates.id_channel.set()
 
 
+@logger.catch
 async def reactions_id_post_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -687,6 +766,7 @@ async def reactions_id_post_state(message: Message, state: FSMContext):
             await ReactionsStates.number_of_button.set()
 
 
+@logger.catch
 async def number_of_button_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -704,6 +784,7 @@ async def number_of_button_state(message: Message, state: FSMContext):
             await ReactionsStates.number_of_accounts.set()
 
 
+@logger.catch
 async def reactions_number_of_accounts_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -735,15 +816,20 @@ async def reactions_number_of_accounts_state(message: Message, state: FSMContext
             await state.finish()
 
 
+@logger.catch
 async def reactions_ask_delay_state(
     query: CallbackQuery, callback_data: dict, state: FSMContext
 ):
     if await not_command_checker(message=query.message, state=state):
         answer = callback_data["answer"]
         user_id = int(callback_data["user_id"])
-        print(callback_dict[user_id])
         link, count, post_id, position = callback_dict[user_id]
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Reaction Ask Delay State Error (Callback {user_id} is not exist): {e}"
+            )
         await state.update_data(channel_link=link)
         await state.update_data(count=count)
         await state.update_data(post_id=post_id)
@@ -762,6 +848,7 @@ async def reactions_ask_delay_state(
             await ReactionsStates.delay_percent.set()
 
 
+@logger.catch
 async def reactions_delay_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
@@ -781,7 +868,7 @@ async def reactions_delay_state(message: Message, state: FSMContext):
                 data["delay"],
             ]
             user_id = message.from_user.id
-            callback_dict[user_id] = [args]
+            callback_dict[user_id] = args
             await state.finish()
             await message.answer(
                 text=MESSAGES["confirm"],
@@ -793,11 +880,12 @@ async def reactions_delay_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def reactions_delay_percent_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
         answer = message.text
 
-        timing = get_timing(answer, message)
+        timing = get_timing(answer)
         if timing is None:
             await message.answer(
                 text=MESSAGES["delay_perсent"], reply_markup=ReplyKeyboardRemove()
@@ -824,6 +912,7 @@ async def reactions_delay_percent_state(message: Message, state: FSMContext):
             )
 
 
+@logger.catch
 async def reactions_ask_confirm_query(query: CallbackQuery, callback_data: dict):
     user_id = int(callback_data["user_id"])
     is_percent = callback_data["is_percent"] == "True"
@@ -835,12 +924,23 @@ async def reactions_ask_confirm_query(query: CallbackQuery, callback_data: dict)
         else:
             args = callback_dict[user_id][0]
             await reactions_confirm(args, query.message)
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Reaction Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
     elif answer == BUTTONS["no_confirm"]:  # Не подтверждено
         await query.message.edit_text(text=MESSAGES["confirm_no"], reply_markup=None)
-        callback_dict.pop(user_id)
+        try:
+            callback_dict.pop(user_id)
+        except Exception as e:
+            logger.error(
+                f"Reaction Ask Confirm Query Error (Callback {user_id} is not exist): {e}"
+            )
 
 
+@logger.catch
 async def reactions_confirm(args, message):
     is_success = await click_on_button(args=args, prev_message=message)
     if is_success:
@@ -856,6 +956,7 @@ async def reactions_confirm(args, message):
         await ReactionsStates.id_channel.set()
 
 
+@logger.catch
 async def reactions_percent_confirm(args, timing, message):
     is_success = await percent_timer(
         timing, click_on_button, args, prev_message=message

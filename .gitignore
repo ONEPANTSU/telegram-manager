@@ -20,3 +20,6 @@ __pycache__/
 
 trius/
 /base/
+
+*.log
+/base2/

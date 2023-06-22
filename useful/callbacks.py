@@ -1,7 +1,7 @@
 from aiogram.utils.callback_data import CallbackData
 
-subscribe_callback = CallbackData("subscribe_public_button", "is_public")
-unsubscribe_callback = CallbackData("unsubscribe_public_button", "is_public")
+subscribe_callback = CallbackData("subscribe_button", "is_public")
+unsubscribe_callback = CallbackData("unsubscribe_button", "is_public")
 unsubscribe_all_callback = CallbackData("unsubscribe_all_button")
 viewer_post_callback = CallbackData("viewer_post_button")
 reactions_callback = CallbackData("reactions_button")
@@ -24,4 +24,13 @@ viewer_yes_no_confirm_callback = CallbackData(
 )
 reactions_yes_no_confirm_callback = CallbackData(
     "reaction_yes_no_confirm", "answer", "user_id", "is_percent"
+)
+
+task_callback = CallbackData("task", "page")
+delete_task_callback = CallbackData("delete_task", "task_id", "page")
+stop_task_callback = CallbackData("stop_task", "task_id", "page")
+refresh_task_callback = CallbackData("refresh_task", "task_id", "page")
+
+confirm_delete_task_callback = CallbackData(
+    "task_yes_no_confirm_keyboard", "answer", "task_id"
 )
