@@ -23,7 +23,7 @@ git clone https://github.com/ONEPANTSU/TelegramManager.git
 ```
 pip install -r requirements.txt
 ```
-3. Replace the file `/auth.py` to the directory `/venv/lib/python3.8/site-packages/telethon/client`:
+3. Replace the file `/auth.py` to the directory `/venv/lib/python3.8/site-packages/telethon/client`
 4. Run the database server (REST API app) realising the processing of the requests:
 ```python
 requests.get(DATABASE_SERVER + "admins")
