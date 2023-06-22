@@ -73,4 +73,4 @@ The ProjectStoreBot was created by SoftBananas inc., which includes the followin
 - **[ONEPANTSU](https://github.com/ONEPANTSU)**
 - **[nikramiar](https://github.com/nikramiar)**
 
-![by SoftBannas inc.](/src/sbi_logo.svg)
+![by SoftBannas inc.](https://github.com/ONEPANTSU/ONEPANTSU/blob/main/sbi_logo.svg)
