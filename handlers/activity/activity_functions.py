@@ -486,9 +486,12 @@ async def subscribe_private_channel(
                 logger.info(f"{phone.phone} вступил в {channel_link}")
                 try:
                     add_database(phone=accounts[account_iter], link=channel_link)
+                except Exception as e:
+                    logger.error(f"Subscribe Private Channel add_database Error: {e}")
+                try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
-                    logger.error(f"Subscribe Private Channel Error: {e}")
+                    logger.error(f"Subscribe Private Channel delete_task_phone Error: {e}")
             except Exception as e:
                 logger.error(f"Subscribe Private Channel Error: {e}")
 
