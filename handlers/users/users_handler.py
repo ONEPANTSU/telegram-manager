@@ -58,23 +58,12 @@ async def add_user_button(message: Message):
 @logger.catch
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
-        phone = message.text
-        if phone.startswith("+"):
-            await state.update_data(phone=phone)
-            await message.answer(
-                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
-            )
-            await state.finish()
-        elif phone.startswith("8"):
-            phone = phone.replace("8", "+7", 1)
-            await state.update_data(phone=phone)
-            await message.answer(
-                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
-            )
-            await state.finish()
-        else:
-            await message.answer(text=MESSAGES["phone_error"])
-            await AddUserStates.phone.set()
+        phone = '+{}'.join(filter(str.isdigit, message.text))
+        await state.update_data(phone=phone)
+        await message.answer(
+            text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
+        )
+        await state.finish()
 
 
 @logger.catch
@@ -132,6 +121,10 @@ async def sms_state(message: Message, state: FSMContext):
             await clients[phone]._start(
                 phone=phone, code_callback=code[phone], message=message
             )
+        await message.answer(
+            text="Авторизация прошла успешно.",
+            reply_markup=get_main_keyboard()
+        )
         await state.finish()
 
 

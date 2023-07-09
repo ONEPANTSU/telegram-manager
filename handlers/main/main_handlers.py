@@ -80,6 +80,7 @@ def refresh_phones():
 async def update_command(message: Message):
     message = await message.answer("🔄 Идёт обновление...")
     logger.info(f"Refresh Command")
+    #функция привести все телефоны в один формат
     delete_journals_files()
     refresh_phones()
     await message.edit_text("✅ Бот обновлён!")
