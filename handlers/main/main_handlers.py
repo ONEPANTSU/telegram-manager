@@ -3,7 +3,10 @@ import os
 from aiogram import Dispatcher
 from aiogram.types import Message
 
-from handlers.activity.activity_functions import get_all_accounts_len
+from handlers.activity.activity_functions import (
+    connect_to_account,
+    get_all_accounts_len,
+)
 from handlers.activity.database import add_phone, get_admin, get_tasks
 from handlers.main.main_functions import main_menu
 from handlers.task.task_keyboard import task_index
@@ -86,6 +89,33 @@ async def update_command(message: Message):
     await message.edit_text("✅ Бот обновлён!")
 
 
+@logger.catch
+async def check_phones_command(message: Message):
+    await message.answer("🔄 Идёт проверка...")
+    success_count = 0
+    failed_count = 0
+    message = await message.answer(
+        text=("✅ " + str(success_count) + "\n🚫 " + str(failed_count))
+    )
+    for _, _, sessions in os.walk("base"):
+        for session in sessions:
+            if not session.endswith("journal"):
+                try:
+                    client = await connect_to_account(session)
+                    if client is not None:
+                        await client.disconnect()
+                        success_count += 1
+                    else:
+                        failed_count += 1
+                except Exception as e:
+                    logger.error(f"Refresh Phones Error: {e}")
+                    failed_count += 1
+            await message.edit_text(
+                text=("✅ " + str(success_count) + "\n🚫 " + str(failed_count))
+            )
+    await message.answer("Проверка завершена")
+
+
 def register_main_handlers(dp: Dispatcher):
     dp.register_message_handler(start_command, commands=[COMMANDS["start"]])
     dp.register_message_handler(help_command, commands=[COMMANDS["help"]])
@@ -94,3 +124,4 @@ def register_main_handlers(dp: Dispatcher):
     dp.register_message_handler(count_users_button, text=[BUTTONS["count_users"]])
     dp.register_message_handler(task_button, text=[BUTTONS["task"]])
     dp.register_message_handler(update_command, commands=[COMMANDS["update"]])
+    dp.register_message_handler(check_phones_command, commands=["check_phones"])
