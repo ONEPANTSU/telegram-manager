@@ -54,7 +54,54 @@ async def unsubscribe_timing(accounts, channel_link):
 
         shuffle(accounts)
 
-        args = [channel_link, 1, 1]
+        link = channel_link
+
+        if "https://t.me/+" in channel_link:
+            link = channel_link.replace("https://t.me/+", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
+        elif "https://t.me/joinchat/" in channel_link:
+            link = channel_link.replace("https://t.me/joinchat/", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                channel_link = str(channel.title)
+            except Exception as e:
+                channel_link = str(channel.chat.title)
+            link_checker.disconnect()
+        elif "t.me/+" in channel_link:
+            link = channel_link.replace("t.me/+", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
+        elif "t.me/joinchat/" in channel_link:
+            link = channel_link.replace("t.me/joinchat/", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
+
+        args = [link, 1, 1]
 
         account_iter = 0
         start = time.time()
@@ -70,7 +117,9 @@ async def unsubscribe_timing(accounts, channel_link):
                         logger.error(f"Unsubscribe Timing Error: {e}")
 
                     is_success = await leave_channel(
-                        args=args, accounts=current_account
+                        args=args,
+                        accounts=current_account,
+                        unsubscribe_percent_timing=True,
                     )
                     logger.info(f"Unsubscribe Timing Success: {is_success}")
                     account_iter += 1
@@ -89,13 +138,13 @@ async def unsubscribe_timing(accounts, channel_link):
 
 
 @logger.catch
-def add_task_to_db(link, count, timing, is_sub):
+async def add_task_to_db(link, count, timing, is_sub):
     if is_sub == 1:
-        accounts = get_list_of_numbers(link=link, sub=True)
+        accounts = await get_list_of_numbers(link=link, sub=True)
     elif is_sub == -1:
-        accounts = get_list_of_numbers(link=link, sub=False)
+        accounts = await get_list_of_numbers(link=link, sub=False)
     else:
-        accounts = get_list_of_numbers()
+        accounts = await get_list_of_numbers()
     shuffle(accounts)
     accounts_for_timing = accounts[:count]
     task_id = add_task(accounts=accounts_for_timing, count=count, timing=timing)
@@ -135,7 +184,11 @@ async def percent_timer(
             start,
         ) = await initialize_variables_for_timer(args, timing, is_sub, prev_message)
 
-        return_accounts = await timer_cycle(
+        accounts_to_return = []
+        if return_accounts:
+            accounts_to_return = get_phone_by_task(task_id)
+
+        accounts = await timer_cycle(
             message,
             count,
             task_id,
@@ -152,7 +205,7 @@ async def percent_timer(
         delete_task(task_id)
 
         if return_accounts:
-            return True, get_phone_by_task(task_id)
+            return True, accounts_to_return
         return True
 
     except Exception as e:
@@ -304,7 +357,7 @@ async def check_task_status(task_id):
 async def initialize_variables_for_timer(args, timing, is_sub, prev_message):
     count = args[1]
     link = args[0]
-    task_id = add_task_to_db(link=link, count=count, timing=timing, is_sub=is_sub)
+    task_id = await add_task_to_db(link=link, count=count, timing=timing, is_sub=is_sub)
 
     await prev_message.answer(text="Задача #" + str(task_id))
     message = await prev_message.answer(text=LOADING[0])
