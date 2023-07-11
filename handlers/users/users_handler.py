@@ -1,10 +1,12 @@
+import os
+
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message
 from telethon import TelegramClient
 
 from config import *
-from handlers.activity.database import get_admin
+from handlers.activity.database import get_admin, add_phone
 from handlers.main.main_functions import get_main_keyboard
 from states import AddUserStates
 from texts.buttons import BUTTONS
@@ -121,6 +123,16 @@ async def sms_state(message: Message, state: FSMContext):
             await clients[phone]._start(
                 phone=phone, code_callback=code[phone], message=message
             )
+
+        for _, _, sessions in os.walk("base"):
+            for session in sessions:
+                if not session.endswith("journal") and phone in session:
+                    try:
+                        add_phone(session)
+                        break
+                    except Exception as e:
+                        logger.error(f"Refresh Phones Error: {e}")
+
         await message.answer(
             text="Авторизация прошла успешно.",
             reply_markup=get_main_keyboard()
