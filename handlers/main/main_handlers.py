@@ -10,6 +10,7 @@ from handlers.activity.activity_functions import (
 from handlers.activity.database import add_phone, get_admin, get_tasks
 from handlers.main.main_functions import main_menu
 from handlers.task.task_keyboard import task_index
+from handlers.users.ftp_connection import send_file_to_servers
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
 from texts.messages import MESSAGES
@@ -83,7 +84,7 @@ def refresh_phones():
 async def update_command(message: Message):
     message = await message.answer("🔄 Идёт обновление...")
     logger.info(f"Refresh Command")
-    #функция привести все телефоны в один формат
+    # функция привести все телефоны в один формат
     delete_journals_files()
     refresh_phones()
     await message.edit_text("✅ Бот обновлён!")

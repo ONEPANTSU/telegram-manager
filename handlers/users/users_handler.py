@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from telethon import TelegramClient
 
 from config import *
-from handlers.activity.database import get_admin, add_phone
+from handlers.activity.database import add_phone, get_admin
 from handlers.main.main_functions import get_main_keyboard
 from states import AddUserStates
 from texts.buttons import BUTTONS
@@ -60,7 +60,7 @@ async def add_user_button(message: Message):
 @logger.catch
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
-        phone = '+{}'.join(filter(str.isdigit, message.text))
+        phone = "+{}".join(filter(str.isdigit, message.text))
         await state.update_data(phone=phone)
         await message.answer(
             text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
@@ -134,8 +134,7 @@ async def sms_state(message: Message, state: FSMContext):
                         logger.error(f"Refresh Phones Error: {e}")
 
         await message.answer(
-            text="Авторизация прошла успешно.",
-            reply_markup=get_main_keyboard()
+            text="Авторизация прошла успешно.", reply_markup=get_main_keyboard()
         )
         await state.finish()
 
