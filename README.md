@@ -79,6 +79,7 @@ Once you have the bot installed and running, you can use the following commands:
 - /start - Start bot ▶️
 - /update - Update database and refresh journal files 🔄
 - /help - FAQ ❓ 
+- /check_phones - Checking how many sessions are available
 
 ## Contributors
 The ProjectStoreBot was created by SoftBananas inc., which includes the following members:
