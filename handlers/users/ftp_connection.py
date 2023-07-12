@@ -16,7 +16,9 @@ def send_file_to_server(file_name: str, file_path: str, server: dict) -> None:
         ftp.quit()
         logger.info(f"Send File To Server Success: {file_name} -> {server['host']}")
     except Exception as e:
-        logger.error(f"Send File To Server Error ({file_name} -> {server['host']}): {e}")
+        logger.error(
+            f"Send File To Server Error ({file_name} -> {server['host']}): {e}"
+        )
 
 
 @logger.catch
