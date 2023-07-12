@@ -48,17 +48,26 @@ requests.get(DATABASE_SERVER + "task_phone", params={"id_task": id_task})
 ```
 5. Create configurating file `config.py`
 ```python
-BOT_TOKEN : str # The bot token from https://t.me/BotFather
-API_ID : int # Telethon's API ID
-API_HASH : str # Telethon's API Hash
+BOT_TOKEN: str # The bot token from https://t.me/BotFather
+API_ID: int # Telethon's API ID
+API_HASH: str # Telethon's API Hash
 
 MILES_IN_HOUR = 3600
 HOURS_IN_WEEK = 168
 MILES_IN_WEEK = MILES_IN_HOUR * HOURS_IN_WEEK
 
-RANDOM_PERCENT = 80 # The percent coefficient affecting the randomness of the time between bot accounts activities
+RANDOM_PERCENT = 80 # The percent coefficient affecting the randomness of the time 
+                    # between bot accounts activities
 
-DATABASE_SERVER : str # The database servers path ending with '/'
+DATABASE_SERVER: str # The database servers path ending with '/'
+
+FTP_SERVERS: List[dict] # List with dictionaries with format:
+                        #   {"host": HOST_IP,
+                        #    "user": FTP_USER,
+                        #    "passwd": FTP_PASSWORD,
+                        #    "base_path": PATH_OF_BASE_LOCATION}
+                        # It's needed for uploading session files for other servers
+                        # with this bot if they are necessary
 ```
 6. Run the bot:
 ```
