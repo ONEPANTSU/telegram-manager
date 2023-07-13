@@ -1,6 +1,5 @@
 import asyncio
 import math
-import os
 import random
 import time
 from os import remove, walk
@@ -138,7 +137,7 @@ async def get_all_accounts_len():
 
 
 @logger.catch
-def get_list_of_numbers(link=None, sub=False):
+async def get_list_of_numbers(link=None, sub=False):
     if link is None:
         accounts = []
         for _, _, sessions in walk("base"):
@@ -149,12 +148,48 @@ def get_list_of_numbers(link=None, sub=False):
     else:
         if "https://t.me/+" in link:
             link = link.replace("https://t.me/+", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         elif "https://t.me/joinchat/" in link:
             link = link.replace("https://t.me/joinchat/", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         elif "t.me/+" in link:
             link = link.replace("t.me/+", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         elif "t.me/joinchat/" in link:
             link = link.replace("t.me/joinchat/", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         already_exists = get_phones(link=link)
         try:
             for iteration in range(len(already_exists)):
@@ -209,9 +244,42 @@ async def connect_to_account(session):
                     logger.info(f"{session} connected")
                     return client
             except Exception as e:
-                logger.error(f"Connection To Account Error: {e}")
-                await client.disconnect()
-                remove(f"base/{session}")
+                logger.warning(f"Connection To Account Error 1: {e}")
+                try:
+                    await client.disconnect()
+                    remove(f"base/{session}")
+                except Exception as e:
+                    logger.warning(f"Account Disconnect Error {e}")
+                try:
+                    await client.connect()
+                    if not await client.get_me():
+                        await client.disconnect()
+                        remove(f"base/{session}")
+                    else:
+                        logger.info(f"{session} connected")
+                        return client
+                except Exception as e:
+                    logger.warning(f"Connection To Account Error 2: {e}")
+                    try:
+                        await client.disconnect()
+                        remove(f"base/{session}")
+                    except Exception as e:
+                        logger.warning(f"Account Disconnect Error {e}")
+                    try:
+                        await client.connect()
+                        if not await client.get_me():
+                            await client.disconnect()
+                            remove(f"base/{session}")
+                        else:
+                            logger.info(f"{session} connected")
+                            return client
+                    except Exception as e:
+                        logger.error(f"Connection To Account Error 3: {e}")
+                        try:
+                            await client.disconnect()
+                            remove(f"base/{session}")
+                        except Exception as e:
+                            logger.warning(f"Account Disconnect Error {e}")
             return None
 
 
@@ -229,12 +297,48 @@ async def get_accounts_len(link=None, sub=False):
     else:
         if "https://t.me/+" in link:
             link = link.replace("https://t.me/+", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         elif "https://t.me/joinchat/" in link:
             link = link.replace("https://t.me/joinchat/", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         elif "t.me/+" in link:
             link = link.replace("t.me/+", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         elif "t.me/joinchat/" in link:
             link = link.replace("t.me/joinchat/", "")
+            link_checker = await connect_to_account((await get_list_of_numbers())[0])
+            channel = await link_checker(
+                functions.messages.CheckChatInviteRequest(link)
+            )
+            try:
+                link = str(channel.title)
+            except Exception as e:
+                link = str(channel.chat.title)
+            link_checker.disconnect()
         already_exists = len(get_phones(link=link))
         if sub:
             accounts_len = 0
@@ -329,7 +433,7 @@ async def subscribe_public_channel(
             await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers(link=channel_link, sub=True)
+        accounts = await get_list_of_numbers(link=channel_link, sub=True)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -445,8 +549,18 @@ async def subscribe_private_channel(
     elif "t.me/joinchat/" in channel_link:
         channel_link = channel_link.replace("t.me/joinchat/", "")
 
+    link_checker = await connect_to_account((await get_list_of_numbers())[0])
+    channel = await link_checker(
+        functions.messages.CheckChatInviteRequest(channel_link)
+    )
+    try:
+        channel_id = str(channel.title)
+    except Exception as e:
+        channel_id = str(channel.chat.title)
+    link_checker.disconnect()
+
     if accounts is None:
-        accounts = get_list_of_numbers(link=channel_link, sub=True)
+        accounts = await get_list_of_numbers(link=channel_id, sub=True)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -483,12 +597,17 @@ async def subscribe_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 await account(ImportChatInviteRequest(channel_link))
-                logger.info(f"{phone.phone} вступил в {channel_link}")
+                logger.info(f"{phone.phone} вступил в {channel_id}")
                 try:
-                    add_database(phone=accounts[account_iter], link=channel_link)
+                    add_database(phone=accounts[account_iter], link=channel_id)
+                except Exception as e:
+                    logger.error(f"Subscribe Private Channel add_database Error: {e}")
+                try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
-                    logger.error(f"Subscribe Private Channel Error: {e}")
+                    logger.error(
+                        f"Subscribe Private Channel delete_task_phone Error: {e}"
+                    )
             except Exception as e:
                 logger.error(f"Subscribe Private Channel Error: {e}")
 
@@ -555,8 +674,9 @@ async def leave_channel(
     prev_message=None,
     loading_args=None,
     task_id=None,
+    unsubscribe_percent_timing=False,
 ):
-    if "t.me/+" in args[0]:
+    if "t.me/+" in args[0] or unsubscribe_percent_timing:
         is_success = await leave_private_channel(
             args=args,
             accounts=accounts,
@@ -603,7 +723,7 @@ async def leave_public_channel(
             await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers(link=channel_link, sub=False)
+        accounts = await get_list_of_numbers(link=channel_link, sub=False)
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]
@@ -697,8 +817,27 @@ async def leave_private_channel(
             message = await prev_message.answer(text=LOADING[0])
             await prev_message.delete()
 
+    if "t.me/+" in channel_link:
+        if "https://t.me/+" in channel_link:
+            channel_link = channel_link.replace("https://t.me/+", "")
+        elif "http://t.me/+" in channel_link:
+            channel_link = channel_link.replace("http://t.me/+", "")
+        elif "t.me/+" in channel_link:
+            channel_link = channel_link.replace("t.me/+", "")
+        link_checker = await connect_to_account((await get_list_of_numbers())[0])
+        channel = await link_checker(
+            functions.messages.CheckChatInviteRequest(channel_link)
+        )
+        try:
+            channel_id = str(channel.title)
+        except Exception as e:
+            channel_id = str(channel.chat.title)
+        link_checker.disconnect()
+    else:
+        channel_id = channel_link
+
     if accounts is None:
-        accounts = get_list_of_numbers(link=channel_link, sub=False)
+        accounts = await get_list_of_numbers(link=channel_id, sub=False)
         shuffle(accounts)
         accounts = accounts[:count]
     accounts_len = len(accounts)
@@ -708,8 +847,6 @@ async def leave_private_channel(
         channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
     elif "t.me/+" in channel_link:
         channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
-
-    link_for_db = channel_link.replace("https://t.me/joinchat/", "")
 
     for account_iter in range(count):
         if task_id is not None:
@@ -740,17 +877,17 @@ async def leave_private_channel(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
                 try:
-                    chat = await account.get_entity(channel_link)
-                    chat_title = chat.title
+                    # chat = await account.get_entity(channel_link)
+                    # chat_title = chat.title
                     async for dialog in account.iter_dialogs():
-                        if dialog.title == chat_title:
+                        if dialog.title == channel_id:
                             await dialog.delete()
-                            logger.info(f"{phone.phone} покинул {channel_link}")
+                            logger.info(f"{phone.phone} покинул {channel_id}")
                             break
                 except Exception as e:
                     logger.error(f"Leave Private Channel Error: {e}")
                 try:
-                    delete_phone_link(link=link_for_db, phone=accounts[account_iter])
+                    delete_phone_link(link=channel_id, phone=accounts[account_iter])
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:
                     logger.error(f"Leave Private Channel Error: {e}")
@@ -802,7 +939,7 @@ async def view_post(
         await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers()
+        accounts = await get_list_of_numbers()
         shuffle(accounts)
         accounts = accounts[:count_accounts]
     accounts_len = len(accounts)
@@ -908,7 +1045,7 @@ async def click_on_button(
         await prev_message.delete()
 
     if accounts is None:
-        accounts = get_list_of_numbers()
+        accounts = await get_list_of_numbers()
         shuffle(accounts)
         # disconnect_all(accounts[count:])
         accounts = accounts[:count]

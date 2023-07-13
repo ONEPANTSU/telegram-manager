@@ -11,7 +11,7 @@ from useful.instruments import code, clients
 from .. import utils, helpers, errors, password as pwd_mod
 from ..tl import types, functions, custom
 from .._updates import SessionState
-from aiogram.types import Message
+
 if typing.TYPE_CHECKING:
     from .telegramclient import TelegramClient
 
@@ -156,26 +156,24 @@ class AuthMethods:
 
         self.me = None
         attempts = 0
-
         await self.send_code_request(phone, force_sms=force_sms)
 
         clients[phone] = self
-        #time.sleep(30)
+        time.sleep(30)
         await AddUserStates.sms.set()
 
 
     async def _start(
-            self: 'TelegramClient',
-            phone,
-            password: typing.Callable[[], str] = lambda: getpass.getpass('Please enter your password: '),
-            bot_token: str = None,
+            self: 'TelegramClient', phone, password=None, bot_token: str = None,
             force_sms: bool = False,
-            code_callback: typing.Callable[[],
-            typing.Union[str, int]] = None,
+            code_callback: typing.Callable[[], typing.Union[str, int]] = None,
             first_name: str = 'New User',
             last_name: str = '',
             max_attempts: int = 3,
-            message: Message = None):
+            message = None):
+
+        two_step_detected = False
+
         if not self.is_connected():
             await self.connect()
 
@@ -187,8 +185,6 @@ class AuthMethods:
         #         'The code_callback parameter needs to be a callable '
         #         'function that returns the code you received by Telegram.'
         #     )
-
-        two_step_detected = False
 
         if not phone and not bot_token:
             raise ValueError('No phone number or bot token provided.')
@@ -251,6 +247,9 @@ class AuthMethods:
                         self.me = await self.sign_in(phone=phone, password=value)
                         break
                     except errors.PasswordHashInvalidError:
+                        await message.answer(
+                            text=MESSAGES["password_error"], reply_markup=get_main_keyboard()
+                        )
                         print('Invalid password. Please try again',
                               file=sys.stderr)
                 else:
@@ -259,10 +258,13 @@ class AuthMethods:
                 self.me = await self.sign_in(phone=phone, password=password)
 
         # We won't reach here if any step failed (exit by exception)
-        signed, name = 'Добавлен пользователь ', utils.get_display_name(self.me)
+        signed, name = 'Signed in successfully as', utils.get_display_name(self.me)
         try:
-            success_txt = signed + name
-            await message.answer(text=success_txt)
+            await message.answer(
+                text="Авторизация прошла успешно. Пользователь: {user}".format(user=utils.get_display_name(self.me)),
+                reply_markup=get_main_keyboard()
+            )
+            print(signed, name)
         except UnicodeEncodeError:
             # Some terminals don't support certain characters
             print(signed, name.encode('utf-8', errors='ignore')
