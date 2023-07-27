@@ -3,13 +3,14 @@ import math
 import random
 import time
 from os import remove, walk
+from typing import List, Optional, Union
 
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 from telethon import TelegramClient, functions
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import JoinChannelRequest, LeaveChannelRequest
-from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.tl.functions.messages import ImportChatInviteRequest, GetHistoryRequest
 from telethon.tl.types import InputPeerNotifySettings
 
 from config import API_HASH, API_ID, RANDOM_PERCENT
@@ -478,6 +479,7 @@ async def subscribe_public_channel(
                             settings=InputPeerNotifySettings(mute_until=2**31 - 1),
                         )
                     )
+                    await view_post_by_account(account=account, channel_link=channel_link)
                     logger.info(f"{phone.phone} вступил в {channel_link}")
                     try:
                         add_database(link=channel_link, phone=accounts[account_iter])
@@ -596,7 +598,11 @@ async def subscribe_private_channel(
                 await account(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
-                await account(ImportChatInviteRequest(channel_link))
+                invite = await account(ImportChatInviteRequest(channel_link))
+                try:
+                    await view_post_by_account(account=account, channel_link=str(invite.chats[0].id))
+                except Exception as e:
+                    logger.warning(f"{phone.phone} не смог прочесть посты {channel_id}")
                 logger.info(f"{phone.phone} вступил в {channel_id}")
                 try:
                     add_database(phone=accounts[account_iter], link=channel_id)
@@ -914,6 +920,82 @@ async def leave_private_channel(
 
 
 @logger.catch
+async def get_last_post_id(account, channel):
+    if channel.isdigit():
+        entity = await account.get_entity(int(channel))
+    else:
+        entity = await account.get_entity(channel)
+
+    messages = await account(GetHistoryRequest(
+        peer=entity,
+        limit=1,
+        offset_date=None,
+        offset_id=0,
+        max_id=0,
+        min_id=0,
+        add_offset=0,
+        hash=0
+    ))
+    last_post_id = messages.messages[0].id
+    return last_post_id
+
+
+@logger.catch
+async def view_post_by_account(account: TelegramClient,
+                               channel_link: str,
+                               last_post_id: int = 0,
+                               count_posts_range: List[int] = [2, 7]):
+    count_posts = random.randint(*count_posts_range)
+
+    if channel_link.isdigit():
+        if last_post_id == 0:
+            last_post_id = await get_last_post_id(account=account, channel=channel_link)
+        channel_link = int(channel_link)
+
+        await account(
+            functions.messages.GetMessagesViewsRequest(
+                peer=channel_link,
+                id=[
+                    post_id
+                    for post_id in range(
+                        last_post_id, last_post_id - count_posts, -1
+                    )
+                ],
+                increment=True,
+            )
+        )
+
+        phone = await account.get_me()
+        logger.info(f"{phone.phone} посмторел посты в {channel_link}")
+    else:
+        phone = await account.get_me()
+        try:
+            await account(
+                functions.account.UpdateStatusRequest(offline=False)
+            )  # Go to online
+
+            if last_post_id == 0:
+                last_post_id = await get_last_post_id(account=account, channel=channel_link)
+
+            await account(
+                functions.messages.GetMessagesViewsRequest(
+                    peer=channel_link,
+                    id=[
+                        post_id
+                        for post_id in range(
+                            last_post_id, last_post_id - count_posts, -1
+                        )
+                    ],
+                    increment=True,
+                )
+            )
+
+            logger.info(f"{phone.phone} посмторел посты в {channel_link}")
+        except Exception as e:
+            logger.error(f"View Post Error: {e}")
+
+
+@logger.catch
 async def view_post(
     args,
     accounts=None,
@@ -977,6 +1059,10 @@ async def view_post(
                 await account(
                     functions.account.UpdateStatusRequest(offline=False)
                 )  # Go to online
+
+                if last_post_id == 0:
+                    last_post_id = await get_last_post_id(account=account, channel=channel_link)
+
                 await account(
                     functions.messages.GetMessagesViewsRequest(
                         peer=channel_link,
