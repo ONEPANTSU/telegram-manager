@@ -530,7 +530,12 @@ async def number_of_post_state(message: Message, state: FSMContext):
             await ViewerPostStates.number_of_post.set()
         else:
             await state.update_data(count_posts=int(answer))
-            accounts_len = await get_accounts_len()
+            data = await state.get_data()
+            channel_link = data["channel_link"]
+            if "t.me/+" in channel_link:
+                accounts_len = await get_accounts_len(link=channel_link)
+            else:
+                accounts_len = await get_accounts_len()
             await message.answer(
                 text=MESSAGES["number_of_accounts"].format(count=accounts_len)
             )

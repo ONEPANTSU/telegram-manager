@@ -61,9 +61,9 @@ async def add_user_button(message: Message):
 @logger.catch
 async def phone_state(message: Message, state: FSMContext):
     if await not_command_checker(message=message, state=state):
-        phone = '+{num}'.format(num=''.join(filter(str.isdigit, message.text)))
-        if phone[1:3] == '89' and len(phone) == 12:
-            phone = phone[0] + '7' + phone[2:]
+        phone = "+{num}".format(num="".join(filter(str.isdigit, message.text)))
+        if phone[1:3] == "89" and len(phone) == 12:
+            phone = phone[0] + "7" + phone[2:]
         await state.update_data(phone=phone)
         await message.answer(
             text=MESSAGES["user_ask"], reply_markup=ask_keyboard(phone)

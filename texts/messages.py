@@ -41,8 +41,10 @@ delay_percent_message = (
 )
 subscribe_message = "Подписка на канал осуществлена"
 unsubscribe_message = "Отписка от канала осуществлена"
-id_post_message = "Введите id поста"
-number_of_post_message = "Введите количество постов"
+id_post_message = (
+    "Введите id поста (<i>Совет:</i> Введите 0, чтобы выбрать последний пост)"
+)
+number_of_post_message = "Введите количество постов (<i>Совет:</i> Введите 0, чтобы выбрать случайное значение от 2 до 7)"
 viewer_post_message = "Посты просмотрены"
 number_of_button_message = "Введите номер кнопки"
 reactions_message = "Нажатие кнопки произошло успешно"

@@ -10,7 +10,7 @@ from aiogram.types import Message
 from telethon import TelegramClient, functions
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import JoinChannelRequest, LeaveChannelRequest
-from telethon.tl.functions.messages import ImportChatInviteRequest, GetHistoryRequest
+from telethon.tl.functions.messages import GetHistoryRequest, ImportChatInviteRequest
 from telethon.tl.types import InputPeerNotifySettings
 
 from config import API_HASH, API_ID, RANDOM_PERCENT
@@ -479,7 +479,9 @@ async def subscribe_public_channel(
                             settings=InputPeerNotifySettings(mute_until=2**31 - 1),
                         )
                     )
-                    await view_post_by_account(account=account, channel_link=channel_link)
+                    await view_post_by_account(
+                        account=account, channel_link=channel_link
+                    )
                     logger.info(f"{phone.phone} вступил в {channel_link}")
                     try:
                         add_database(link=channel_link, phone=accounts[account_iter])
@@ -600,7 +602,9 @@ async def subscribe_private_channel(
                 )  # Go to online
                 invite = await account(ImportChatInviteRequest(channel_link))
                 try:
-                    await view_post_by_account(account=account, channel_link=str(invite.chats[0].id))
+                    await view_post_by_account(
+                        account=account, channel_link=str(invite.chats[0].id)
+                    )
                 except Exception as e:
                     logger.warning(f"{phone.phone} не смог прочесть посты {channel_id}")
                 logger.info(f"{phone.phone} вступил в {channel_id}")
@@ -926,25 +930,29 @@ async def get_last_post_id(account, channel):
     else:
         entity = await account.get_entity(channel)
 
-    messages = await account(GetHistoryRequest(
-        peer=entity,
-        limit=1,
-        offset_date=None,
-        offset_id=0,
-        max_id=0,
-        min_id=0,
-        add_offset=0,
-        hash=0
-    ))
+    messages = await account(
+        GetHistoryRequest(
+            peer=entity,
+            limit=1,
+            offset_date=None,
+            offset_id=0,
+            max_id=0,
+            min_id=0,
+            add_offset=0,
+            hash=0,
+        )
+    )
     last_post_id = messages.messages[0].id
     return last_post_id
 
 
 @logger.catch
-async def view_post_by_account(account: TelegramClient,
-                               channel_link: str,
-                               last_post_id: int = 0,
-                               count_posts_range: List[int] = [2, 7]):
+async def view_post_by_account(
+    account: TelegramClient,
+    channel_link: str,
+    last_post_id: int = 0,
+    count_posts_range: List[int] = [2, 7],
+):
     count_posts = random.randint(*count_posts_range)
 
     if channel_link.isdigit():
@@ -957,9 +965,7 @@ async def view_post_by_account(account: TelegramClient,
                 peer=channel_link,
                 id=[
                     post_id
-                    for post_id in range(
-                        last_post_id, last_post_id - count_posts, -1
-                    )
+                    for post_id in range(last_post_id, last_post_id - count_posts, -1)
                 ],
                 increment=True,
             )
@@ -975,7 +981,9 @@ async def view_post_by_account(account: TelegramClient,
             )  # Go to online
 
             if last_post_id == 0:
-                last_post_id = await get_last_post_id(account=account, channel=channel_link)
+                last_post_id = await get_last_post_id(
+                    account=account, channel=channel_link
+                )
 
             await account(
                 functions.messages.GetMessagesViewsRequest(
@@ -1027,10 +1035,23 @@ async def view_post(
     accounts_len = len(accounts)
     if count_accounts > accounts_len:
         count_accounts = accounts_len
-    if "https://t.me/+" in channel_link:
-        channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
-    elif "t.me/+" in channel_link:
-        channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
+
+    is_invite = False
+    # if "https://t.me/+" in channel_link:
+    #     channel_link = channel_link.replace("https://t.me/+", "https://t.me/joinchat/")
+    #     is_invite = True
+    # elif "t.me/+" in channel_link:
+    #     channel_link = channel_link.replace("t.me/+", "https://t.me/joinchat/")
+    #     is_invite = True
+    if "t.me/+" in channel_link:
+        if "https://t.me/+" in channel_link:
+            channel_link = channel_link.replace("https://t.me/+", "")
+        elif "http://t.me/+" in channel_link:
+            channel_link = channel_link.replace("http://t.me/+", "")
+        elif "t.me/+" in channel_link:
+            channel_link = channel_link.replace("t.me/+", "")
+        is_invite = True
+
     for account_iter in range(count_accounts):
         if task_id is not None:
             try:
@@ -1054,6 +1075,10 @@ async def view_post(
 
         account = await connect_to_account(accounts[account_iter])
         if account is not None:
+            if count_posts == 0:
+                count_posts_range = [2, 7]
+                count_posts = random.randint(*count_posts_range)
+
             phone = await account.get_me()
             try:
                 await account(
@@ -1061,20 +1086,33 @@ async def view_post(
                 )  # Go to online
 
                 if last_post_id == 0:
-                    last_post_id = await get_last_post_id(account=account, channel=channel_link)
-
-                await account(
-                    functions.messages.GetMessagesViewsRequest(
-                        peer=channel_link,
-                        id=[
-                            post_id
-                            for post_id in range(
-                                last_post_id, last_post_id - count_posts, -1
-                            )
-                        ],
-                        increment=True,
+                    last_post_id = await get_last_post_id(
+                        account=account, channel=channel_link
                     )
-                )
+
+                if not is_invite:
+                    await account(
+                        functions.messages.GetMessagesViewsRequest(
+                            peer=channel_link,
+                            id=[
+                                post_id
+                                for post_id in range(
+                                    last_post_id, last_post_id - count_posts, -1
+                                )
+                            ],
+                            increment=True,
+                        )
+                    )
+                else:
+                    invite = await account(ImportChatInviteRequest(channel_link))
+                    try:
+                        await view_post_by_account(
+                            account=account, channel_link=str(invite.chats[0].id)
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"{phone.phone} не смог прочесть посты {channel_link}"
+                        )
                 try:
                     delete_task_phone(id_task=task_id, phone=accounts[account_iter])
                 except Exception as e:

@@ -27,15 +27,20 @@ def activity_keyboard():
     view_button = InlineKeyboardButton(
         text=BUTTONS["view"], callback_data=viewer_post_callback.new()
     )
-    react_button = InlineKeyboardButton(
-        text=BUTTONS["react"], callback_data=reactions_callback.new()
-    )
-
+    # react_button = InlineKeyboardButton(
+    #     text=BUTTONS["react"], callback_data=reactions_callback.new()
+    # )
+    #
+    # act_keyboard = InlineKeyboardMarkup(row_width=1).add(
+    #     subscribe_button,
+    #     unsubscribe_button,
+    #     view_button,
+    #     react_button,
+    # )
     act_keyboard = InlineKeyboardMarkup(row_width=1).add(
         subscribe_button,
         unsubscribe_button,
         view_button,
-        react_button,
     )
     return act_keyboard
 
